@@ -1,58 +1,52 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
+
+	"github.com/devloperdevesh/agentmesh/internal/api"
 )
 
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
-	_, _ = w.Write([]byte(`{
-		"status":"ok",
-		"service":"agentmesh-control-plane",
-		"version":"0.1.0"
-	}`))
-}
-
-func loggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		start := time.Now()
-
-		next.ServeHTTP(w, r)
-
-		log.Printf(
-			"%s %s %s",
-			r.Method,
-			r.URL.Path,
-			time.Since(start),
-		)
-	})
-}
-
 func main() {
-
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("/health", healthHandler)
+	router := api.NewRouter()
 
 	server := &http.Server{
 		Addr:         ":8080",
-		Handler:      loggingMiddleware(mux),
+		Handler:      router,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  30 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
 	log.Println("===================================")
-	log.Println("AgentMesh Control Plane Started")
+	log.Println("AgentMesh Control Plane")
 	log.Println("Listening on :8080")
 	log.Println("===================================")
 
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server failed: %v", err)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+
+	<-stop
+
+	log.Println("Shutdown signal received...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("graceful shutdown failed: %v", err)
 	}
+
+	log.Println("AgentMesh stopped cleanly.")
 }

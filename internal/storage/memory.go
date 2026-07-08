@@ -1,71 +1,45 @@
 package storage
 
 import (
-	"errors"
+	"context"
 	"sync"
-	"time"
 )
-
-var (
-	ErrStateNotFound = errors.New("agent state not found")
-)
-
-type AgentState struct {
-	AgentID      string    `json:"agent_id"`
-	CurrentStep  int       `json:"current_step"`
-	Context      string    `json:"context"`
-	LastModified time.Time `json:"last_modified"`
-}
 
 type MemoryStore struct {
-	mu     sync.RWMutex
-	states map[string]AgentState
+	mu           sync.RWMutex
+	storePayload map[string]string
+	storeSteps   map[string]uint64
+	storeAnchors map[string]string
 }
 
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
-		states: make(map[string]AgentState),
+		storePayload: make(map[string]string),
+		storeSteps:   make(map[string]uint64),
+		storeAnchors: make(map[string]string),
 	}
 }
 
-func (m *MemoryStore) Save(state AgentState) {
+func (m *MemoryStore) Save(ctx context.Context, agentID string, step uint64, payload string, anchor string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	state.LastModified = time.Now().UTC()
-	m.states[state.AgentID] = state
+	m.storePayload[agentID] = payload
+	m.storeSteps[agentID] = step
+	m.storeAnchors[agentID] = anchor
+	return nil
 }
 
-func (m *MemoryStore) Get(agentID string) (AgentState, error) {
+func (m *MemoryStore) Get(ctx context.Context, agentID string) (string, uint64, string, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	state, ok := m.states[agentID]
-	if !ok {
-		return AgentState{}, ErrStateNotFound
+	payload, exists := m.storePayload[agentID]
+	if !exists {
+		return "", 0, "", ErrStateNotFound
 	}
 
-	return state, nil
-}
-
-func (m *MemoryStore) Delete(agentID string) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	delete(m.states, agentID)
-}
-
-func (m *MemoryStore) Exists(agentID string) bool {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	_, ok := m.states[agentID]
-	return ok
-}
-
-func (m *MemoryStore) Count() int {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	return len(m.states)
+	step := m.storeSteps[agentID]
+	anchor := m.storeAnchors[agentID]
+	return payload, step, anchor, nil
 }
