@@ -3,43 +3,101 @@ package storage
 import (
 	"context"
 	"sync"
+
+	"github.com/devloperdevesh/agentmesh/internal/control"
 )
 
 type MemoryStore struct {
-	mu           sync.RWMutex
-	storePayload map[string]string
-	storeSteps   map[string]uint64
-	storeAnchors map[string]string
+	mu sync.RWMutex
+
+	workflows map[string]*control.Workflow
 }
 
 func NewMemoryStore() *MemoryStore {
 	return &MemoryStore{
-		storePayload: make(map[string]string),
-		storeSteps:   make(map[string]uint64),
-		storeAnchors: make(map[string]string),
+		workflows: make(map[string]*control.Workflow),
 	}
 }
 
-func (m *MemoryStore) Save(ctx context.Context, agentID string, step uint64, payload string, anchor string) error {
+func (m *MemoryStore) Save(
+	ctx context.Context,
+	workflow *control.Workflow,
+) error {
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.storePayload[agentID] = payload
-	m.storeSteps[agentID] = step
-	m.storeAnchors[agentID] = anchor
+	m.workflows[workflow.ID] = workflow
+
 	return nil
 }
 
-func (m *MemoryStore) Get(ctx context.Context, agentID string) (string, uint64, string, error) {
+func (m *MemoryStore) Load(
+	ctx context.Context,
+	id string,
+) (*control.Workflow, error) {
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	payload, exists := m.storePayload[agentID]
-	if !exists {
-		return "", 0, "", ErrStateNotFound
+	workflow, ok := m.workflows[id]
+
+	if !ok {
+		return nil, ErrWorkflowNotFound
 	}
 
-	step := m.storeSteps[agentID]
-	anchor := m.storeAnchors[agentID]
-	return payload, step, anchor, nil
+	return workflow, nil
+}
+
+func (m *MemoryStore) Delete(
+	ctx context.Context,
+	id string,
+) error {
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	delete(m.workflows, id)
+
+	return nil
+}
+
+func (m *MemoryStore) List(
+	ctx context.Context,
+) ([]*control.Workflow, error) {
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	workflows := make([]*control.Workflow, 0, len(m.workflows))
+
+	for _, workflow := range m.workflows {
+		workflows = append(workflows, workflow)
+	}
+
+	return workflows, nil
 }
