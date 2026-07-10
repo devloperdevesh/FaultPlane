@@ -1,13 +1,36 @@
 package api
 
-import "net/http"
+import (
+	"net/http"
 
-func NewRouter() http.Handler {
+	"github.com/devloperdevesh/agentmesh/internal/control"
+)
+
+func NewRouter(
+	controller *control.Controller,
+) http.Handler {
+
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/api/v1/health", HealthHandler)
-	mux.HandleFunc("/api/v1/checkpoint", CheckpointHandler)
-	mux.HandleFunc("/api/v1/recover", RecoverHandler)
+	mux.HandleFunc(
+		"/health",
+		HealthHandler,
+	)
+
+	mux.HandleFunc(
+		"/checkpoint",
+		CheckpointHandler(controller),
+	)
+
+	mux.HandleFunc(
+		"/recover",
+		RecoverHandler(controller),
+	)
+
+	mux.HandleFunc(
+		"/metrics",
+		MetricsHandler,
+	)
 
 	return LoggingMiddleware(mux)
 }
