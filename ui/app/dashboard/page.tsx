@@ -13,6 +13,7 @@ import TelemetryLogs from "@/components/logs/TelemetryLogs";
 import KernelLogs from "@/components/logs/KernelLogs";
 
 import CheckpointTimeline from "@/components/timeline/CheckpointTimeline";
+import EbpfMonitor from "@/components/ebpf/EbpfMonitor";
 
 export default function DashboardPage() {
   return (
@@ -88,6 +89,10 @@ export default function DashboardPage() {
 
       <section>
         <CheckpointTimeline />
+      </section>
+
+      <section>
+        <EbpfMonitor />
       </section>
     </div>
   );
