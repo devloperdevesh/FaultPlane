@@ -12,10 +12,9 @@ import WorkflowTable from "@/components/tables/WorkflowTable";
 import TelemetryLogs from "@/components/logs/TelemetryLogs";
 import KernelLogs from "@/components/logs/KernelLogs";
 
-import CheckpointTimeline from "@/components/timeline/CheckpointTimeline";
-
 import EbpfMonitor from "@/components/ebpf/EbpfMonitor";
 import SocketMigration from "@/components/topology/SocketMigration";
+import CheckpointTimeline from "@/components/gitops/CheckpointTimeline";
 
 export default function DashboardPage() {
   return (
