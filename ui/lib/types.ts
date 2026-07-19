@@ -1,75 +1,68 @@
-export interface RuntimeMetrics {
-  cpu: number;
-  memory: number;
-  network: number;
-  goroutines: number;
-}
-
-
 export interface Worker {
-  id: string;
 
+  id:string;
+  
+  status:
+  "ACTIVE" |
+  "FAILED" |
+  "RECOVERING";
+  
+  cpu:number;
+  
+  memory:string;
+  
+  checkpoint:string;
+  
   role:
-    | "primary"
-    | "standby";
-
+  "PRIMARY" |
+  "STANDBY";
+  
+  }
+  
+  
+  
+  export interface Workflow {
+  
+  id:string;
+  
+  name:string;
+  
   status:
-    | "healthy"
-    | "recovering"
-    | "offline";
-
-  cpu: string;
-  memory: string;
-  requests: number;
-}
-
-
-export interface Checkpoint {
-  id: string;
-  workerId: string;
-  size: string;
-  storage: string;
-  createdAt: string;
-}
-
-
-export interface RuntimeLog {
+  "RUNNING"|
+  "FAILED";
+  
+  }
+  
+  
+  export interface Checkpoint {
+  
+  id:string;
+  
+  createdAt:string;
+  
+  size:string;
+  
+  }
+  
+  
+  export interface Metric {
+  
+  name:string;
+  
+  value:string;
+  
+  }
+  
+  
+  export interface TelemetryEvent {
+  
   level:
-    | "INFO"
-    | "WARN"
-    | "ERROR"
-    | "RECOVERY"
-    | "CHECKPOINT";
-
-  message: string;
-  timestamp: string;
-}
-
-
-export interface HealthStatus {
-  status:
-    | "healthy"
-    | "degraded";
-
-  version: string;
-}
-
-
-/**
- * GitOps State Diff
- * Used for checkpoint comparison
- */
-
-export type VariableDiffType =
-  | "modified"
-  | "added"
-  | "removed"
-  | "unchanged";
-
-
-export interface VariableDiffData {
-  key: string;
-  before: string;
-  after: string;
-  type: VariableDiffType;
-}
+  "INFO"|
+  "WARN"|
+  "ERROR";
+  
+  message:string;
+  
+  timestamp:string;
+  
+  }
