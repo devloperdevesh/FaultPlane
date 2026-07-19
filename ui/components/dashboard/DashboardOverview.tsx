@@ -1,7 +1,10 @@
-import MetricCard from "@/components/cards/MetricCard";
-import SLAProtectionCard from "@/components/cards/SLAProtectionCard";
+"use client";
+
+import GatewayCard from "@/components/cards/GatewayCard";
+import WorkerCard from "@/components/cards/WorkerCard";
 import RecoveryCard from "@/components/cards/RecoveryCard";
-import CostCard from "@/components/cards/CostCard";
+import LatencyCard from "@/components/cards/LatencyCard";
+import CheckpointCard from "@/components/cards/CheckpointCard";
 
 import LatencyChart from "@/components/charts/LatencyChart";
 import RecoveryTimeline from "@/components/charts/RecoveryTimeline";
@@ -16,23 +19,28 @@ import EbpfMonitor from "@/components/ebpf/EbpfMonitor";
 
 import SocketMigration from "@/components/topology/SocketMigration";
 
-import CheckpointTimeline from "@/components/gitops/CheckpointTimeline";
-
 import MemoryGrid from "@/components/memory/MemoryGrid";
 
 import BlastGraph from "@/components/blast-radius/BlastGraph";
 import FailurePropagation from "@/components/blast-radius/FailurePropagation";
 import ImpactTimeline from "@/components/blast-radius/ImpactTimeline";
+
+import CheckpointTimeline from "@/components/gitops/CheckpointTimeline";
 import StateDiff from "@/components/gitops/StateDiff";
+
 import FinOpsOverview from "@/components/cards/FinOpsOverview";
+
 import TenantTable from "@/components/tables/TenantTable";
+
 import RuntimeShield from "@/components/status/RuntimeShield";
 import CapabilityMatrix from "@/components/status/CapabilityMatrix";
 import ThreatScore from "@/components/status/ThreatScore";
+
+import TransportMetrics from "@/components/telemetry/TransportMetrics";
 import InterceptorLogs from "@/components/telemetry/InterceptorLogs";
 import ProxyStream from "@/components/telemetry/ProxyStream";
 import HijackDetection from "@/components/telemetry/HijackDetection";
-import TransportMetrics from "@/components/telemetry/TransportMetrics";
+
 import SpeculativePath from "@/components/workflows/SpeculativePath";
 
 function Section({
@@ -41,44 +49,47 @@ function Section({
   children,
 }: {
   title: string;
-  description?: string;
+  description: string;
   children: React.ReactNode;
 }) {
   return (
     <section
       className="
-      rounded-2xl
-      border
-      border-white/10
-      bg-zinc-950/60
-      backdrop-blur-xl
-      p-6
-      shadow-xl
-      shadow-black/20
-      "
+rounded-2xl
+border
+border-white/10
+bg-zinc-950/70
+backdrop-blur-xl
+p-6
+shadow-xl
+shadow-black/20
+"
     >
-      <div className="mb-6">
+      <div
+        className="
+mb-6
+"
+      >
         <h2
           className="
-          text-sm
-          font-semibold
-          text-white
-          "
+text-sm
+font-semibold
+tracking-wide
+text-white
+"
         >
           {title}
         </h2>
 
-        {description && (
-          <p
-            className="
-            mt-1
-            text-xs
-            text-zinc-500
-            "
-          >
-            {description}
-          </p>
-        )}
+        <p
+          className="
+mt-1
+text-xs
+text-zinc-500
+"
+        >
+          {description}
+        </p>
       </div>
 
       {children}
@@ -86,7 +97,7 @@ function Section({
   );
 }
 
-export default function DashboardPage() {
+export default function DashboardOverview() {
   return (
     <div
       className="
@@ -123,7 +134,7 @@ text-zinc-500
 
       <Section
         title="Runtime Overview"
-        description="Current infrastructure health and recovery metrics"
+        description="Live infrastructure health and runtime metrics"
       >
         <div
           className="
@@ -133,15 +144,15 @@ md:grid-cols-2
 xl:grid-cols-5
 "
         >
-          <MetricCard title="Gateway" value="Healthy" />
+          <GatewayCard />
 
-          <MetricCard title="Active Workers" value="24" />
+          <WorkerCard />
 
           <RecoveryCard />
 
-          <CostCard />
+          <LatencyCard />
 
-          <SLAProtectionCard />
+          <CheckpointCard />
         </div>
       </Section>
 
@@ -149,7 +160,7 @@ xl:grid-cols-5
 
       <Section
         title="Performance Telemetry"
-        description="Latency boundaries and recovery execution metrics"
+        description="Latency boundaries and recovery execution"
       >
         <div
           className="
@@ -164,11 +175,11 @@ xl:grid-cols-2
         </div>
       </Section>
 
-      {/* Workload */}
+      {/* Workloads */}
 
       <Section
         title="Workload Runtime"
-        description="Agent execution and worker state management"
+        description="Worker execution and workflow orchestration"
       >
         <div
           className="
@@ -181,11 +192,11 @@ space-y-6
         </div>
       </Section>
 
-      {/* Observability */}
+      {/* Kernel */}
 
       <Section
         title="Kernel Observability"
-        description="Low level runtime events and system telemetry"
+        description="Low level runtime signals and system events"
       >
         <div
           className="
@@ -199,11 +210,7 @@ xl:grid-cols-2
           <KernelLogs />
         </div>
 
-        <div
-          className="
-mt-6
-"
-        >
+        <div className="mt-6">
           <EbpfMonitor />
         </div>
       </Section>
@@ -212,7 +219,7 @@ mt-6
 
       <Section
         title="Transport Infrastructure"
-        description="Network failover and connection migration state"
+        description="Network migration and connection resilience"
       >
         <SocketMigration />
       </Section>
@@ -221,7 +228,7 @@ mt-6
 
       <Section
         title="State Resilience"
-        description="Runtime memory migration and checkpoint restoration"
+        description="Checkpoint recovery and memory migration"
       >
         <MemoryGrid />
       </Section>
@@ -230,7 +237,7 @@ mt-6
 
       <Section
         title="Recovery Intelligence"
-        description="Failure impact analysis and blast radius containment"
+        description="Failure analysis and blast radius containment"
       >
         <div
           className="
@@ -254,7 +261,8 @@ mt-6
           <CheckpointTimeline />
         </div>
       </Section>
-      {/* GitOps Debugging */}
+
+      {/* Debugging */}
 
       <Section
         title="Checkpoint Debugging"
@@ -262,27 +270,30 @@ mt-6
       >
         <StateDiff />
       </Section>
-      {/* FinOps Intelligence */}
+
+      {/* FinOps */}
 
       <Section
         title="FinOps Intelligence"
-        description="Cloud cost optimization and resource efficiency"
+        description="Cloud cost optimization and efficiency"
       >
         <FinOpsOverview />
       </Section>
 
-      {/* Multi Tenant Governance */}
+      {/* Multi Tenant */}
 
       <Section
         title="Multi Tenant Governance"
-        description="Tenant isolation, quota and resource management"
+        description="Tenant isolation and resource control"
       >
         <TenantTable />
       </Section>
 
+      {/* Security */}
+
       <Section
         title="Runtime Security"
-        description="WASM sandbox isolation and workload protection"
+        description="Sandbox isolation and workload protection"
       >
         <div
           className="
@@ -305,11 +316,17 @@ xl:grid-cols-2
         </div>
       </Section>
 
+      {/* Network Security */}
+
       <Section
         title="Network Security Telemetry"
-        description="Transport interception and connection intelligence"
+        description="Transport interception intelligence"
       >
-        <div className="space-y-6">
+        <div
+          className="
+space-y-6
+"
+        >
           <TransportMetrics />
 
           <div
@@ -327,7 +344,8 @@ xl:grid-cols-2
           <HijackDetection />
         </div>
       </Section>
-      {/* Speculative Execution */}
+
+      {/* Workflow Intelligence */}
 
       <Section
         title="Workflow Intelligence"
