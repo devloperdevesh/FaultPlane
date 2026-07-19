@@ -4,7 +4,7 @@ import Link from "next/link";
 import clsx from "clsx";
 import type { LucideIcon } from "lucide-react";
 
-interface SidebarItemProps {
+interface Props {
   title: string;
   href: string;
   icon: LucideIcon;
@@ -16,34 +16,54 @@ export default function SidebarItem({
   title,
   href,
   icon: Icon,
-  active = false,
+  active,
   badge,
-}: SidebarItemProps) {
+}: Props) {
   return (
     <Link
       href={href}
       className={clsx(
-        "group flex items-center justify-between rounded-xl px-4 py-3 transition-all duration-200",
+        "group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all duration-200",
+
         active
-          ? "bg-blue-500/10 text-white border border-blue-500/30"
-          : "text-zinc-400 hover:bg-zinc-900 hover:text-white",
+          ? "bg-white/10 text-white shadow-lg"
+          : "text-zinc-400 hover:bg-white/5 hover:text-white",
       )}
     >
-      <div className="flex items-center gap-3">
-        <Icon
-          className={clsx(
-            "h-5 w-5 transition-colors",
-            active
-              ? "text-blue-400"
-              : "text-zinc-500 group-hover:text-blue-400",
-          )}
+      {active && (
+        <span
+          className="
+absolute
+left-0
+h-7
+w-1
+rounded-r-full
+bg-emerald-400
+"
         />
+      )}
 
-        <span className="text-sm font-medium">{title}</span>
-      </div>
+      <Icon
+        size={18}
+        className={clsx(
+          "transition-transform duration-200 group-hover:scale-110",
+
+          active ? "text-emerald-400" : "text-zinc-500",
+        )}
+      />
+
+      <span className="flex-1">{title}</span>
 
       {badge && (
-        <span className="rounded-md bg-zinc-800 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-300">
+        <span
+          className="
+rounded-md
+bg-zinc-800
+px-2
+py-1
+text-[10px]
+"
+        >
           {badge}
         </span>
       )}
