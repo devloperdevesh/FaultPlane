@@ -1,68 +1,98 @@
-export interface Worker {
+// Runtime Worker Contract
 
-  id:string;
-  
+export interface Worker {
+  id: string;
+
   status:
-  "ACTIVE" |
-  "FAILED" |
-  "RECOVERING";
-  
-  cpu:number;
-  
-  memory:string;
-  
-  checkpoint:string;
-  
+    | "ACTIVE"
+    | "FAILED"
+    | "RECOVERING";
+
+  cpu: number;
+
+  memory: string;
+
+  checkpoint: string;
+
   role:
-  "PRIMARY" |
-  "STANDBY";
-  
-  }
-  
-  
-  
-  export interface Workflow {
-  
-  id:string;
-  
-  name:string;
-  
+    | "PRIMARY"
+    | "STANDBY";
+}
+
+
+// Workflow Contract
+
+export interface Workflow {
+
+  id: string;
+
+  name: string;
+
   status:
-  "RUNNING"|
-  "FAILED";
-  
-  }
-  
-  
-  export interface Checkpoint {
-  
-  id:string;
-  
-  createdAt:string;
-  
-  size:string;
-  
-  }
-  
-  
-  export interface Metric {
-  
-  name:string;
-  
-  value:string;
-  
-  }
-  
-  
-  export interface TelemetryEvent {
-  
+    | "RUNNING"
+    | "FAILED";
+
+}
+
+
+// Checkpoint Contract
+
+export interface Checkpoint {
+
+  id: string;
+
+  createdAt: string;
+
+  size: string;
+
+}
+
+
+// Metrics Contract
+
+export interface Metric {
+
+  name: string;
+
+  value: string;
+
+}
+
+
+// Telemetry Contract
+
+export interface TelemetryEvent {
+
   level:
-  "INFO"|
-  "WARN"|
-  "ERROR";
-  
-  message:string;
-  
-  timestamp:string;
-  
-  }
+    | "INFO"
+    | "WARN"
+    | "ERROR"
+    | "SUCCESS";
+
+  message: string;
+
+  timestamp: string;
+
+}
+
+
+// GitOps State Diff Contract
+
+export type VariableDiffType =
+  | "modified"
+  | "added"
+  | "removed"
+  | "unchanged";
+
+
+export interface VariableDiffData {
+
+  key: string;
+
+  before: string;
+
+  after: string;
+
+  type: VariableDiffType;
+
+}
