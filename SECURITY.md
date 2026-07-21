@@ -1,22 +1,22 @@
 # Security Policy
 
-Security is a core design consideration for AgentMesh.
+Security is a core design principle of FaultPlane.
 
-This document describes how to report vulnerabilities, supported release branches, and the security practices followed by the project.
+This document explains how to report security vulnerabilities, supported versions, security practices, and responsible disclosure guidelines for the project.
 
-AgentMesh is under active development. Security guarantees will evolve as the implementation matures.
+FaultPlane is an actively developed open-source infrastructure project. Security practices and guarantees will continue to evolve as the platform matures.
 
 ---
 
 # Supported Versions
 
-Only maintained releases receive security updates.
+Security updates are provided for actively maintained releases.
 
 | Version | Supported |
-|----------|-----------|
-| main | Yes |
-| v0.x | Yes |
-| Earlier Development Branches | No |
+|---|---|
+| main branch | Yes |
+| Latest stable release | Yes |
+| Previous development branches | No |
 
 Users are encouraged to run the latest supported version.
 
@@ -26,399 +26,387 @@ Users are encouraged to run the latest supported version.
 
 Please do **not** report security vulnerabilities through public GitHub issues.
 
-Instead, report vulnerabilities privately to the project maintainers.
+Security issues should be reported privately through the repository security reporting channel.
 
-A report should include:
+A useful vulnerability report should include:
 
-- affected version
-- description of the issue
+- affected version or commit
+- vulnerability description
 - reproduction steps
 - potential impact
-- proof of concept, if available
+- proof of concept (if available)
+- relevant logs or traces
 
-The more detail provided, the faster the issue can be investigated.
+Providing detailed information helps maintainers investigate and resolve issues faster.
 
 ---
 
-# Response Process
+# Security Response Process
 
-Every security report follows the same process.
+Security reports follow a structured process:
 
-```text
-Receive Report
-        │
-        ▼
+```
+Security Report Received
+
+        ↓
+
 Initial Review
-        │
-        ▼
-Confirm Vulnerability
-        │
-        ▼
-Develop Fix
-        │
-        ▼
-Internal Validation
-        │
-        ▼
-Release Patch
-        │
-        ▼
+
+        ↓
+
+Vulnerability Validation
+
+        ↓
+
+Impact Assessment
+
+        ↓
+
+Develop Mitigation
+
+        ↓
+
+Testing & Verification
+
+        ↓
+
+Release Security Fix
+
+        ↓
+
 Public Disclosure
 ```
 
-The goal is to resolve confirmed vulnerabilities before public disclosure whenever practical.
+The project aims to resolve confirmed vulnerabilities before public disclosure whenever practical.
 
 ---
 
-# Disclosure Policy
+# Coordinated Disclosure Policy
 
-The project follows a coordinated disclosure process.
+FaultPlane follows responsible disclosure practices.
 
-When a report is confirmed:
+For confirmed vulnerabilities:
 
-1. The issue is reproduced.
-2. A fix is developed.
-3. The fix is validated.
-4. A release is prepared.
-5. Security notes are published.
+1. The issue is reproduced and validated.
+2. Impact is assessed.
+3. A mitigation or fix is developed.
+4. The fix is tested.
+5. A patched release is prepared.
+6. Security information is published.
 
-Public disclosure should occur only after users have access to a patched release.
+Public disclosure should occur after users have access to a remediation path.
 
 ---
 
 # Scope
 
-This policy applies to the AgentMesh codebase, including:
+This security policy applies to the FaultPlane project, including:
 
-- gateway
-- control plane
+- data-plane runtime
+- gateway components
+- recovery mechanisms
 - storage interfaces
-- telemetry components
-- deployment manifests
-- documentation containing executable configuration
+- telemetry systems
+- deployment configurations
+- executable documentation examples
 
-Third-party services are outside the scope of this policy.
+Third-party infrastructure and external services are outside the direct scope of this policy.
 
 ---
 
 # Security Principles
 
-The project follows several engineering principles.
+FaultPlane follows these engineering principles:
 
 | Principle | Description |
-|-----------|-------------|
-| Least Privilege | Components should receive only the permissions they require. |
-| Secure Defaults | Default configuration should minimize unnecessary exposure. |
-| Defense in Depth | Multiple layers of protection are preferred over a single control. |
-| Explicit Trust | External systems should never be trusted implicitly. |
-| Observability | Security-relevant events should be visible through logs and telemetry. |
+|---|---|
+| Least Privilege | Components should only access required resources. |
+| Secure Defaults | Default configurations should minimize exposure. |
+| Defense in Depth | Multiple security layers should protect critical systems. |
+| Explicit Trust Boundaries | External systems should not be trusted automatically. |
+| Observable Security | Security-relevant events should be measurable and traceable. |
 
 ---
 
-# Authentication
+# Authentication & Authorization
 
-Future production deployments may support authentication for administrative endpoints.
+Production deployments should protect administrative interfaces through proper authentication and authorization controls.
 
-Current development builds assume trusted local environments.
+Sensitive operations include:
 
-Administrative interfaces should never be exposed directly to the public internet without additional protection.
-
----
-
-# Authorization
-
-Access to operational endpoints should be restricted.
-
-Examples include:
-
-- administrative APIs
-- checkpoint management
-- telemetry configuration
 - runtime configuration
+- recovery management
+- telemetry configuration
+- operational APIs
+- state management
 
-Authorization policies are planned for future releases.
+Development environments may use simplified configurations but should not be exposed publicly.
 
 ---
 
 # Transport Security
 
-Production deployments should use encrypted transport.
+Production deployments should use encrypted communication.
 
-Recommended practices include:
+Recommended practices:
 
-- HTTPS
-- TLS
-- Mutual TLS where appropriate
+- TLS encryption
+- HTTPS endpoints
+- Mutual TLS where required
 - Secure service-to-service communication
 
-Unencrypted communication should be limited to local development environments.
+Unencrypted communication should only be used in controlled local development environments.
 
 ---
 
-# Checkpoint Security
+# Runtime State Security
 
-Checkpoint data may contain execution context.
+FaultPlane may handle runtime metadata and recovery-related state.
 
 Deployments should consider:
 
 - encryption at rest
 - encrypted transport
-- restricted access
-- regular backup validation
-- secure deletion policies
+- restricted access policies
+- backup validation
+- secure deletion procedures
 
-Sensitive information should not be stored unless required by the application.
+Applications should avoid storing unnecessary sensitive information inside runtime state.
 
 ---
 
 # Secrets Management
 
-Secrets should never be committed to the repository.
+Secrets must never be committed to source control.
 
 Examples include:
 
 - API keys
-- authentication tokens
-- private certificates
+- access tokens
+- certificates
 - database credentials
-- cloud provider credentials
+- cloud credentials
 
-Use environment variables or dedicated secret management solutions instead.
+Recommended approaches:
 
----
-
-# Dependency Management
-
-Dependencies should remain minimal.
-
-When introducing a dependency:
-
-- verify active maintenance
-- review licensing
-- evaluate security history
-- remove unused dependencies regularly
-
-Reducing dependency count reduces supply chain risk.
+- environment variables
+- secret managers
+- encrypted configuration systems
 
 ---
+
+# Dependency Security
+
+FaultPlane aims to maintain a minimal dependency footprint.
+
+Before adding dependencies, contributors should evaluate:
+
+- maintenance activity
+- security history
+- licensing
+- community adoption
+- long-term maintenance cost
+
+Unused dependencies should be removed regularly.
+
 ---
 
 # Supply Chain Security
 
-AgentMesh aims to minimize supply chain risk by keeping external dependencies small and regularly reviewing third-party packages.
-
-Contributors introducing new dependencies should evaluate:
-
-- project maintenance status
-- release frequency
-- security history
-- licensing
-- long-term viability
-
-Dependencies without a clear operational benefit should not be added.
-
----
-
-# Secure Development
-
-The project follows a secure-by-default development approach.
+Software supply chain security is an important part of maintaining reliable infrastructure.
 
 Recommended practices include:
 
-- explicit error handling
-- input validation
-- dependency updates
-- automated testing
-- peer review
-- least privilege
+- dependency auditing
 - reproducible builds
+- version pinning where appropriate
+- automated security checks
+- regular updates
 
-Security should be considered throughout development rather than only before release.
+Contributors should avoid introducing dependencies without clear technical justification.
 
 ---
 
-# Logging
+# Secure Development Practices
 
-Logs should assist operational debugging without exposing sensitive information.
+FaultPlane follows secure engineering practices:
+
+- explicit error handling
+- input validation
+- automated testing
+- peer review
+- static analysis
+- dependency updates
+- reproducible builds
+
+Security should be considered throughout development, not only before releases.
+
+---
+
+# Logging & Telemetry Security
+
+Logs and telemetry should provide operational visibility without exposing sensitive information.
 
 Avoid logging:
 
-- API keys
-- access tokens
 - credentials
-- private certificates
+- API tokens
+- private keys
 - authentication headers
-- checkpoint payloads containing sensitive application data
+- confidential runtime data
+- sensitive application payloads
 
-Operational logs should focus on events rather than confidential content.
+Security-related events may include:
+
+- runtime failures
+- configuration changes
+- recovery operations
+- authentication events
+- unexpected shutdowns
 
 ---
 
-# Auditing
+# Auditing & Monitoring
 
-Security-relevant events should be observable.
+Security-relevant activity should be observable.
 
-Examples include:
+Examples:
 
-- gateway startup
+- gateway startup events
 - configuration changes
-- authentication failures
 - worker availability changes
-- recovery operations
-- unexpected process termination
+- recovery actions
+- abnormal runtime behavior
 
-These events should be exported through the project's telemetry pipeline when available.
+Telemetry systems should provide enough information for debugging and incident investigation.
 
 ---
 
 # Incident Response
 
-When a confirmed security issue is identified:
+For confirmed security issues:
 
-```text
-Report Received
-        │
-        ▼
-Validate Issue
-        │
-        ▼
-Assess Impact
-        │
-        ▼
-Develop Fix
-        │
-        ▼
-Review & Test
-        │
-        ▼
-Release Patch
-        │
-        ▼
-Publish Advisory
+```
+Issue Identified
+
+        ↓
+
+Impact Analysis
+
+        ↓
+
+Mitigation Development
+
+        ↓
+
+Testing
+
+        ↓
+
+Security Release
+
+        ↓
+
+Advisory Publication
 ```
 
-The response process may vary depending on the severity of the issue.
+Response timelines depend on severity, complexity, and affected components.
 
 ---
 
-# Security Best Practices
+# Production Security Checklist
 
-For production deployments, the following practices are recommended.
+Before deploying FaultPlane, verify:
 
-- Enable TLS for all external communication.
-- Restrict administrative endpoints.
-- Rotate credentials regularly.
-- Store secrets outside the repository.
-- Monitor recovery events.
-- Keep dependencies up to date.
-- Apply operating system security updates.
-- Validate backups periodically.
-
-These recommendations complement, but do not replace, organization-specific security policies.
-
----
-
-# Security Checklist
-
-Before deploying AgentMesh, verify the following.
-
-| Item | Status |
-|------|--------|
+| Security Item | Status |
+|---|---|
 | TLS Enabled | □ |
-| Secrets Stored Securely | □ |
-| Administrative Endpoints Protected | □ |
+| Secrets Protected | □ |
+| Administrative APIs Secured | □ |
 | Dependencies Updated | □ |
-| Logging Configured | □ |
 | Monitoring Enabled | □ |
+| Logging Configured | □ |
 | Backup Strategy Verified | □ |
 | Recovery Workflow Tested | □ |
 
 ---
 
-# Vulnerability Disclosure Timeline
+# Security Advisory Process
 
-The project follows a coordinated disclosure process whenever possible.
+Security advisories should include:
 
-| Stage | Description |
-|--------|-------------|
-| Acknowledgement | Report is received and reviewed. |
-| Validation | The issue is reproduced and confirmed. |
-| Remediation | A fix is developed and tested. |
-| Release | A patched version is published. |
-| Disclosure | Public advisory is released after remediation. |
+- affected versions
+- severity information
+- vulnerability impact
+- mitigation steps
+- fixed versions
+- additional references
 
-Timeframes may vary depending on the complexity and impact of the issue.
+Users should upgrade to patched versions as soon as possible.
 
 ---
 
 # Third-Party Components
 
-AgentMesh may rely on external software such as:
+FaultPlane may interact with external technologies including:
 
-- Go standard library
+- Go runtime
 - Docker
-- Python runtime
-- OpenTelemetry components
+- Kubernetes
+- OpenTelemetry
 - Prometheus
 - Jaeger
+- Linux networking components
 
-Security updates for third-party software are managed by their respective maintainers.
+Security updates for third-party components are managed by their respective maintainers.
 
 ---
 
-# Supported Deployment Practices
+# Recommended Deployment Practices
 
-Recommended environments include:
+Recommended production environments include:
 
-- isolated development environments
+- isolated infrastructure
 - containerized deployments
-- Kubernetes clusters with network policies
-- infrastructure protected by authenticated ingress
+- Kubernetes environments with network policies
+- authenticated ingress layers
+- restricted administrative access
 
-Avoid exposing development configurations directly to production networks.
-
----
-
-# Security Advisories
-
-Security advisories will accompany fixes for confirmed vulnerabilities.
-
-Each advisory should include:
-
-- affected versions
-- severity
-- impact
-- mitigation guidance
-- patched version
-- references when applicable
+Development configurations should not be directly exposed to production networks.
 
 ---
 
 # Responsible Disclosure
 
-Researchers acting in good faith are encouraged to report vulnerabilities responsibly.
+Security researchers are encouraged to report vulnerabilities responsibly.
 
 Please avoid:
 
-- public disclosure before a fix is available
-- automated attacks against production deployments
-- accessing data that does not belong to you
-- activities that may impact service availability
+- public disclosure before remediation
+- accessing unrelated user data
+- disrupting production services
+- destructive testing
 
-The project values coordinated and constructive security research.
+Good-faith security research helps improve FaultPlane.
 
 ---
 
 # Contact
 
-For security-related concerns, contact the project maintainers through the repository's private security reporting channel.
+For security-related concerns, contact the FaultPlane maintainers through the repository's private security reporting mechanism.
 
-Do not disclose vulnerabilities through public issues or pull requests.
+Do not disclose security vulnerabilities through public issues or pull requests.
 
 ---
 
 # Acknowledgements
 
-The project appreciates responsible disclosure from security researchers and contributors who help improve the reliability and safety of AgentMesh.
+FaultPlane appreciates security researchers, contributors, and community members who help improve the safety and reliability of the project.
 
-Security is an ongoing process, and contributions that strengthen the project's security posture are always welcome.
+Security is an ongoing engineering process, and contributions that strengthen the project's security posture are always welcome.
+
+---
+
+# License
+
+This security policy is provided under the Apache License 2.0.
