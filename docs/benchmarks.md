@@ -1,257 +1,387 @@
 # Benchmarks
 
-This document describes the benchmarking methodology used by AgentMesh.
+This document describes the benchmarking methodology used by FaultPlane.
 
-Benchmarks are intended to measure infrastructure behavior rather than application performance. The primary objective is to quantify the overhead introduced by routing, checkpoint management, and recovery under controlled conditions.
+The purpose of benchmarking is to measure infrastructure behavior, runtime overhead, and system characteristics under controlled conditions.
 
-Benchmark results should always be reproducible and accompanied by environment details.
+FaultPlane benchmarks focus on understanding:
+
+- routing overhead
+- recovery performance
+- state management cost
+- runtime resource usage
+- scalability characteristics
+
+Benchmark results should always include environment details and reproducible methodology.
+
+---
+
+# Benchmark Philosophy
+
+Benchmarks exist to support engineering decisions, not marketing claims.
+
+Performance improvements should be validated through:
+
+- measurable experiments
+- reproducible workloads
+- consistent environments
+- transparent reporting
+
+A single benchmark number does not represent complete system performance.
 
 ---
 
 # Objectives
 
-The benchmark suite is designed to answer the following questions.
+The benchmark suite aims to answer:
 
-- What is the routing overhead?
-- How long does recovery take?
-- How much memory does the gateway allocate?
-- How does throughput change under concurrent load?
-- What is the impact of checkpoint operations?
-
-Benchmarks should support engineering decisions rather than marketing claims.
+- What latency overhead does FaultPlane introduce?
+- How quickly can failures be detected and recovered?
+- How much memory does the runtime consume?
+- How does throughput behave under concurrent workloads?
+- What is the cost of maintaining runtime state?
+- How does observability affect runtime performance?
 
 ---
 
 # Scope
 
-The benchmark suite measures infrastructure behavior only.
+FaultPlane benchmarks focus on infrastructure components.
 
-Included:
+## Included
 
-- routing latency
+- gateway routing latency
 - recovery latency
-- checkpoint operations
+- runtime state operations
 - storage performance
-- gateway throughput
+- request throughput
 - memory allocation
+- CPU utilization
+- telemetry overhead
 
-Excluded:
+---
 
-- LLM inference time
-- model quality
-- prompt execution
+## Excluded
+
+The benchmark suite does not measure:
+
+- LLM inference quality
+- model accuracy
+- prompt execution performance
 - application business logic
 - vector database performance
+- external API latency
 
-These areas belong to external systems.
+These depend on external systems and workloads.
 
 ---
 
 # Benchmark Environment
 
-Every published benchmark should describe the execution environment.
+Every published benchmark should document the execution environment.
 
-| Item | Example |
-|------|---------|
+Example:
+
+| Component | Configuration |
+|---|---|
 | CPU | AMD Ryzen 9 7900X |
-| Memory | 32 GB DDR5 |
+| Memory | 32GB DDR5 |
 | Operating System | Ubuntu 24.04 LTS |
-| Go Version | 1.23 |
-| Docker Version | Current |
-| AgentMesh Commit | Git SHA |
+| Go Version | 1.23+ |
+| Docker Version | Latest Stable |
+| FaultPlane Version | Release / Git SHA |
+| Runtime Configuration | Documented |
 
-Hardware details are required for reproducibility.
+Hardware and software details are required for reproducibility.
 
 ---
 
-# Methodology
+# Benchmark Workflow
 
-Benchmarks should execute in an isolated environment.
+Benchmarks should execute using a controlled process.
 
-```text
-Initialize Environment
-         │
-         ▼
-Warm Up
-         │
-         ▼
-Execute Benchmark
-         │
-         ▼
-Collect Metrics
-         │
-         ▼
-Generate Report
+```
+Environment Setup
+
+        ↓
+
+Configuration Loading
+
+        ↓
+
+Warm-up Phase
+
+        ↓
+
+Benchmark Execution
+
+        ↓
+
+Metric Collection
+
+        ↓
+
+Result Analysis
 ```
 
-Warm-up iterations should be excluded from reported measurements.
+Warm-up iterations should not be included in final measurements.
 
 ---
 
-# Workloads
-
-Representative workloads include:
+# Workload Categories
 
 | Workload | Purpose |
-|----------|---------|
-| Single Request | Baseline latency |
-| Concurrent Requests | Throughput |
-| Recovery | Recovery overhead |
-| Checkpoint Writes | Persistence performance |
-| Storage Reads | Lookup performance |
+|---|---|
+| Single Request | Measure baseline latency |
+| Concurrent Requests | Measure throughput behavior |
+| Failure Recovery | Measure recovery overhead |
+| State Writes | Measure checkpoint performance |
+| State Reads | Measure lookup performance |
+| Long Running Sessions | Evaluate runtime stability |
 
-Additional workloads may be introduced as the project evolves.
+Additional workloads may be introduced as the runtime evolves.
 
 ---
 
 # Metrics
 
-The benchmark suite records the following metrics.
+FaultPlane tracks multiple performance indicators.
 
 | Metric | Description |
-|---------|-------------|
-| Request Latency | End-to-end processing time |
-| Recovery Latency | Time to restore execution |
-| Throughput | Requests processed per second |
-| Allocations | Heap allocations per request |
-| Memory Usage | Resident memory consumption |
-| CPU Utilization | Gateway CPU usage |
-
-Each metric should be interpreted in the context of the workload being measured.
+|---|---|
+| Request Latency | Time required to process a request |
+| Recovery Latency | Time required to restore execution |
+| Throughput | Requests handled per second |
+| Memory Allocation | Heap allocation cost |
+| Memory Usage | Runtime memory footprint |
+| CPU Usage | Processing overhead |
+| Error Rate | Reliability under workload |
 
 ---
 
 # Benchmark Categories
 
-## Routing
+## Gateway Routing
 
-Measures the overhead introduced by the routing subsystem.
+Measures the overhead introduced by the routing layer.
 
-```text
-Request
-   │
-   ▼
-Gateway
-   │
-   ▼
-Worker
+Flow:
+
+```
+Client
+
+  ↓
+
+FaultPlane Gateway
+
+  ↓
+
+Worker Runtime
 ```
 
+Metrics:
+
+- routing latency
+- request throughput
+- CPU overhead
+
 ---
 
-## Recovery
+# Recovery Performance
 
-Measures the time required to resume execution after infrastructure failure.
+Measures failure handling behavior.
 
-```text
-Failure
-   │
-   ▼
-Lookup
-   │
-   ▼
-Restore
-   │
-   ▼
-Continue
+Flow:
+
+```
+Failure Event
+
+      ↓
+
+Detection
+
+      ↓
+
+State Lookup
+
+      ↓
+
+Recovery Decision
+
+      ↓
+
+Execution Resume
 ```
 
+Metrics:
+
+- detection time
+- recovery duration
+- successful recovery rate
+
 ---
 
-## Storage
+# Runtime State
 
-Measures checkpoint read and write performance.
+Measures state management performance.
 
-```text
-Checkpoint
-    │
-    ▼
-Storage
+Flow:
+
+```
+Execution State
+
+        ↓
+
+Checkpoint Operation
+
+        ↓
+
+Storage Layer
 ```
 
----
+Metrics:
 
-## Telemetry
-
-Measures the cost of instrumentation and telemetry export.
-
----
-
-# Reporting
-
-Benchmark reports should include:
-
-- benchmark configuration
-- environment details
-- workload description
-- metric definitions
-- raw results
-- interpretation
-
-Avoid presenting isolated benchmark numbers without context.
+- write latency
+- read latency
+- storage overhead
+- serialization cost
 
 ---
 
-# Reproducibility
+# Telemetry Overhead
+
+Measures the performance impact of observability systems.
+
+Evaluates:
+
+- logging overhead
+- metric collection cost
+- trace generation impact
+- export latency
+
+Observability should provide visibility without significantly affecting runtime behavior.
+
+---
+
+# Benchmark Reporting
+
+Every benchmark report should include:
+
+## Environment
+
+- hardware information
+- software versions
+- runtime configuration
+
+## Workload
+
+- request pattern
+- concurrency level
+- dataset size
+- execution duration
+
+## Results
+
+- raw measurements
+- summarized metrics
+- comparison results
+
+## Interpretation
+
+Explain:
+
+- what changed
+- why it changed
+- possible limitations
+
+---
+
+# Reproducibility Guidelines
 
 Benchmarks should be repeatable.
 
 Recommended practices:
 
-- fixed configuration
-- isolated environment
-- consistent dataset
-- documented commands
-- version-controlled benchmark code
+- use fixed configurations
+- document commands
+- isolate test environments
+- version benchmark code
+- avoid hidden variables
 
-Changes to benchmark methodology should be documented.
+Example:
 
----
-
-# Performance Philosophy
-
-Optimization work should prioritize predictable behavior.
-
-Primary goals include:
-
-- lower recovery latency
-- lower allocation rate
-- predictable tail latency
-- stable throughput
-- minimal routing overhead
-
-Average latency alone is insufficient for evaluating production systems.
-
----
-
-# Future Work
-
-Planned benchmark improvements include:
-
-- distributed recovery benchmarks
-- Kubernetes benchmarks
-- storage backend comparisons
-- telemetry overhead analysis
-- multi-region evaluation
-- automated benchmark reporting
-
----
-
-# Benchmark Summary
-
-Benchmarking provides objective measurements of infrastructure behavior.
-
-```text
-Workload
-    │
-    ▼
-Benchmark
-    │
-    ▼
-Metrics
-    │
-    ▼
-Analysis
+```bash
+go test -bench=. ./...
 ```
 
-Performance decisions should be based on measured data rather than assumptions.
+Benchmark methodology changes should be documented.
+
+---
+
+# Performance Priorities
+
+FaultPlane optimization focuses on predictable production behavior.
+
+Priority areas:
+
+1. Recovery latency
+2. Tail latency consistency
+3. Memory efficiency
+4. Runtime stability
+5. Throughput scalability
+6. Operational simplicity
+
+Average latency alone is not sufficient for evaluating distributed infrastructure.
+
+---
+
+# Future Benchmark Work
+
+Planned improvements:
+
+- distributed recovery benchmarks
+- Kubernetes deployment testing
+- storage backend comparisons
+- multi-node evaluation
+- telemetry scaling analysis
+- automated benchmark pipelines
+- regression tracking
+
+---
+
+# Benchmark Lifecycle
+
+```
+Workload Definition
+
+        ↓
+
+Benchmark Execution
+
+        ↓
+
+Metric Collection
+
+        ↓
+
+Performance Analysis
+
+        ↓
+
+Engineering Decision
+```
+
+---
+
+# Conclusion
+
+Benchmarking helps FaultPlane evolve through measurable engineering decisions.
+
+The goal is not only faster systems, but:
+
+- predictable behavior
+- reliable recovery
+- efficient resource usage
+- operational confidence
+
+Performance improvements should always be supported by transparent measurements.
