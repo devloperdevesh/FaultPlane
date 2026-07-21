@@ -1,21 +1,43 @@
-# Contributing
+# Contributing to FaultPlane
 
-Thank you for your interest in contributing to AgentMesh.
+Thank you for your interest in contributing to FaultPlane.
 
-The project is under active development, and contributions of all sizes are welcome. Whether you are fixing a bug, improving documentation, adding tests, or implementing a new feature, please follow the guidelines below to help keep the codebase consistent and maintainable.
+FaultPlane is an open-source infrastructure project focused on building reliability primitives for long-running AI workloads through transport resilience, runtime recovery, and distributed system observability.
+
+Contributions of all sizes are welcome, including:
+
+- bug fixes
+- documentation improvements
+- testing improvements
+- performance optimizations
+- infrastructure improvements
+- new runtime capabilities
+
+This guide explains the recommended workflow and engineering standards for contributing to the project.
 
 ---
 
 # Before You Start
 
-Before opening an issue or pull request:
+Before creating an issue or pull request:
 
-- Search existing issues and pull requests.
-- Read the project documentation.
-- Verify that your change aligns with the project goals.
-- Keep changes focused on a single concern.
+- Search existing issues and discussions.
+- Review project documentation.
+- Understand the current architecture.
+- Confirm that the proposed change aligns with project goals.
+- Keep changes focused around a single technical objective.
 
-Large architectural changes should be discussed through an issue before implementation.
+Large architectural changes should be discussed before implementation.
+
+For major changes involving:
+
+- runtime architecture
+- transport layer behavior
+- storage design
+- recovery mechanisms
+- public APIs
+
+please open a design discussion first.
 
 ---
 
@@ -23,41 +45,41 @@ Large architectural changes should be discussed through an issue before implemen
 
 ## Requirements
 
-Install the following tools before contributing.
-
 | Tool | Version |
-|------|---------|
-| Go | 1.23 or newer |
-| Python | 3.11 or newer |
+|---|---|
+| Go | 1.23+ |
+| Python | 3.11+ |
 | Docker | Latest |
 | Docker Compose | Latest |
 | Git | Latest |
 
 ---
 
-## Clone the Repository
+# Clone Repository
 
 ```bash
-git clone https://github.com/devloperdevesh/agentmesh.git
+git clone https://github.com/devloperdevesh/FaultPlane.git
 
-cd agentmesh
+cd FaultPlane
 ```
 
 ---
 
-## Start the Development Environment
+# Local Development
+
+Start supporting services:
 
 ```bash
 docker compose up --build
 ```
 
-Run the gateway.
+Run the FaultPlane daemon:
 
 ```bash
 go run ./cmd/daemon
 ```
 
-Run the example worker.
+Run the agent simulation environment:
 
 ```bash
 python data-plane/agent_sim/main.py
@@ -68,78 +90,103 @@ python data-plane/agent_sim/main.py
 # Repository Structure
 
 ```text
-cmd/
-    daemon/
+faultplane/
 
-internal/
-    api/
-    control/
-    gateway/
-    storage/
-    telemetry/
-
-data-plane/
-    agent_sim/
-
-deployments/
-
-docs/
+├── cmd/
+│   └── daemon/
+│
+├── internal/
+│
+│   ├── api/
+│   ├── gateway/
+│   ├── control/
+│   ├── telemetry/
+│   └── storage/
+│
+├── data-plane/
+│   └── agent_sim/
+│
+├── deployments/
+│
+├── docs/
+│
+└── README.md
 ```
 
-Each directory has a single responsibility.
+Each package should maintain a clear responsibility boundary.
 
-Avoid introducing cross-package dependencies unless required.
+Avoid unnecessary coupling between internal components.
 
 ---
 
 # Development Principles
 
-Contributions should follow these principles.
+## Keep Changes Focused
 
-## Keep Changes Small
+A pull request should solve one primary problem.
 
-Each pull request should address one problem.
+Avoid combining:
 
-Avoid combining unrelated fixes into a single contribution.
+- unrelated refactors
+- feature additions
+- formatting changes
+- dependency updates
 
----
-
-## Prefer Simplicity
-
-Simple implementations are easier to review and maintain.
-
-Avoid unnecessary abstractions.
+into a single contribution.
 
 ---
 
-## Write Readable Code
+## Prefer Simple Designs
 
-Code should be understandable without extensive comments.
+Infrastructure code should prioritize:
 
-Prefer descriptive names over clever implementations.
+- correctness
+- readability
+- maintainability
+- operational safety
 
----
-
-## Keep Packages Focused
-
-Each package should own a specific responsibility.
-
-Avoid creating generic utility packages.
+Avoid introducing abstractions without a clear requirement.
 
 ---
 
-# Coding Style
+## Preserve Architecture Boundaries
 
-General expectations:
+FaultPlane separates:
 
-- Follow standard Go formatting.
-- Keep functions focused.
-- Return early where appropriate.
-- Handle errors explicitly.
-- Avoid unnecessary global state.
-- Keep interfaces small.
+- data-plane execution
+- recovery logic
+- telemetry systems
+- storage layers
 
-Before submitting changes, run:
+Changes should respect existing package ownership.
+
+---
+
+## Production-Oriented Thinking
+
+Contributions should consider:
+
+- failure scenarios
+- operational visibility
+- performance impact
+- backwards compatibility
+
+---
+
+# Coding Standards
+
+Go code should follow standard Go practices.
+
+Requirements:
+
+- use `gofmt`
+- handle errors explicitly
+- avoid unnecessary global state
+- keep interfaces small
+- write clear package APIs
+- prefer readable implementations
+
+Before submitting:
 
 ```bash
 go fmt ./...
@@ -157,512 +204,361 @@ Use descriptive branch names.
 
 Examples:
 
-```text
-feature/grpc-gateway
-
+```
 feature/checkpoint-storage
 
 feature/otel-exporter
 
+feature/runtime-metrics
+
 fix/recovery-timeout
 
-fix/checkpoint-race
+fix/router-state
 
-docs/update-readme
-
-docs/architecture
+docs/update-architecture
 ```
 
-Avoid generic names such as:
+Avoid:
 
-```text
-new
+```
+update
 
 changes
 
-update
+test
 
-work
+final
 
-testing
+new
 ```
 
 ---
 
-# Commit Messages
+# Commit Guidelines
 
-Write commit messages in the imperative mood.
+Write commits in imperative form.
 
-Good examples:
+Good:
 
-```text
-Add checkpoint storage abstraction
+```
+Add gateway health monitoring
 
-Implement gateway health checks
+Implement recovery state manager
 
-Improve recovery logging
-
-Refactor routing package
+Improve telemetry logging
 
 Update architecture documentation
 ```
 
-Avoid messages like:
+Avoid:
 
-```text
+```
+fixed stuff
+
 changes
 
 update
 
-fix
-
-work
-
 done
 
-final
+final commit
 ```
 
-Commit history should explain the evolution of the project without requiring additional context.
+Commit history should explain the evolution of the system.
 
 ---
 
-# Keeping Pull Requests Focused
+# Pull Request Guidelines
 
-A pull request should answer one question.
+Every contribution should be submitted through a pull request.
 
-Examples:
+Recommended workflow:
 
-- Does this improve routing?
-- Does this fix recovery?
-- Does this improve documentation?
-- Does this add tests?
----
+```
+Create Branch
 
-# Pull Request Process
+      ↓
 
-All changes should be submitted through a pull request.
+Implement Change
 
-The preferred workflow is:
+      ↓
 
-```text
-Fork Repository
-        │
-        ▼
-Create Feature Branch
-        │
-        ▼
-Implement Changes
-        │
-        ▼
-Run Tests
-        │
-        ▼
+Add Tests
+
+      ↓
+
+Run Validation
+
+      ↓
+
 Update Documentation
-        │
-        ▼
+
+      ↓
+
 Open Pull Request
-        │
-        ▼
+
+      ↓
+
 Code Review
-        │
-        ▼
+
+      ↓
+
 Merge
 ```
-
-Keep pull requests focused.
-
-Large changes are significantly harder to review than several small pull requests.
 
 ---
 
 # Pull Request Checklist
 
-Before submitting a pull request, verify the following.
+Before opening a PR:
 
-- Project builds successfully.
-- All tests pass.
-- Documentation reflects the implementation.
-- Public APIs remain consistent.
-- No unnecessary dependencies were introduced.
-- Commit history is clean.
-
-If a change modifies runtime behavior, explain the reason in the pull request description.
+- [ ] Code builds successfully
+- [ ] Tests pass
+- [ ] Formatting is applied
+- [ ] Documentation is updated
+- [ ] No unnecessary dependencies added
+- [ ] Changes follow architecture boundaries
+- [ ] Commit history is clean
 
 ---
 
-# Testing
+# Testing Requirements
 
-Every functional change should be validated.
-
-Run the complete test suite.
+Run the complete test suite:
 
 ```bash
 go test ./...
 ```
 
-Run benchmarks when performance-sensitive code changes.
-
-```bash
-go test -bench=. ./...
-```
-
-Run the race detector.
-
-```bash
-go test -race ./...
-```
-
-Run static analysis.
+Run static analysis:
 
 ```bash
 go vet ./...
 ```
 
-Format all source files.
+Run formatting:
 
 ```bash
 go fmt ./...
 ```
 
-Code that does not build or fails existing tests should not be submitted.
+For concurrency-sensitive changes:
+
+```bash
+go test -race ./...
+```
+
+For performance-sensitive changes:
+
+```bash
+go test -bench=. ./...
+```
 
 ---
 
-# Benchmarking
+# Performance Contributions
 
-Performance claims should be supported with measurements.
+Performance improvements should include measurements.
 
-Useful benchmark metrics include:
+Useful metrics:
 
 | Metric | Description |
-|---------|-------------|
-| Throughput | Requests processed per second |
-| Recovery Latency | Time required to restore execution |
-| Memory Usage | Heap allocations during routing |
-| CPU Usage | Gateway processing overhead |
-| Allocation Count | Objects allocated per request |
+|---|---|
+| Throughput | Operations handled per second |
+| Recovery Latency | Time required for recovery |
+| Memory Usage | Runtime memory consumption |
+| CPU Usage | Processing overhead |
+| Allocation Count | Memory allocation behavior |
 
-Avoid optimization without benchmark data.
+Avoid optimization without evidence.
+
+Correctness comes before performance.
 
 ---
 
-# Documentation
+# Documentation Requirements
 
-Documentation should evolve together with the implementation.
+Documentation is part of the implementation.
 
-Update documentation whenever you:
+Update documentation when changing:
 
-- add new features
-- remove functionality
-- modify APIs
-- change configuration
-- introduce new deployment behavior
+- APIs
+- architecture
+- configuration
+- deployment workflows
+- runtime behavior
 
-Documentation is considered part of the implementation.
+Technical documentation should remain:
+
+- accurate
+- concise
+- implementation-focused
 
 ---
 
 # Code Review
 
-Every contribution is reviewed before merging.
+All changes are reviewed before merging.
 
 Review focuses on:
 
 - correctness
-- readability
 - maintainability
+- architecture
 - performance impact
-- API consistency
+- operational safety
 - documentation quality
 
-Feedback should remain constructive and specific.
-
----
-
-# Review Expectations
-
-Reviewers typically evaluate:
-
-- Does the implementation solve the intended problem?
-- Is the solution understandable?
-- Can the implementation be simplified?
-- Are edge cases handled?
-- Is documentation updated?
-- Are tests sufficient?
-
-Code review is intended to improve the project, not simply approve changes.
-
----
-
-# Continuous Integration
-
-Every pull request should pass the project's CI pipeline.
-
-Typical validation includes:
-
-| Check | Required |
-|--------|----------|
-| Build | Yes |
-| Unit Tests | Yes |
-| Formatting | Yes |
-| Static Analysis | Yes |
-| Documentation | Recommended |
-| Benchmarks | When Applicable |
-
-Pull requests that fail automated validation should be updated before review.
+Review feedback should be specific and constructive.
 
 ---
 
 # Dependency Management
 
-Dependencies should remain minimal.
+Dependencies should be introduced carefully.
 
-Before adding a new dependency, consider:
+Before adding a dependency, consider:
 
-- Is the standard library sufficient?
-- Does the dependency solve a long-term problem?
-- Is the project actively maintained?
-- Is the additional complexity justified?
+- Can the standard library solve this?
+- Is the dependency actively maintained?
+- Does it introduce unnecessary complexity?
+- Is the long-term maintenance cost acceptable?
 
-Reducing dependency surface improves maintainability and security.
+A smaller dependency surface improves reliability and security.
 
 ---
 
 # API Changes
 
-Public APIs should evolve carefully.
+Public interfaces should evolve carefully.
 
-When modifying an exported interface:
+When changing APIs:
 
-- document the change
-- preserve backward compatibility when practical
-- explain migration steps if required
+- document the reason
+- explain migration requirements
+- maintain compatibility when possible
 
-Breaking changes should be introduced intentionally rather than accidentally.
-
----
-
-# Performance Changes
-
-When modifying routing, storage, or recovery logic:
-
-- include benchmark results
-- explain expected performance impact
-- avoid speculative optimization
-- preserve correctness before optimization
-
-Reliable systems are preferred over fast but unpredictable systems.
+Breaking changes should be intentional.
 
 ---
 
 # Error Handling
 
-Errors should provide useful operational context.
+Errors should provide operational context.
 
-Prefer explicit error handling over silent failures.
+Prefer:
 
-Examples include:
+- descriptive errors
+- wrapped failures
+- actionable logs
+- graceful recovery paths
 
-- returning descriptive errors
-- wrapping underlying failures
-- logging unexpected conditions
-- avoiding panic except for unrecoverable startup failures
+Avoid:
 
-Operational visibility is more valuable than hiding errors.
+- silent failures
+- ignored errors
+- unnecessary panics
 
----
 ---
 
 # Reporting Issues
 
-If you encounter a bug, please open an issue before submitting a fix if the problem has not already been reported.
+When reporting bugs, include:
 
-A good issue should include:
-
-- environment information
 - operating system
 - Go version
 - reproduction steps
 - expected behavior
-- observed behavior
-- logs or stack traces when available
+- actual behavior
+- logs or error output
 
-Minimal reproducible examples help maintainers investigate problems more efficiently.
+A minimal reproduction helps maintainers investigate quickly.
 
 ---
 
 # Feature Requests
 
-Feature requests are welcome.
+Feature proposals should explain:
 
-When proposing a new feature, explain:
+- problem being solved
+- motivation
+- proposed approach
+- alternatives considered
+- expected impact
 
-- the problem being solved
-- why existing behavior is insufficient
-- the proposed solution
-- possible alternatives
-- expected operational impact
-
-Requests that align with the project's design principles are more likely to be accepted.
+Large features should begin with discussion.
 
 ---
 
 # Security Issues
 
-Do not report security vulnerabilities through public issues.
+Do not report security vulnerabilities through public GitHub issues.
 
-Please follow the process described in `SECURITY.md`.
+Follow the security reporting process described in:
 
-This allows vulnerabilities to be investigated and addressed responsibly before public disclosure.
-
----
-
-# Release Process
-
-Releases follow a simple workflow.
-
-```text
-Development
-
-      │
-
-      ▼
-
-Testing
-
-      │
-
-      ▼
-
-Documentation Review
-
-      │
-
-      ▼
-
-Version Tag
-
-      │
-
-      ▼
-
-GitHub Release
+```
+SECURITY.md
 ```
 
-Each release should include:
-
-- release notes
-- compatibility information
-- migration notes when required
-- documentation updates
+Responsible disclosure helps protect users and contributors.
 
 ---
 
 # Maintainer Responsibilities
 
-Maintainers are responsible for preserving the long-term quality of the project.
+Maintainers are responsible for:
 
-Responsibilities include:
+- reviewing contributions
+- maintaining project quality
+- managing releases
+- preserving architecture consistency
+- supporting contributors
 
-- reviewing pull requests
-- maintaining documentation
-- triaging issues
-- planning releases
-- ensuring build stability
-- preserving architectural consistency
-
-Maintainers may request changes before merging contributions.
+Maintainers may request changes before merging.
 
 ---
 
 # Project Scope
 
-AgentMesh focuses on infrastructure for execution recovery.
+FaultPlane focuses on infrastructure reliability for AI-native systems.
 
-Contributions outside the current scope may be deferred until the core platform reaches stability.
+Current scope includes:
 
-Examples include:
+- transport resilience
+- runtime recovery
+- observability
+- distributed workload reliability
 
-- unrelated orchestration frameworks
-- model-specific integrations
-- experimental research projects
-- UI dashboards unrelated to core infrastructure
-
-Maintaining a clear scope helps keep the project focused.
+Out-of-scope additions may be deferred until core stability improves.
 
 ---
 
 # Community Expectations
 
-All contributors are expected to:
+Contributors should:
 
 - communicate respectfully
 - provide constructive feedback
-- assume good intent
-- discuss technical decisions with evidence
-- keep discussions focused on the project
+- support technical discussions
+- explain decisions with evidence
+- help improve the project
 
-Technical disagreements are expected and should be resolved through discussion and measurable results.
-
----
-
-# Support
-
-Before opening an issue:
-
-- read the documentation
-- search existing issues
-- verify the problem on the latest version
-- provide reproduction steps
-
-Questions without sufficient context are difficult to investigate.
-
----
-
-# Documentation Standards
-
-Documentation should be:
-
-- technically accurate
-- concise
-- implementation-focused
-- updated alongside code changes
-
-Avoid marketing language or unsupported claims.
-
-Examples and diagrams should reflect the current implementation.
-
----
-
-# Long-Term Goals
-
-The project aims to remain:
-
-- simple to understand
-- straightforward to contribute to
-- easy to operate
-- predictable to maintain
-
-New features should improve reliability without introducing unnecessary complexity.
+Engineering disagreement is healthy when handled professionally.
 
 ---
 
 # License
 
-By contributing to AgentMesh, you agree that your contributions will be licensed under the Apache License 2.0.
-
-See the `LICENSE` file for details.
+By contributing to FaultPlane, you agree that your contributions will be licensed under the Apache License 2.0.
 
 ---
 
 # Questions
 
-If you are unsure whether a contribution fits the project, open a discussion before beginning implementation.
+For questions about contributing:
 
-Early design discussions are encouraged for significant architectural changes.
+- open a GitHub discussion
+- create an issue
+- contact project maintainers
 
-Thank you for contributing to AgentMesh.
-If the answer is "multiple things," consider splitting the work into separate pull requests.
-
----
+Thank you for helping build FaultPlane.
