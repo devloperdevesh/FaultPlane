@@ -1,62 +1,66 @@
 # Checkpoints
 
-This document describes how AgentMesh captures, stores, and restores execution progress.
+This document describes how FaultPlane captures, stores, validates, and restores execution progress.
 
-Checkpointing is the foundation of the recovery model. It allows execution to continue after infrastructure failures without restarting the workflow from its initial step.
+Checkpointing is a core part of FaultPlane's recovery model.
 
-This document focuses on checkpoint semantics rather than storage implementation.
+The purpose of checkpointing is to separate execution progress from worker lifetime, allowing workloads to continue after infrastructure failures without restarting completed execution.
+
+This document defines checkpoint semantics and recovery behavior independent of storage implementation.
 
 ---
 
 # Overview
 
-A checkpoint represents the latest successful execution state of a workflow.
+A checkpoint represents a durable representation of the latest valid execution state.
 
-Instead of relying on process memory, execution progress is externalized into a checkpoint that can be restored by another worker if the original runtime becomes unavailable.
+Instead of keeping all progress inside worker memory, FaultPlane externalizes recovery state into a checkpoint that can be restored by another runtime instance.
 
-```text
+Architecture:
+
+```
 Execution
 
     │
 
     ▼
 
-Checkpoint
+Checkpoint Manager
 
     │
 
     ▼
 
-Storage
+Storage Layer
 
     │
 
     ▼
 
-Recovery
+Recovery Manager
 
     │
 
     ▼
 
-Continue
+Resume Execution
 ```
 
-The checkpoint system is independent of the worker executing the workload.
+The worker executing the workload does not own the lifetime of execution state.
 
 ---
 
-# Objectives
+# Design Goals
 
-The checkpoint subsystem is designed around the following goals.
+The checkpoint subsystem is designed around the following principles.
 
 | Goal | Description |
-|------|-------------|
-| Recovery | Preserve execution progress across infrastructure failures. |
-| Isolation | Separate execution state from worker lifetime. |
-| Consistency | Restore the latest valid checkpoint. |
-| Simplicity | Keep checkpoint semantics predictable. |
-| Portability | Remain independent of application frameworks. |
+|---|---|
+| Reliability | Preserve completed execution progress during failures. |
+| Isolation | Separate runtime state from worker availability. |
+| Consistency | Restore the latest valid checkpoint deterministically. |
+| Portability | Avoid dependency on specific application frameworks. |
+| Simplicity | Keep recovery semantics predictable and easy to reason about. |
 
 ---
 
@@ -64,54 +68,53 @@ The checkpoint subsystem is designed around the following goals.
 
 The checkpoint subsystem is responsible for:
 
-- recording execution progress
-- persisting checkpoint metadata
+- capturing execution progress
+- maintaining checkpoint metadata
+- storing recovery state
+- validating checkpoint integrity
 - restoring execution context
-- providing recovery state
 
-The checkpoint subsystem is not responsible for:
+The checkpoint subsystem is **not responsible** for:
 
-- executing workloads
-- routing requests
+- running workloads
 - scheduling workers
-- business logic
-- application persistence
+- routing network traffic
+- application business logic
+- user data management
 
 ---
 
 # Checkpoint Lifecycle
 
-Every checkpoint follows a simple lifecycle.
+A checkpoint follows a controlled lifecycle.
 
-```text
+```
 Create
 
-   │
+  ↓
 
-   ▼
+Validate
 
-Update
-
-   │
-
-   ▼
+  ↓
 
 Persist
 
-   │
+  ↓
 
-   ▼
+Reference
+
+  ↓
 
 Recover
 
-   │
+  ↓
 
-   ▼
-
-Discard
+Expire
 ```
 
-Only successful execution steps create new checkpoints.
+Only successfully completed execution steps should create new checkpoints.
+
+Failed operations must not overwrite valid recovery state.
 
 ---
 
@@ -119,68 +122,74 @@ Only successful execution steps create new checkpoints.
 
 A checkpoint represents execution state at a specific point in time.
 
-Typical fields include:
+Example metadata:
 
 | Field | Description |
-|--------|-------------|
-| Agent ID | Workflow identifier |
+|---|---|
+| Workflow ID | Unique execution identifier |
 | Checkpoint ID | Unique checkpoint reference |
-| Step | Last completed execution step |
-| Context | Serialized execution state |
+| Version | Schema version |
+| Execution Step | Last completed step |
+| Context | Serialized runtime state |
 | Timestamp | Creation time |
+| Metadata | Additional recovery information |
 
-Additional metadata may be introduced as the recovery model evolves.
+The exact schema may evolve as the recovery model matures.
 
 ---
 
-# Ownership
+# Ownership Model
 
-Execution state belongs to the checkpoint subsystem rather than the worker.
+Execution state belongs to the checkpoint subsystem, not the worker.
 
-```text
+```
 Worker
 
    │
 
    ▼
 
-Checkpoint
+Checkpoint Manager
 
    │
 
    ▼
 
-Storage
+Storage Backend
 
    │
 
    ▼
 
-Recovery
+Recovery Manager
 
    │
 
    ▼
 
-Worker
+New Worker
 ```
 
-Workers may terminate without invalidating execution progress.
+A worker failure should not automatically destroy execution progress.
 
 ---
 
-# Update Policy
+# Checkpoint Creation Policy
 
-Checkpoints are updated only after successful execution.
+FaultPlane creates checkpoints only after successful execution boundaries.
 
-```text
+Flow:
+
+```
 Execute Step
 
       │
 
       ▼
 
-Success?
+Execution Successful?
+
+      │
 
  ┌────┴────┐
 
@@ -192,227 +201,148 @@ Yes        No
 
  ▼         ▼
 
-Update   Ignore
+Save    Ignore
+
+Checkpoint
 ```
 
-Failed execution must never overwrite the last valid checkpoint.
+Invalid or incomplete execution states should never become recovery points.
 
 ---
 
 # Recovery Model
 
-Recovery always begins from the latest successful checkpoint.
+Recovery starts from the latest valid checkpoint.
 
-```text
-Failure
+```
+Failure Detected
 
-   │
+        ↓
 
-   ▼
+Locate Checkpoint
 
-Lookup
+        ↓
 
-   │
+Validate State
 
-   ▼
+        ↓
 
-Restore
+Restore Context
 
-   │
+        ↓
 
-   ▼
-
-Continue
+Continue Execution
 ```
 
-Checkpoint selection is deterministic.
+Recovery behavior should remain deterministic.
 
-The same checkpoint should always produce the same recovery result.
-
----
-
-# Serialization
-
-Checkpoint contents are serialized before persistence.
-
-The serialization format should satisfy the following requirements.
-
-| Property | Purpose |
-|----------|---------|
-| Portable | Independent of runtime process |
-| Deterministic | Same input produces same output |
-| Compact | Reduce storage overhead |
-| Versioned | Allow future schema evolution |
-
-The serialization format remains an implementation detail of the storage layer.
+Given the same checkpoint and runtime conditions, recovery should produce the same execution result.
 
 ---
 
-# Checkpoint Identity
+# Storage Abstraction
 
-Every checkpoint should have a stable identity.
+Checkpoint management is independent from storage implementation.
 
-Typical identifiers include:
+Architecture:
 
-- agent identifier
-- workflow identifier
-- checkpoint version
-- timestamp
-
-Stable identifiers simplify lookup during recovery.
-
----
-
-# Consistency Model
-
-The checkpoint subsystem follows a simple consistency model.
-
-- completed work is preserved
-- failed work is discarded
-- latest valid checkpoint wins
-- recovery uses immutable state
-
-The system favors deterministic recovery over aggressive optimization.
-
----
-
-# Component Boundaries
-
-| Component | Responsibility |
-|-----------|----------------|
-| Worker | Produce execution state |
-| Checkpoint Manager | Capture progress |
-| Storage | Persist checkpoints |
-| Recovery Manager | Restore state |
-| Gateway | Coordinate recovery |
-
-Each component communicates through well-defined interfaces.
-
----
----
-
-# Storage Interface
-
-The checkpoint subsystem interacts with storage through a minimal interface.
-
-The storage implementation is intentionally abstracted from the recovery logic.
-
-```text
+```
 Worker
+
    │
+
    ▼
+
 Checkpoint Manager
+
    │
+
    ▼
+
 Storage Interface
+
    │
+
    ▼
+
 Storage Backend
 ```
 
-This separation allows storage backends to evolve without changing recovery behavior.
+Possible future storage implementations:
 
----
+- in-memory store
+- Redis
+- PostgreSQL
+- distributed key-value systems
 
-# Checkpoint Lookup
-
-Recovery begins by locating the latest valid checkpoint.
-
-```text
-Agent ID
-    │
-    ▼
-Lookup
-    │
-    ▼
-Latest Checkpoint
-    │
-    ▼
-Restore
-```
-
-Lookup operations should be deterministic and inexpensive.
-
-The recovery process assumes a single authoritative checkpoint for each workflow.
-
----
-
-# Recovery Pipeline
-
-Checkpoint restoration follows a fixed sequence.
-
-```text
-Infrastructure Failure
-          │
-          ▼
-Locate Checkpoint
-          │
-          ▼
-Validate Metadata
-          │
-          ▼
-Restore Context
-          │
-          ▼
-Resume Execution
-```
-
-Recovery should never modify checkpoint contents during restoration.
-
----
-
-# Failure Scenarios
-
-The checkpoint subsystem is designed to tolerate common infrastructure failures.
-
-| Scenario | Expected Behavior |
-|----------|-------------------|
-| Worker crash | Restore latest checkpoint |
-| Container restart | Restore latest checkpoint |
-| HTTP timeout | Resume from checkpoint |
-| Gateway restart | Continue if persistent storage exists |
-| Missing checkpoint | Restart workflow |
-
-Recovery guarantees depend on the availability of a valid checkpoint.
+The recovery layer should not depend on a specific database technology.
 
 ---
 
 # Checkpoint Validation
 
-Every checkpoint should be validated before use.
+Before restoration, checkpoints must be validated.
 
-Typical validation includes:
+Validation includes:
 
-- identifier exists
-- metadata is complete
-- serialization format is valid
-- version is supported
-- timestamp is reasonable
+- checkpoint identifier verification
+- metadata completeness
+- schema compatibility
+- serialization integrity
+- timestamp validation
 
 Invalid checkpoints should never be restored.
 
 ---
 
-# Versioning
+# Consistency Model
 
-Checkpoint formats may evolve over time.
+FaultPlane follows a predictable recovery model.
 
-Future versions should maintain compatibility through explicit version identifiers.
+Rules:
 
-```text
+- latest valid checkpoint wins
+- incomplete checkpoints are ignored
+- successful execution is preserved
+- failed execution does not overwrite state
+- recovery uses immutable checkpoint data
+
+The system prioritizes correctness over aggressive optimization.
+
+---
+
+# Failure Handling
+
+FaultPlane handles common infrastructure failures.
+
+| Failure Scenario | Expected Behavior |
+|---|---|
+| Worker crash | Restore latest checkpoint |
+| Container restart | Restore available checkpoint |
+| Network interruption | Continue from recovery state |
+| Gateway restart | Recover using persistent storage |
+| Missing checkpoint | Start new execution |
+
+Recovery guarantees depend on checkpoint availability.
+
+---
+
+# Checkpoint Versioning
+
+Checkpoint schemas may evolve over time.
+
+Each checkpoint should include version information.
+
+```
 Checkpoint
 
-      │
+      ↓
 
-      ▼
+Schema Version Check
 
-Version Check
+      ↓
 
-      │
-
-      ▼
-
-Supported?
+Compatible?
 
  ┌────┴────┐
 
@@ -424,41 +354,41 @@ Yes        No
 
  ▼         ▼
 
-Load    Reject
+Restore   Reject
 ```
 
-Version compatibility should be handled by the storage layer.
+Schema migrations should be handled explicitly.
 
 ---
 
 # Garbage Collection
 
-Expired checkpoints should eventually be removed.
+Checkpoint cleanup is required to prevent unlimited storage growth.
 
-Possible cleanup strategies include:
+Possible strategies:
 
-- age-based expiration
-- completed workflow removal
-- scheduled cleanup
-- storage quota enforcement
+- workflow completion cleanup
+- time-based expiration
+- storage quota policies
+- scheduled cleanup jobs
 
-Garbage collection policies should never remove checkpoints for active workflows.
+Cleanup operations must never remove active recovery points.
 
 ---
 
 # Performance Considerations
 
-Checkpoint operations should remain inexpensive.
+Checkpoint operations should introduce minimal overhead.
 
-Optimization priorities include:
+Optimization priorities:
 
-- compact serialization
-- efficient lookup
-- minimal write overhead
-- low memory allocation
-- predictable latency
+- efficient serialization
+- low allocation overhead
+- fast lookup
+- predictable write latency
+- controlled storage growth
 
-Performance improvements should be validated through benchmark data.
+Performance improvements should be validated through benchmarks.
 
 ---
 
@@ -466,9 +396,9 @@ Performance improvements should be validated through benchmark data.
 
 Checkpoint data may contain execution context.
 
-Deployments should consider:
+Production deployments should consider:
 
-- encrypted storage
+- encryption at rest
 - encrypted transport
 - access control
 - audit logging
@@ -480,78 +410,83 @@ Applications should avoid storing unnecessary sensitive information inside check
 
 # Operational Recommendations
 
-Recommended operational practices include:
+Recommended practices:
 
-- validate checkpoint integrity
-- monitor storage utilization
-- test recovery regularly
-- retain only required history
-- monitor checkpoint latency
-- verify backup procedures
+- monitor checkpoint creation latency
+- test recovery workflows regularly
+- validate storage availability
+- monitor checkpoint size growth
+- maintain backup strategies
+- verify recovery correctness
 
-Operational reliability depends on both implementation and deployment practices.
+Reliable recovery requires both correct implementation and operational discipline.
 
 ---
 
 # Future Improvements
 
-Areas under active evaluation include:
+Future checkpoint capabilities may include:
 
-- persistent checkpoint storage
+- persistent checkpoint backends
 - incremental checkpoints
 - checkpoint compression
-- storage replication
-- distributed checkpoint coordination
-- pluggable storage backends
+- distributed replication
+- checkpoint streaming
+- pluggable storage providers
+- cross-region recovery
 
-These capabilities will be introduced incrementally as the recovery model matures.
+These features will be introduced as the architecture matures.
 
 ---
 
 # Design Trade-offs
 
-The checkpoint subsystem intentionally favors predictable behavior.
+FaultPlane intentionally favors predictable recovery behavior.
 
-| Decision | Benefit | Cost |
-|----------|---------|------|
-| Immutable checkpoints | Deterministic recovery | Additional storage writes |
+| Decision | Benefit | Trade-off |
+|---|---|---|
+| Immutable checkpoints | Reliable recovery | Additional storage usage |
 | Externalized state | Worker independence | Storage dependency |
-| Minimal metadata | Lower overhead | Less historical context |
-| Explicit validation | Safer recovery | Small validation cost |
+| Explicit validation | Safer restoration | Small validation overhead |
+| Minimal metadata | Lower complexity | Reduced historical information |
 
-Each trade-off prioritizes correctness over implementation complexity.
+These trade-offs prioritize reliability and maintainability.
 
 ---
 
 # Checkpoint Summary
 
-The checkpoint subsystem preserves execution progress independently of worker lifetime.
+The checkpoint subsystem preserves execution progress independently from worker lifetime.
 
-```text
-Execute Step
-      │
-      ▼
+```
+Execute Work
+
+      ↓
+
 Create Checkpoint
-      │
-      ▼
+
+      ↓
+
 Persist State
-      │
-      ▼
-Failure
-      │
-      ▼
+
+      ↓
+
+Infrastructure Failure
+
+      ↓
+
 Restore Checkpoint
-      │
-      ▼
+
+      ↓
+
 Resume Execution
 ```
 
-Workers execute application logic.
+FaultPlane separates responsibilities:
 
-The checkpoint manager preserves execution progress.
+- Workers execute workloads.
+- Checkpoint Manager preserves progress.
+- Storage maintains recovery state.
+- Recovery Manager restores execution.
 
-Storage maintains recovery state.
-
-Together, these components allow AgentMesh to recover long-running workloads without repeating completed work.
-
----
+Together, these components provide a foundation for resilient long-running AI infrastructure.
