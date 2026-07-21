@@ -1,31 +1,17 @@
-interface Props {
-  children?: React.ReactNode;
-}
+import AgentInspector from "@/components/inspector/AgentInspector";
 
-export default function InspectorPanel({ children }: Props) {
+export default function InspectorPanel() {
   return (
     <aside
       className="
-   hidden
-   xl:block
-   w-[340px]
-   border-l
-   border-white/10
-   bg-zinc-950/80
-   backdrop-blur-xl
-   p-5
-   "
+w-80
+border-l
+border-zinc-800
+bg-zinc-950
+p-5
+"
     >
-      {children ?? (
-        <div
-          className="
-   text-sm
-   text-zinc-500
-   "
-        >
-          Select resource to inspect
-        </div>
-      )}
+      <AgentInspector />
     </aside>
   );
 }
