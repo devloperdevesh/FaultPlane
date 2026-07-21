@@ -22,30 +22,49 @@ func RecoverHandler(
 
 		var req recoverRequest
 
-		json.NewDecoder(
-			r.Body,
-		).Decode(&req)
-
-		err := controller.Recover(
-			req.WorkflowID,
-		)
-
-		if err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 
 			http.Error(
 				w,
-				err.Error(),
-				500,
+				"invalid recovery request",
+				http.StatusBadRequest,
 			)
 
 			return
 		}
 
-		json.NewEncoder(w).Encode(
+		if err := controller.Recover(
+			req.WorkflowID,
+		); err != nil {
+
+			http.Error(
+				w,
+				err.Error(),
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
+
+		w.Header().Set(
+			"Content-Type",
+			"application/json",
+		)
+
+		if err := json.NewEncoder(w).Encode(
 			map[string]string{
 				"status": "recovered",
 			},
-		)
+		); err != nil {
+
+			http.Error(
+				w,
+				"failed to encode recovery response",
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
 
 	}
 

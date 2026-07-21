@@ -11,16 +11,32 @@ import (
 
 	"github.com/devloperdevesh/agentmesh/internal/api"
 	"github.com/devloperdevesh/agentmesh/internal/control"
+	"github.com/devloperdevesh/agentmesh/internal/storage"
+	"github.com/devloperdevesh/agentmesh/internal/telemetry"
 )
 
 func main() {
 
-	// Initialize core control plane
-	controller := control.NewController()
+	// Storage layer
+	store := storage.NewMemoryStore()
 
-	// Dependency injection:
-	// API layer receives control plane instance
-	router := api.NewRouter(controller)
+	// Telemetry layer
+	registry := telemetry.NewRegistry()
+
+	collector := telemetry.NewCollector(
+		registry,
+	)
+
+	// Control plane
+	controller := control.NewController(
+		store,
+		collector,
+	)
+
+	// HTTP API Router
+	router := api.NewRouter(
+		controller,
+	)
 
 	server := &http.Server{
 
@@ -36,25 +52,26 @@ func main() {
 	}
 
 	log.Println("===================================")
-	log.Println("AgentMesh Control Plane")
-	log.Println("Environment: local")
-	log.Println("Listening on :8080")
+	log.Println(" AgentMesh Control Plane ")
+	log.Println(" HTTP :8080 ")
+	log.Println(" Storage : MemoryStore ")
+	log.Println(" Telemetry : Enabled ")
 	log.Println("===================================")
 
 	go func() {
 
-		if err := server.ListenAndServe(); err != nil &&
+		err := server.ListenAndServe()
+
+		if err != nil &&
 			err != http.ErrServerClosed {
 
 			log.Fatalf(
-				"server failed: %v",
+				"server error: %v",
 				err,
 			)
 		}
 
 	}()
-
-	// Graceful shutdown handling
 
 	stop := make(chan os.Signal, 1)
 
@@ -66,26 +83,28 @@ func main() {
 
 	<-stop
 
-	log.Println("Shutdown signal received...")
-
-	ctx, cancel := context.WithTimeout(
-		context.Background(),
-		5*time.Second,
+	log.Println(
+		"shutdown signal received",
 	)
+
+	ctx, cancel :=
+		context.WithTimeout(
+			context.Background(),
+			5*time.Second,
+		)
 
 	defer cancel()
 
-	if err := server.Shutdown(ctx); err != nil {
+	if err :=
+		server.Shutdown(ctx); err != nil {
 
 		log.Fatalf(
-			"graceful shutdown failed: %v",
+			"shutdown failed: %v",
 			err,
 		)
-
 	}
 
 	log.Println(
-		"AgentMesh stopped cleanly.",
+		"AgentMesh stopped cleanly",
 	)
-
 }

@@ -1,7 +1,14 @@
 package control
 
-import "time"
+import (
+	"context"
+	"time"
 
+	"github.com/devloperdevesh/agentmesh/internal/domain"
+)
+
+// CreateCheckpoint stores the current workflow state
+// and persists it through storage backend.
 func (c *Controller) CreateCheckpoint(
 	id string,
 	step uint64,
@@ -11,48 +18,70 @@ func (c *Controller) CreateCheckpoint(
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	w, ok := c.workflows[id]
+	workflow, exists := c.workflows[id]
 
-	if !ok {
+	if !exists {
 		return ErrWorkflowNotFound
 	}
 
-	w.Checkpoint = &Checkpoint{
-
-		ID: id,
-
+	checkpoint := &domain.Checkpoint{
+		ID:         id,
 		WorkflowID: id,
-
-		Step: step,
-
-		Payload: payload,
-
-		CreatedAt: time.Now(),
+		Step:       step,
+		Payload:    payload,
+		CreatedAt:  time.Now(),
 	}
 
-	w.CurrentStep = step
+	// Update runtime state
 
-	w.UpdatedAt = time.Now()
+	workflow.Checkpoint = checkpoint
+
+	workflow.CurrentStep = step
+
+	workflow.UpdatedAt = time.Now()
+
+	// Persist workflow state
+
+	if c.storage != nil {
+
+		err := c.storage.Save(
+			context.Background(),
+			workflow,
+		)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	// Record telemetry
+
+	if c.telemetry != nil {
+
+		c.telemetry.RecordCheckpoint()
+
+	}
 
 	return nil
-
 }
 
-func (c *Controller) RestoreCheckpoint(id string) (*Checkpoint, error) {
+// RestoreCheckpoint retrieves latest checkpoint.
+func (c *Controller) RestoreCheckpoint(
+	id string,
+) (*domain.Checkpoint, error) {
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	w, ok := c.workflows[id]
+	workflow, exists := c.workflows[id]
 
-	if !ok {
+	if !exists {
 		return nil, ErrWorkflowNotFound
 	}
 
-	if w.Checkpoint == nil {
+	if workflow.Checkpoint == nil {
 		return nil, ErrCheckpointNotFound
 	}
 
-	return w.Checkpoint, nil
-
+	return workflow.Checkpoint, nil
 }

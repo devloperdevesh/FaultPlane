@@ -15,11 +15,20 @@ func HealthHandler(
 		"application/json",
 	)
 
-	json.NewEncoder(w).Encode(
-		map[string]string{
-			"status":  "healthy",
-			"service": "agentmesh",
-		},
-	)
+	response := map[string]string{
+		"status":  "healthy",
+		"service": "agentmesh",
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+
+		http.Error(
+			w,
+			"failed to encode health response",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
 
 }
