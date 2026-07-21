@@ -1,22 +1,47 @@
-interface Props {
-  children: React.ReactNode;
+"use client";
+
+import { motion } from "framer-motion";
+
+interface ExecutionPathProps {
+  height?: number;
 }
 
-export default function ExecutionPath({ children }: Props) {
+export default function ExecutionPath({ height = 48 }: ExecutionPathProps) {
   return (
-    <div
+    <motion.div
+      initial={{
+        opacity: 0,
+        scaleY: 0,
+      }}
+      animate={{
+        opacity: 1,
+        scaleY: 1,
+      }}
+      transition={{
+        duration: 0.35,
+        ease: "easeOut",
+      }}
       className="
-    flex
-    justify-center
-    "
+      flex
+      origin-top
+      justify-center
+      py-3
+      "
+      aria-hidden="true"
     >
       <div
+        style={{
+          height,
+        }}
         className="
-    h-10
-    w-px
-    bg-zinc-700
-    "
+        w-px
+        rounded-full
+        bg-gradient-to-b
+        from-blue-500
+        via-zinc-700
+        to-emerald-500
+        "
       />
-    </div>
+    </motion.div>
   );
 }

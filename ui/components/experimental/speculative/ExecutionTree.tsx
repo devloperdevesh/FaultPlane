@@ -1,59 +1,59 @@
 "use client";
 
-import PredictionNode from "./PredictionNode";
-import ExecutionPath from "./ExecutionPath";
+import { motion } from "framer-motion";
 
-export default function ExecutionTree() {
+interface ExecutionPathProps {
+  height?: number;
+  animated?: boolean;
+}
+
+export default function ExecutionPath({
+  height = 48,
+  animated = true,
+}: ExecutionPathProps) {
   return (
-    <div
+    <motion.div
+      initial={
+        animated
+          ? {
+              opacity: 0,
+              scaleY: 0,
+            }
+          : undefined
+      }
+      animate={
+        animated
+          ? {
+              opacity: 1,
+              scaleY: 1,
+            }
+          : undefined
+      }
+      transition={{
+        duration: 0.35,
+        ease: "easeOut",
+      }}
       className="
-rounded-2xl
-border
-border-white/10
-bg-zinc-950
-p-6
-space-y-4
-"
+        flex
+        origin-top
+        justify-center
+        py-3
+      "
+      aria-hidden="true"
     >
-      <h2
-        className="
-text-sm
-font-semibold
-text-white
-"
-      >
-        Execution Prediction
-      </h2>
-
-      <div className="text-center text-xs text-zinc-500">Step 04</div>
-
-      <ExecutionPath />
-
       <div
+        style={{
+          height,
+        }}
         className="
-grid
-gap-4
-md:grid-cols-2
-"
-      >
-        <PredictionNode title="Database Query" probability="80" selected />
-
-        <PredictionNode title="Cache Lookup" probability="20" />
-      </div>
-
-      <div
-        className="
-rounded-xl
-bg-emerald-500/10
-border
-border-emerald-500/30
-p-4
-text-sm
-text-emerald-400
-"
-      >
-        Selected: Database Query
-      </div>
-    </div>
+          w-px
+          rounded-full
+          bg-gradient-to-b
+          from-blue-500
+          via-zinc-700
+          to-emerald-500
+        "
+      />
+    </motion.div>
   );
 }
