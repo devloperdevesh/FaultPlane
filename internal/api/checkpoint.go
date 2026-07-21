@@ -26,43 +26,51 @@ func CheckpointHandler(
 
 		var req checkpointRequest
 
-		err := json.NewDecoder(
-			r.Body,
-		).Decode(&req)
-
-		if err != nil {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 
 			http.Error(
 				w,
-				err.Error(),
-				400,
+				"invalid checkpoint request",
+				http.StatusBadRequest,
 			)
 
 			return
 		}
 
-		err = controller.CreateCheckpoint(
+		if err := controller.CreateCheckpoint(
 			req.WorkflowID,
 			req.Step,
 			req.Payload,
-		)
-
-		if err != nil {
+		); err != nil {
 
 			http.Error(
 				w,
 				err.Error(),
-				500,
+				http.StatusInternalServerError,
 			)
 
 			return
 		}
 
-		json.NewEncoder(w).Encode(
+		w.Header().Set(
+			"Content-Type",
+			"application/json",
+		)
+
+		if err := json.NewEncoder(w).Encode(
 			map[string]string{
 				"status": "checkpoint_saved",
 			},
-		)
+		); err != nil {
+
+			http.Error(
+				w,
+				"failed to encode response",
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
 
 	}
 

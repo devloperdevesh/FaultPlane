@@ -1,7 +1,10 @@
 package control
 
 import (
+	"context"
 	"time"
+
+	"github.com/devloperdevesh/agentmesh/internal/domain"
 )
 
 // CreateCheckpoint stores the current workflow state
@@ -21,32 +24,29 @@ func (c *Controller) CreateCheckpoint(
 		return ErrWorkflowNotFound
 	}
 
-	checkpoint := &Checkpoint{
-
-		ID: id,
-
+	checkpoint := &domain.Checkpoint{
+		ID:         id,
 		WorkflowID: id,
-
-		Step: step,
-
-		Payload: payload,
-
-		CreatedAt: time.Now(),
+		Step:       step,
+		Payload:    payload,
+		CreatedAt:  time.Now(),
 	}
 
-	// Update in-memory workflow state
+	// Update runtime state
+
 	workflow.Checkpoint = checkpoint
 
 	workflow.CurrentStep = step
 
 	workflow.UpdatedAt = time.Now()
 
-	// Persist checkpoint
+	// Persist workflow state
+
 	if c.storage != nil {
 
 		err := c.storage.Save(
-			id,
-			payload,
+			context.Background(),
+			workflow,
 		)
 
 		if err != nil {
@@ -54,20 +54,21 @@ func (c *Controller) CreateCheckpoint(
 		}
 	}
 
-	// Record telemetry event
+	// Record telemetry
+
 	if c.telemetry != nil {
 
 		c.telemetry.RecordCheckpoint()
+
 	}
 
 	return nil
 }
 
-// RestoreCheckpoint retrieves the latest
-// checkpoint state of a workflow.
+// RestoreCheckpoint retrieves latest checkpoint.
 func (c *Controller) RestoreCheckpoint(
 	id string,
-) (*Checkpoint, error) {
+) (*domain.Checkpoint, error) {
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
