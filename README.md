@@ -1,4 +1,6 @@
-# FaultPlane
+<p align="center">
+  <img src="banner.png" alt="FaultPlane Autonomous Transport-Layer Data Proxy Banner Shield" width="100%">
+</p>
 
 > Zero-code-intrusion transport data-plane proxy providing state resilience and microsecond kernel failover for long-running AI agent workloads.
 
