@@ -2,11 +2,11 @@
 
 > Zero-code-intrusion transport data-plane proxy providing state resilience and microsecond kernel failover for long-running AI agent workloads.
 
-[![Go Report Card](https://goreportcard.com)](https://goreportcard.com)
-[![License](https://shields.io)](LICENSE)
-[![Go Version](https://shields.io)]()
-[![Issues](https://shields.io)](https://github.com)
-[![Open Source Directory](https://shields.io)](https://netlify.app)
+[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://go.dev)
+[![Go Report Card](https://goreportcard.com/badge/github.com/devloperdevesh/FaultPlane)](https://goreportcard.com/report/github.com/devloperdevesh/FaultPlane)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![CI](https://github.com/devloperdevesh/FaultPlane/actions/workflows/ci.yml/badge.svg)](https://github.com/devloperdevesh/FaultPlane/actions)
+[![GitHub Issues](https://img.shields.io/github/issues/devloperdevesh/FaultPlane)](https://github.com/devloperdevesh/FaultPlane/issues)
 
 FaultPlane is an open-source, bare-metal Go systems runtime designed to handle execution state checkpoints and non-invasive network routing for distributed multi-tenant workflows directly at the Linux Layer 4 transport socket boundary. 
 
