@@ -1,100 +1,170 @@
 # Frequently Asked Questions
 
-This document answers common questions about AgentMesh.
+This document answers common questions about FaultPlane.
 
-The FAQ focuses on architecture, deployment, recovery, and operational behavior. For implementation details, refer to the corresponding documents in the `docs/` directory.
+The FAQ covers architecture, deployment, recovery behavior, and operational concepts.
+
+For deeper technical details, refer to the design documents under `docs/`.
 
 ---
 
 # General
 
-## What is AgentMesh?
+## What is FaultPlane?
 
-AgentMesh is a control plane for recovering long-running AI workloads after infrastructure failures.
+FaultPlane is a transport resilience layer for long-running AI workloads.
 
-It coordinates routing, checkpoint management, and recovery while remaining independent of workload execution.
-
----
-
-## What problem does AgentMesh solve?
-
-Modern AI workloads may execute for several minutes or longer.
-
-If a worker becomes unavailable during execution, progress is often lost because execution state exists only in process memory.
-
-AgentMesh externalizes execution progress into checkpoints so that workloads can resume from the latest successful state.
+It provides infrastructure-level failure detection, recovery coordination, checkpoint management, and runtime observability without requiring application code changes.
 
 ---
 
-## Is AgentMesh an orchestration framework?
+## What problem does FaultPlane solve?
+
+Modern AI workloads are increasingly long-running.
+
+An AI agent or distributed workflow may maintain:
+
+- execution context
+- external tool interactions
+- streaming connections
+- intermediate state
+- service dependencies
+
+for extended periods.
+
+When infrastructure fails, execution progress is often lost because state exists only inside worker memory.
+
+FaultPlane separates execution state from runtime processes by maintaining recoverable checkpoints.
+
+---
+
+## Is FaultPlane a workflow orchestration framework?
 
 No.
 
-AgentMesh coordinates recovery.
+FaultPlane does not orchestrate business workflows.
 
-Workflow orchestration remains the responsibility of higher-level systems.
+It provides recovery and resilience primitives.
 
----
-
-## Does AgentMesh execute AI models?
-
-No.
-
-Workers execute application logic.
-
-AgentMesh coordinates infrastructure behavior.
+Workflow scheduling, task management, and application logic remain responsibilities of higher-level systems.
 
 ---
 
-## Is AgentMesh tied to a specific AI framework?
+## Does FaultPlane run AI models?
 
 No.
 
-The project is designed to remain independent of agent frameworks and model providers.
+FaultPlane does not host or execute models.
+
+Workers remain responsible for:
+
+- inference execution
+- agent logic
+- application workloads
+
+FaultPlane manages infrastructure reliability.
+
+---
+
+## Is FaultPlane tied to a specific AI framework?
+
+No.
+
+FaultPlane is designed as an infrastructure layer independent of:
+
+- agent frameworks
+- model providers
+- application languages
+- workflow systems
 
 ---
 
 # Architecture
 
-## Why separate the control plane from workers?
+## Why separate recovery logic from workers?
 
-Separating recovery logic from workload execution improves fault isolation and allows each layer to evolve independently.
+Separating recovery from execution improves fault isolation.
 
-Workers can fail without affecting the recovery subsystem.
-
----
-
-## Why is the gateway stateless?
-
-A stateless gateway allows multiple gateway instances to share the same recovery state through external checkpoint storage.
-
-This simplifies scaling and improves availability.
+Workers can fail, restart, or be replaced while execution progress remains available through checkpoint storage.
 
 ---
 
-## Why use checkpoints?
+## Why is the gateway designed to be stateless?
 
-Checkpoints preserve execution progress outside the worker process.
+A stateless gateway allows multiple instances to operate simultaneously.
 
-Recovery becomes possible even if the original worker terminates unexpectedly.
+Recovery state is stored externally, allowing any healthy gateway instance to coordinate execution recovery.
+
+Benefits:
+
+- horizontal scalability
+- easier deployment
+- improved availability
 
 ---
 
-## Can checkpoints be stored persistently?
+## Why does FaultPlane use checkpoints?
 
-Yes.
+Checkpoints preserve execution progress outside the worker lifecycle.
 
-The current implementation uses in-memory storage, while persistent backends such as Redis or PostgreSQL are planned.
+Without checkpoints:
+
+```
+Worker Failure
+
+      ↓
+
+Execution Lost
+
+      ↓
+
+Restart From Beginning
+```
+
+With checkpoints:
+
+```
+Worker Failure
+
+      ↓
+
+Restore Checkpoint
+
+      ↓
+
+Continue Execution
+```
+
+---
+
+## Does FaultPlane modify application code?
+
+No.
+
+FaultPlane is designed as an infrastructure layer.
+
+Applications do not require:
+
+- custom SDKs
+- framework plugins
+- recovery logic
+- workflow rewrites
 
 ---
 
 # Deployment
 
-## Can AgentMesh run locally?
+## Can FaultPlane run locally?
 
 Yes.
 
-The repository includes a Docker Compose environment for local development and recovery testing.
+The project supports local development environments using Docker-based workflows.
+
+Local deployments are useful for:
+
+- development
+- testing
+- failure simulation
 
 ---
 
@@ -102,49 +172,73 @@ The repository includes a Docker Compose environment for local development and r
 
 No.
 
-Local and single-host deployments remain valid development environments.
+FaultPlane can operate in simpler environments.
 
-Kubernetes support is planned for production deployments.
+Kubernetes support is planned for larger production deployments requiring:
+
+- scaling
+- service discovery
+- automated lifecycle management
 
 ---
 
-## Can multiple gateways be deployed?
+## Can multiple gateway instances run together?
 
 Yes.
 
-The architecture is designed to support multiple stateless gateway instances sharing a common checkpoint backend.
+The architecture supports multiple gateway instances sharing common recovery state.
+
+Example:
+
+```
+Gateway A
+
+      │
+
+      ▼
+
+Checkpoint Storage
+
+      ▲
+
+      │
+
+Gateway B
+```
 
 ---
 
 # Recovery
 
-## What failures can AgentMesh recover from?
+## What failures can FaultPlane recover from?
 
-Typical recovery scenarios include:
+Typical infrastructure failures include:
 
-- worker crash
-- container restart
-- HTTP 5xx
-- network timeout
-- connection failure
+- worker crashes
+- container restarts
+- network interruptions
+- request timeouts
+- unhealthy runtime instances
 
-Application-specific failures remain outside the recovery model.
+Application-specific failures are outside the recovery boundary.
 
 ---
 
 ## What happens if no checkpoint exists?
 
-The workflow must restart from its initial step because there is no saved execution state to restore.
+Recovery requires valid stored state.
+
+If no checkpoint exists, the workload must restart from its initial execution point.
 
 ---
 
-## Does recovery modify application data?
+## Does recovery change application behavior?
 
 No.
 
-Recovery restores previously recorded execution context.
+FaultPlane restores previously recorded execution state.
 
-Application behavior remains unchanged.
+Application logic remains unchanged.
 
 ---
 
@@ -154,122 +248,158 @@ Application behavior remains unchanged.
 
 Yes.
 
-The storage layer is designed around an abstract interface that supports multiple backend implementations.
+The storage layer is designed around an abstraction boundary.
+
+Future backends may include:
+
+- Redis
+- PostgreSQL
+- distributed key-value stores
+- custom storage implementations
 
 ---
 
 ## Why separate storage from routing?
 
-Keeping storage independent reduces coupling and allows recovery logic to remain unchanged when storage implementations evolve.
+Separating storage from routing keeps the architecture flexible.
+
+Storage implementations can evolve without changing recovery logic.
 
 ---
 
 # Telemetry
 
-## What telemetry standards are supported?
+## What observability systems are supported?
 
-The project is designed around OpenTelemetry-compatible instrumentation.
+FaultPlane is designed for OpenTelemetry-compatible observability.
 
-Planned integrations include Prometheus and Jaeger.
+Future integrations include:
+
+- Prometheus metrics
+- Jaeger tracing
+- structured logging pipelines
 
 ---
 
-## Does telemetry affect execution?
+## Does telemetry affect recovery decisions?
 
-Telemetry is intended to remain passive.
+No.
 
-Instrumentation should not influence routing or recovery decisions.
+Telemetry should remain observational.
+
+Instrumentation should provide visibility without introducing execution dependencies.
 
 ---
 
 # Performance
 
-## What should be optimized first?
+## What does FaultPlane optimize?
 
-The project prioritizes:
+FaultPlane focuses on infrastructure reliability.
 
-- predictable recovery latency
-- low allocation rate
-- efficient checkpoint operations
-- stable throughput
+Primary optimization areas:
 
-Optimization work should be guided by benchmark results.
+- recovery latency
+- checkpoint performance
+- routing overhead
+- memory allocation
+- throughput stability
 
 ---
 
-## Does AgentMesh improve model inference speed?
+## Does FaultPlane make AI inference faster?
 
 No.
 
-The project focuses on infrastructure recovery rather than inference performance.
+FaultPlane does not optimize model execution speed.
+
+It improves reliability and continuity of long-running workloads.
 
 ---
 
 # Security
 
-## Does AgentMesh manage secrets?
+## Does FaultPlane manage secrets?
 
 No.
 
-Secrets should be managed using external secret management systems.
+Secrets should be handled by dedicated systems such as:
+
+- environment configuration
+- secret managers
+- cloud security services
 
 ---
 
-## Should checkpoint data be encrypted?
+## Should checkpoint data be protected?
 
-Production deployments should consider encrypting checkpoint data both in transit and at rest.
+Yes.
+
+Checkpoint data may contain execution context.
+
+Production deployments should consider:
+
+- encryption at rest
+- encrypted communication
+- access controls
+- audit logging
 
 ---
 
 # Troubleshooting
 
-## Recovery is not occurring.
+## Recovery is not happening.
 
-Verify:
+Check:
 
-- worker health
+- worker health status
 - checkpoint availability
 - storage connectivity
-- timeout configuration
 - gateway logs
+- timeout configuration
+
+Recovery requires both failure detection and valid checkpoint state.
 
 ---
 
-## Requests always restart.
+## Workloads always restart from the beginning.
 
-Verify that checkpoints are successfully written before failures occur.
+Possible causes:
 
-Without valid checkpoints, recovery cannot resume execution.
+- checkpoints are not being created
+- checkpoint storage is unavailable
+- recovery state is invalid
+
+Verify checkpoint creation and persistence.
 
 ---
 
-## Workers appear healthy but routing fails.
+## Workers are healthy but traffic fails.
 
 Review:
 
 - gateway configuration
 - worker endpoints
 - network connectivity
-- telemetry logs
+- telemetry events
 
-Infrastructure issues often become visible through operational metrics and traces.
+Operational metrics usually provide the first indication of failure.
 
 ---
 
 # Project Status
 
-## Is AgentMesh production ready?
+## Is FaultPlane production ready?
 
-Not yet.
+FaultPlane is currently under active development.
 
-The project is under active development.
+Current focus areas:
 
-Current priorities include:
-
-- stabilizing recovery
-- expanding telemetry
-- introducing persistent checkpoint storage
-- improving deployment support
+- stabilizing recovery workflows
+- improving observability
+- adding persistent storage
+- expanding deployment support
+- improving testing coverage
 
 ---
 
@@ -277,15 +407,32 @@ Current priorities include:
 
 ## How can I contribute?
 
-Refer to `CONTRIBUTING.md` for development guidelines, coding standards, testing requirements, and pull request workflow.
+See:
+
+```
+CONTRIBUTING.md
+```
+
+for:
+
+- development workflow
+- coding standards
+- testing requirements
+- pull request guidelines
 
 ---
 
-## Where should design discussions occur?
+## Where should architecture discussions happen?
 
-Architectural proposals are best discussed through GitHub Discussions or design issues before implementation begins.
+Large design changes should be discussed before implementation.
 
-Early discussion helps reduce implementation churn.
+Recommended channels:
+
+- GitHub Discussions
+- Design proposals
+- Architecture issues
+
+Early discussion helps maintain consistency.
 
 ---
 
@@ -297,34 +444,37 @@ Recommended reading order:
 
 1. `README.md`
 2. `ARCHITECTURE.md`
-3. `docs/design.md`
-4. `docs/runtime.md`
-5. `docs/routing.md`
-6. `docs/checkpoint.md`
-7. `docs/storage.md`
-8. `docs/telemetry.md`
-9. `docs/deployment.md`
+3. `DESIGN.md`
+4. `CHECKPOINTS.md`
+5. `DEPLOYMENT.md`
+6. `BENCHMARKS.md`
+7. `SECURITY.md`
+8. `ROADMAP.md`
 
 ---
 
 # Future Work
 
-## What major capabilities are planned?
+Planned capabilities include:
 
-Planned work includes:
-
-- persistent checkpoint storage
+- persistent checkpoint backends
 - distributed recovery
 - Kubernetes deployment
-- OpenTelemetry integration
-- benchmark automation
-- additional storage backends
-- advanced routing strategies
+- advanced telemetry
+- automated benchmarking
+- additional storage providers
+- smarter routing strategies
 
-These items will be delivered incrementally as the implementation matures.
+Development will continue incrementally while maintaining architectural simplicity.
 
 ---
 
 # Additional Questions
 
-If your question is not answered here, review the documentation in the `docs/` directory or open a discussion in the project repository.
+If your question is not answered here:
+
+- review the documentation in `docs/`
+- search existing GitHub discussions
+- open a new discussion with relevant context
+
+Community feedback helps improve FaultPlane's architecture and usability.

@@ -1,61 +1,84 @@
 # Deployment
 
-This document describes recommended deployment patterns for AgentMesh.
+This document describes recommended deployment patterns for FaultPlane.
 
-The deployment model is designed to keep the control plane independent from workload execution while allowing infrastructure components to scale according to operational requirements.
+FaultPlane is designed as an infrastructure-level resilience layer that separates traffic coordination, execution workloads, recovery state, and observability components.
 
-Deployment guidance focuses on infrastructure architecture rather than application configuration.
+The deployment architecture focuses on operational reliability, independent scaling, and predictable recovery behavior.
 
 ---
 
 # Overview
 
-AgentMesh separates request coordination from workload execution.
+FaultPlane separates runtime coordination from workload execution.
+
+Architecture:
 
 ```text
 Clients
-    │
-    ▼
-Gateway
-    │
-    ▼
-Workers
+
+   │
+
+   ▼
+
+FaultPlane Gateway
+
+   │
+
+   ▼
+
+Worker Runtime
+
+   │
+
+   ▼
+
+Checkpoint Storage
+
+   │
+
+   ▼
+
+Telemetry Pipeline
 ```
 
-The gateway coordinates execution.
+The gateway coordinates traffic and recovery decisions.
 
-Workers perform application logic.
+Workers execute workload logic.
 
-Checkpoint storage preserves execution state.
+Checkpoint storage maintains execution continuity.
+
+Telemetry provides operational visibility.
 
 ---
 
 # Deployment Goals
 
-Production deployments should satisfy the following goals.
+Production deployments should optimize for:
 
 | Goal | Description |
-|------|-------------|
-| Availability | Continue operating during worker failures. |
-| Scalability | Scale gateways and workers independently. |
+|---|---|
+| Availability | Continue operating during runtime failures. |
+| Scalability | Scale infrastructure components independently. |
 | Recoverability | Preserve execution progress across failures. |
-| Observability | Export metrics, traces, and logs. |
-| Simplicity | Minimize operational complexity. |
+| Observability | Provide metrics, traces, and logs. |
+| Simplicity | Reduce operational complexity. |
 
 ---
 
 # Deployment Models
 
-The project supports multiple deployment models as implementation evolves.
+FaultPlane supports multiple deployment patterns as the system evolves.
 
 | Environment | Status |
-|------------|--------|
-| Local Docker | Current |
+|---|---|
+| Local Development | Available |
+| Docker Compose | Available |
 | Single Host | Planned |
 | Kubernetes | Planned |
 | Multi-Region | Research |
 
-Each deployment model builds upon the same architectural principles.
+Each deployment model follows the same architectural principles.
 
 ---
 
@@ -63,50 +86,24 @@ Each deployment model builds upon the same architectural principles.
 
 The recommended development environment uses Docker Compose.
 
+Architecture:
+
 ```text
 Docker Network
-
-    │
-
-    ▼
-
-Gateway
-
-    │
-
-    ▼
-
-Primary Worker
-
-    │
-
-    ▼
-
-Fallback Worker
-
-    │
-
-    ▼
-
-Telemetry
-```
-
-Local deployments prioritize developer productivity over scalability.
-
----
-
-# Single Host Deployment
-
-A single-machine deployment may consist of:
-
-```text
-Load Balancer
 
       │
 
       ▼
 
-Gateway
+FaultPlane Gateway
+
+      │
+
+ ┌────┴────┐
+
+ ▼         ▼
+
+Worker A   Worker B
 
       │
 
@@ -118,16 +115,56 @@ Checkpoint Storage
 
       ▼
 
+Telemetry
+```
+
+Local deployments prioritize:
+
+- fast iteration
+- simple debugging
+- reproducible environments
+
+---
+
+# Single Host Deployment
+
+A single machine deployment may contain:
+
+```text
+Load Balancer
+
+        │
+
+        ▼
+
+FaultPlane Gateway
+
+        │
+
+        ▼
+
+Checkpoint Backend
+
+        │
+
+        ▼
+
 Worker Processes
 ```
 
-This model is suitable for development and small production environments.
+Suitable for:
+
+- development environments
+- internal systems
+- small production workloads
 
 ---
 
 # Kubernetes Deployment
 
-Future Kubernetes deployments will separate infrastructure into dedicated components.
+Future Kubernetes deployments will separate FaultPlane components into independent workloads.
+
+Example:
 
 ```text
 Ingress
@@ -142,354 +179,404 @@ Gateway Deployment
 
    ▼
 
-Checkpoint Backend
+Checkpoint Service
 
    │
 
    ▼
 
 Worker Deployment
+
+   │
+
+   ▼
+
+Telemetry Stack
 ```
 
-Each layer should scale independently.
+Each layer can scale independently.
 
 ---
 
 # Component Responsibilities
 
 | Component | Responsibility |
-|-----------|----------------|
-| Gateway | Request coordination |
-| Worker | Application execution |
-| Storage | Checkpoint persistence |
-| Telemetry | Observability |
-| Load Balancer | Traffic distribution |
+|---|---|
+| Gateway | Traffic routing and recovery coordination |
+| Worker | Execute workload operations |
+| Checkpoint Storage | Persist recovery state |
+| Telemetry Layer | Metrics, traces, and logs |
+| Load Balancer | Distribute external traffic |
 
-Each component owns a single operational concern.
+Each component maintains a clear ownership boundary.
 
 ---
 
 # Network Topology
 
-A typical production topology may resemble:
+Typical production architecture:
 
 ```text
-Clients
+                 Clients
 
-   │
+                    │
 
-   ▼
+                    ▼
 
-Load Balancer
+              Load Balancer
 
-   │
+                    │
 
-   ▼
+                    ▼
 
-Gateway Cluster
+           FaultPlane Gateway Pool
 
-   │
+                    │
 
-   ▼
+                    ▼
 
-Checkpoint Backend
+          Checkpoint Storage Layer
 
-   │
+                    │
 
-   ▼
+                    ▼
 
-Worker Pool
+              Worker Fleet
+
+                    │
+
+                    ▼
+
+             Telemetry Pipeline
 ```
 
-Workers should never communicate directly with clients.
+Workers should not directly expose public endpoints.
 
 ---
 
-# Configuration
+# Configuration Management
 
-Production deployments should externalize configuration.
+Production configuration should remain externalized.
 
 Typical configuration includes:
 
-- gateway address
-- worker endpoints
-- storage backend
-- telemetry exporter
-- timeout values
+- gateway settings
+- worker discovery
+- checkpoint backend
+- telemetry exporters
+- timeout policies
+- resource limits
 
-Environment-specific configuration should remain outside the application binary.
+Recommended configuration sources:
+
+- environment variables
+- configuration files
+- secret managers
+- Kubernetes ConfigMaps and Secrets
 
 ---
 
 # Scaling Strategy
 
-Each infrastructure layer should scale independently.
+Each subsystem should scale independently.
 
-| Component | Scaling Strategy |
-|-----------|------------------|
-| Gateway | Horizontal |
-| Workers | Horizontal |
-| Storage | Backend-dependent |
-| Telemetry | Independent |
+| Component | Scaling Model |
+|---|---|
+| Gateway | Horizontal scaling |
+| Workers | Horizontal scaling |
+| Storage | Backend dependent |
+| Telemetry | Independent scaling |
 
-Independent scaling simplifies operational management.
+Independent scaling improves operational flexibility.
 
 ---
 
 # Health Checks
 
-Every deployable component should expose health information.
+Every production component should expose health information.
 
-Typical endpoints include:
+| Component | Health Signal |
+|---|---|
+| Gateway | Readiness and liveness |
+| Worker | Runtime availability |
+| Storage | Connectivity status |
+| Telemetry | Export health |
 
-| Component | Health Check |
-|-----------|--------------|
-| Gateway | Readiness / Liveness |
-| Worker | Readiness / Liveness |
-| Storage | Connectivity |
-| Telemetry | Export status |
-
-Health information should be lightweight and deterministic.
+Health checks should remain lightweight and deterministic.
 
 ---
 
-# Design Constraints
+# Deployment Constraints
 
-Deployment architecture follows several constraints.
+FaultPlane deployments follow several design constraints:
 
-- stateless gateways
-- external checkpoint storage
+- stateless gateway instances
+- externalized recovery state
 - replaceable workers
-- centralized telemetry
-- minimal operational dependencies
+- centralized observability
+- minimal runtime dependencies
 
-These constraints support reliable production deployments.
+These constraints improve reliability and maintainability.
 
----
 ---
 
 # High Availability
 
 Production deployments should tolerate individual component failures.
 
+Example:
+
 ```text
-                Clients
-                   │
-                   ▼
-             Load Balancer
-          ┌────────┴────────┐
-          ▼                 ▼
-      Gateway A         Gateway B
-          │                 │
-          └────────┬────────┘
-                   ▼
+                 Clients
+
+                    │
+
+                    ▼
+
+              Load Balancer
+
+              /          \
+
+             ▼            ▼
+
+       Gateway A      Gateway B
+
+             \          /
+
+              ▼        ▼
+
           Shared Checkpoint Store
-                   │
-        ┌──────────┴──────────┐
-        ▼                     ▼
-   Worker Pool A         Worker Pool B
+
+                    │
+
+          ┌─────────┴─────────┐
+
+          ▼                   ▼
+
+      Worker Pool A       Worker Pool B
 ```
 
-The gateway layer should remain stateless so that requests can be handled by any healthy instance.
+Gateway instances remain stateless so traffic can move between healthy instances.
 
 ---
 
 # Rolling Updates
 
-Deployments should support incremental updates without interrupting active workloads.
+Deployments should support upgrades without interrupting active workloads.
 
-Recommended update sequence:
+Recommended sequence:
 
 ```text
-Deploy New Gateway
+Deploy New Version
+
         │
+
         ▼
-Health Verification
+
+Health Validation
+
         │
+
         ▼
-Shift Traffic
+
+Traffic Migration
+
         │
+
         ▼
-Drain Old Gateway
+
+Drain Previous Version
+
         │
+
         ▼
-Terminate Old Instance
+
+Remove Old Instance
 ```
 
-Workers should complete active requests before termination.
+Active workloads should be allowed to complete gracefully.
 
 ---
 
 # Disaster Recovery
 
-Checkpoint persistence determines the effectiveness of disaster recovery.
+Recovery reliability depends on checkpoint availability.
 
 Recommended practices:
 
 - replicate checkpoint storage
-- verify backup integrity
-- test recovery procedures
-- monitor replication lag
-- document recovery runbooks
+- verify backups
+- test restoration workflows
+- monitor storage health
+- maintain recovery procedures
 
-Recovery procedures should be validated regularly rather than assumed to work.
+Recovery processes should be tested regularly.
 
 ---
 
 # Backup Strategy
 
-Persistent checkpoint backends should be backed up according to operational requirements.
-
-Typical backup policy:
+Persistent infrastructure should maintain appropriate backups.
 
 | Data | Recommendation |
-|------|----------------|
-| Checkpoints | Regular backup |
+|---|---|
+| Checkpoints | Regular backup and validation |
 | Configuration | Version controlled |
-| Telemetry | Retention policy |
-| Logs | Centralized storage |
+| Logs | Central retention policy |
+| Telemetry Data | Defined retention strategy |
 
-Backup frequency depends on workload characteristics and recovery objectives.
+Backup requirements depend on workload criticality.
 
 ---
 
 # Security Recommendations
 
-Production deployments should implement:
+Production deployments should include:
 
-- encrypted transport
-- authenticated administrative endpoints
-- restricted network access
-- secure secret management
+- encrypted communication
+- authenticated administrative access
+- restricted network exposure
+- secure secret handling
 - encrypted checkpoint storage
-- regular dependency updates
+- dependency monitoring
 
-Security controls should be applied consistently across all deployment environments.
+Security should be applied consistently across environments.
 
 ---
 
 # Monitoring
 
-Operational monitoring should focus on infrastructure health.
+Operational monitoring should focus on system behavior.
 
-Representative dashboards include:
+Recommended dashboards:
 
 | Dashboard | Purpose |
-|-----------|---------|
-| Gateway | Request throughput and latency |
-| Recovery | Recovery success rate and duration |
-| Workers | Availability and utilization |
-| Storage | Read/write latency |
-| Telemetry | Export health |
+|---|---|
+| Gateway | Latency and throughput |
+| Recovery | Recovery success and duration |
+| Workers | Availability and resource usage |
+| Storage | Checkpoint operations |
+| Telemetry | Pipeline health |
 
-Monitoring should emphasize trends rather than isolated events.
+Monitoring should focus on trends and system behavior.
 
 ---
 
 # Capacity Planning
 
-Infrastructure should be sized according to workload characteristics.
+Infrastructure sizing should consider:
 
-Consider:
-
-- concurrent workflows
+- concurrent workloads
 - checkpoint frequency
-- recovery rate
-- request throughput
+- recovery operations
+- request volume
 - storage growth
 - telemetry volume
 
-Capacity planning should be based on observed production metrics rather than assumptions.
+Capacity decisions should be based on production measurements.
 
 ---
 
-# Operational Checklist
+# Production Checklist
 
-Before deploying to production, verify the following.
+Before production deployment:
 
 | Item | Status |
-|------|--------|
+|---|---|
 | Gateway configured | □ |
-| Checkpoint backend available | □ |
+| Storage backend available | □ |
 | Worker health checks enabled | □ |
 | TLS configured | □ |
 | Monitoring enabled | □ |
-| Backups verified | □ |
+| Backup strategy verified | □ |
 | Recovery tested | □ |
 | Documentation updated | □ |
-
-This checklist should be adapted to the operational requirements of each deployment.
 
 ---
 
 # Maintenance
 
-Routine operational tasks include:
+Regular operational tasks include:
 
-- updating dependencies
-- validating recovery workflows
-- reviewing telemetry
-- rotating credentials
-- verifying backups
-- monitoring storage usage
+- dependency updates
+- recovery testing
+- telemetry review
+- credential rotation
+- storage cleanup
+- backup verification
 
-Preventive maintenance reduces operational risk over time.
+Continuous maintenance reduces operational risk.
 
 ---
 
 # Future Deployment Work
 
-Areas under evaluation include:
+Future areas include:
 
 - Kubernetes Operator
 - Helm charts
-- multi-region deployments
+- automated scaling
+- multi-region recovery
 - service mesh integration
-- automated scaling policies
 - deployment automation
 - infrastructure validation
 
-Future work will be guided by implementation maturity and operational feedback.
+These capabilities will be introduced as operational requirements evolve.
 
 ---
 
 # Design Trade-offs
 
-The deployment model prioritizes operational simplicity.
+FaultPlane prioritizes simplicity and reliability.
 
-| Decision | Benefit | Cost |
-|----------|---------|------|
-| Stateless gateways | Horizontal scalability | Shared storage dependency |
-| External checkpoint storage | Durable recovery | Additional infrastructure |
-| Independent workers | Operational flexibility | More deployment components |
-| Centralized telemetry | Better observability | Separate telemetry infrastructure |
+| Decision | Benefit | Trade-off |
+|---|---|---|
+| Stateless gateways | Easy scaling | Requires shared state layer |
+| External checkpoints | Durable recovery | Additional infrastructure |
+| Independent workers | Flexible operations | More components |
+| Central telemetry | Better visibility | Extra operational system |
 
-These trade-offs support maintainable production deployments.
+These decisions support long-term maintainability.
 
 ---
 
 # Deployment Summary
 
-The deployment model separates request coordination, execution, persistence, and observability into independent infrastructure components.
+FaultPlane separates infrastructure responsibilities into independent layers.
 
 ```text
 Clients
-    │
-    ▼
+
+   │
+
+   ▼
+
 Gateway
-    │
-    ▼
-Checkpoint Store
-    │
-    ▼
+
+   │
+
+   ▼
+
+Checkpoint Storage
+
+   │
+
+   ▼
+
 Workers
-    │
-    ▼
+
+   │
+
+   ▼
+
 Telemetry
 ```
 
-Each component has a clearly defined operational responsibility.
+This architecture enables:
 
-This separation enables independent scaling, predictable recovery behavior, and straightforward operational management.
+- independent scaling
+- predictable recovery
+- operational visibility
+- reliable long-running AI workloads
 
----
+FaultPlane is designed to provide a stable resilience layer for next-generation distributed AI infrastructure.

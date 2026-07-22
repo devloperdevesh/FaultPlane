@@ -1,342 +1,486 @@
 # Design
 
-This document describes the architectural decisions behind AgentMesh.
+This document describes the architectural decisions behind FaultPlane.
 
-Unlike the repository overview in `README.md`, this document focuses on implementation rationale, design constraints, and system boundaries.
+Unlike the repository overview in `README.md`, this document focuses on implementation rationale, design constraints, system boundaries, and architectural trade-offs.
 
-The goal is to explain **why** AgentMesh is designed the way it is rather than documenting individual APIs.
+The goal is to explain **why FaultPlane is designed the way it is**, rather than documenting individual APIs or implementation details.
 
 ---
 
 # Overview
 
-AgentMesh is a lightweight control plane responsible for recovering long-running AI workloads from infrastructure failures.
+FaultPlane is a transport resilience layer designed for long-running AI workloads and distributed runtime systems.
 
-Instead of coupling execution state to a single runtime process, AgentMesh externalizes checkpoint management and recovery decisions into an independent control layer.
+The architecture separates execution state from worker lifetime by introducing an independent recovery layer responsible for:
 
-This separation allows application runtimes to fail without necessarily losing workflow progress.
+- failure detection
+- checkpoint coordination
+- recovery decisions
+- runtime observability
+
+Instead of depending on a single execution process, FaultPlane externalizes recovery state so workloads can continue after infrastructure failures.
 
 ---
 
 # Problem Statement
 
-Traditional backend systems assume requests are short-lived.
+Traditional distributed systems were designed around short-lived request-response interactions.
 
-Modern AI systems violate this assumption.
+Modern AI workloads introduce different execution characteristics.
 
-An autonomous workflow may execute for several minutes while interacting with multiple external services, language models, storage systems, and internal APIs.
+An AI workflow may maintain:
 
-If one dependency becomes unavailable, the entire workflow frequently restarts from its initial step because intermediate execution state exists only inside process memory.
+- execution context
+- external tool connections
+- streaming sessions
+- model interactions
+- intermediate state
 
-This results in:
+for extended periods of time.
+
+When infrastructure failures occur:
+
+```
+Worker Failure
+
+      │
+
+      ▼
+
+Connection Lost
+
+      │
+
+      ▼
+
+Execution Interrupted
+
+      │
+
+      ▼
+
+Workflow Restart
+```
+
+The result is:
 
 - repeated computation
-- additional inference cost
-- longer execution time
+- increased latency
+- higher infrastructure cost
 - reduced reliability
 
-AgentMesh addresses this by separating execution recovery from execution itself.
+FaultPlane addresses this by separating workload execution from recovery management.
 
 ---
 
 # Design Goals
 
-The project is intentionally built around a limited number of engineering goals.
+FaultPlane is built around a focused set of engineering goals.
 
 | Goal | Description |
-|------|-------------|
-| Recovery | Resume execution from the latest checkpoint whenever possible. |
-| Isolation | Separate routing logic from workload execution. |
-| Simplicity | Keep the control plane small and predictable. |
-| Observability | Every recovery decision should be measurable. |
-| Portability | Avoid dependencies on specific AI frameworks. |
+|---|---|
+| Reliability | Recover execution from the latest valid state. |
+| Isolation | Separate recovery logic from workload execution. |
+| Simplicity | Keep infrastructure components understandable. |
+| Observability | Make recovery behavior measurable. |
+| Portability | Avoid dependency on specific AI frameworks. |
 
 ---
 
 # Non Goals
 
-AgentMesh intentionally does not provide:
+FaultPlane intentionally does not provide:
 
 - workflow orchestration
 - prompt management
-- vector search
-- model serving
-- distributed scheduling
-- GPU management
+- model hosting
+- vector databases
+- GPU scheduling
 - application business logic
+- AI framework abstractions
 
-These responsibilities belong to adjacent infrastructure.
+These responsibilities belong to surrounding infrastructure layers.
 
 ---
 
 # Architectural Principles
 
-Several principles guide implementation decisions throughout the project.
-
 ## Separation of Concerns
 
-The gateway routes requests.
+Each subsystem owns a specific responsibility.
 
-Workers execute workloads.
+```
+Gateway
 
-Storage persists checkpoints.
+→ Traffic coordination
 
-Telemetry exports operational information.
 
-Each component owns one responsibility.
+Worker
 
----
+→ Workload execution
 
-## Stateless Control Plane
 
-The gateway should remain stateless.
+Checkpoint Storage
 
-Execution progress belongs to the checkpoint backend rather than the gateway process.
+→ Recovery state persistence
 
-This enables multiple gateway instances to share recovery information.
 
----
+Telemetry
 
-## Explicit Recovery
+→ Operational visibility
+```
 
-Recovery should never occur implicitly.
-
-Failures must be detected, validated, and handled through a deterministic sequence of operations.
-
-Hidden retries increase operational uncertainty.
+Clear ownership boundaries reduce system complexity.
 
 ---
 
-## Observable Behavior
+# Stateless Gateway Design
 
-Operational behavior should be visible through metrics and tracing.
+The gateway should remain stateless whenever possible.
 
-Recovery decisions should be measurable rather than inferred from application logs.
+Execution progress belongs to the checkpoint layer rather than gateway memory.
+
+Benefits:
+
+- horizontal scalability
+- easier replacement
+- simplified failure recovery
+- reduced coupling
+
+Architecture:
+
+```
+Gateway Instance A
+
+        │
+
+        ▼
+
+Checkpoint Storage
+
+        ▲
+
+        │
+
+Gateway Instance B
+```
+
+Any healthy gateway instance can coordinate recovery.
 
 ---
 
-## Framework Independence
+# Explicit Recovery Model
 
-AgentMesh is designed around infrastructure concerns.
+Recovery should be deterministic.
 
-Recovery should remain independent of the framework executing the workload.
+FaultPlane follows an explicit recovery sequence:
+
+```
+Failure Detection
+
+        │
+
+        ▼
+
+Validate Failure
+
+        │
+
+        ▼
+
+Locate Checkpoint
+
+        │
+
+        ▼
+
+Select Runtime
+
+        │
+
+        ▼
+
+Restore State
+
+        │
+
+        ▼
+
+Continue Execution
+```
+
+Implicit retries are avoided because they make system behavior difficult to reason about.
+
+---
+
+# Observable Runtime
+
+Infrastructure decisions should be measurable.
+
+FaultPlane exposes operational visibility through:
+
+- metrics
+- traces
+- structured logs
+- recovery events
+
+Important events include:
+
+- worker failures
+- routing decisions
+- checkpoint operations
+- recovery duration
+- runtime health changes
+
+---
+
+# Framework Independence
+
+FaultPlane focuses on infrastructure primitives rather than application frameworks.
+
+The recovery layer should work with different execution environments including:
+
+- AI agent runtimes
+- inference services
+- API workers
+- distributed applications
+
+Application-specific logic remains outside the system boundary.
 
 ---
 
 # High-Level Architecture
 
 ```text
-                     Client
+                         Client
 
-                        │
+                           │
 
-                        ▼
+                           ▼
 
-                 AgentMesh Gateway
+                  FaultPlane Gateway
 
-          ┌─────────────┴─────────────┐
+              ┌────────────┴────────────┐
 
-          ▼                           ▼
+              ▼                         ▼
 
-Checkpoint Manager          Telemetry Pipeline
+     Failure Detection          Telemetry Pipeline
 
-          │                           │
+              │                         │
 
-          └─────────────┬─────────────┘
+              └────────────┬────────────┘
 
-                        ▼
+                           ▼
 
-               Routing Decision
+                  Recovery Controller
 
-                │             │
+                    │              │
 
-                ▼             ▼
+                    ▼              ▼
 
-        Primary Worker   Fallback Worker
+             Primary Runtime   Recovery Runtime
+
+                    │
+
+                    ▼
+
+             Checkpoint Storage
 ```
 
-The gateway coordinates execution.
+The gateway coordinates traffic.
 
-Workers remain responsible for application logic.
+Workers execute workloads.
+
+Storage preserves recovery state.
 
 ---
 
 # Control Plane
 
-The control plane manages execution recovery.
+The control plane manages resilience decisions.
 
-Responsibilities include:
+Responsibilities:
 
-- routing
+- runtime health evaluation
 - failure detection
 - checkpoint lookup
-- worker selection
 - recovery coordination
+- routing decisions
 
-The control plane intentionally avoids application-specific behavior.
+The control plane does not execute application workloads.
 
 ---
 
 # Data Plane
 
-The data plane executes user workloads.
+The data plane represents execution environments.
 
-Typical workers may include:
+Examples:
 
-- inference servers
-- agent runtimes
-- API workers
-- internal services
+- AI agent runtimes
+- inference workers
+- service processes
+- distributed applications
 
-Workers are considered replaceable execution targets.
+Workers are replaceable execution targets.
+
+Their lifecycle should not determine workflow durability.
 
 ---
 
-# Recovery Model
+# Recovery Workflow
 
-Recovery follows a deterministic workflow.
+Recovery follows a deterministic pipeline.
 
-```text
-Receive Request
+```
+Incoming Request
 
         │
 
         ▼
 
-Forward To Worker
+Route To Runtime
 
         │
 
         ▼
 
-Failure?
+Runtime Failure?
 
         │
 
-   ┌────┴────┐
+ ┌──────┴──────┐
 
-   │         │
+ │             │
 
- No         Yes
+ No            Yes
 
-   │         │
+ │             │
 
-   ▼         ▼
+ ▼             ▼
 
-Return   Lookup Checkpoint
+Response    Lookup Checkpoint
 
-             │
+                │
 
-             ▼
+                ▼
 
-      Select Worker
+          Select Runtime
 
-             │
+                │
 
-             ▼
+                ▼
 
-      Restore Context
+          Restore State
 
-             │
+                │
 
-             ▼
+                ▼
 
-      Resume Execution
+          Resume Execution
 ```
 
-Recovery is only attempted after infrastructure failures.
+Recovery handles infrastructure failures.
 
-Application errors remain outside the recovery model.
+Application-level failures remain outside the recovery boundary.
 
 ---
 
-# State Ownership
+# State Ownership Model
 
-Execution state belongs to the checkpoint system rather than individual workers.
+Execution state belongs to the checkpoint subsystem.
 
-```text
+```
 Worker
 
-↓
+   │
 
-Checkpoint
+   ▼
 
-↓
+Checkpoint Manager
 
-Storage
+   │
 
-↓
+   ▼
 
-Recovery
+Storage Backend
 
-↓
+   │
+
+   ▼
+
+Recovery Runtime
+
+   │
+
+   ▼
 
 Worker
 ```
 
-Workers may terminate.
+Workers may fail.
 
-Execution state should not.
+Execution progress should remain recoverable.
 
 ---
 
 # Component Boundaries
 
 | Component | Responsibility |
-|------------|----------------|
-| Gateway | Request routing |
-| Control Plane | Recovery decisions |
-| Storage | Checkpoint persistence |
+|---|---|
+| Gateway | Traffic coordination |
+| Recovery Controller | Failure handling decisions |
+| Checkpoint Manager | Execution state management |
+| Storage | Persistent recovery data |
 | Telemetry | Metrics and tracing |
 | Worker | Workload execution |
 
-Each component communicates through clearly defined interfaces.
-
-Cross-component coupling should remain minimal.
+Each component communicates through explicit interfaces.
 
 ---
 
 # Failure Model
 
-The current implementation assumes failures such as:
+Current failure scenarios include:
 
-- process termination
-- container restart
-- HTTP 5xx
-- timeout
-- network interruption
+- process crashes
+- container failures
+- connection interruptions
+- upstream timeout
+- unhealthy runtime instances
 
-Future versions may extend recovery to additional infrastructure scenarios.
+Future versions may extend recovery capabilities to additional infrastructure failures.
 
 ---
 
-# Trade-offs
+# Architectural Trade-offs
 
-Several implementation choices intentionally prioritize maintainability over feature count.
+FaultPlane intentionally prioritizes reliability and maintainability.
 
-| Decision | Benefit | Cost |
-|----------|---------|------|
-| Stateless gateway | Horizontal scalability | External storage required |
-| Explicit checkpoints | Deterministic recovery | Small write overhead |
+| Decision | Benefit | Trade-off |
+|---|---|---|
+| Stateless gateway | Easy horizontal scaling | Requires shared state storage |
+| External checkpoints | Durable recovery | Additional storage dependency |
 | Framework independence | Broad compatibility | Less framework-specific optimization |
-| Small control plane | Simpler operation | Fewer built-in features |
+| Minimal control plane | Easier operation | Fewer built-in abstractions |
 
-Every trade-off favors predictable behavior.
+Each decision favors predictable infrastructure behavior.
 
 ---
 
 # Evolution Strategy
 
-The architecture evolves incrementally.
+FaultPlane evolves incrementally.
 
-```text
+```
 Local Recovery
 
         │
 
         ▼
 
-Persistent Storage
+Persistent Checkpoints
 
         │
 
@@ -354,35 +498,38 @@ Cluster Deployment
 
         ▼
 
-Production Readiness
+Production Infrastructure
 ```
 
-Each stage introduces one capability while preserving existing behavior.
+Each stage introduces new capability without breaking existing architecture.
 
 ---
 
 # Future Design Work
 
-Areas under active evaluation include:
+Areas under evaluation:
 
 - distributed checkpoint replication
 - adaptive routing
-- policy-based recovery
-- storage abstraction
+- policy-driven recovery
 - gRPC transport
+- Kubernetes integration
 - multi-region recovery
+- kernel-level observability
 - recovery optimization
 
-Research items are intentionally separated from committed roadmap items.
+Research areas remain separate from committed roadmap items.
 
 ---
 
-# References
+# Related Documentation
 
-Related documents:
+Additional documentation:
 
-- `ARCHITECTURE.md`
-- `ROADMAP.md`
-- `README.md`
+- `README.md` — Project overview
+- `ARCHITECTURE.md` — System architecture
+- `CHECKPOINTS.md` — Recovery state model
+- `DEPLOYMENT.md` — Deployment patterns
+- `ROADMAP.md` — Future milestones
 
-Implementation-specific documentation is provided in the remaining files under `docs/`.
+Implementation-specific documentation is maintained under `docs/`.

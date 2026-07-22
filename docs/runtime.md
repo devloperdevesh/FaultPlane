@@ -1,506 +1,657 @@
 # Runtime
 
-This document describes how AgentMesh behaves during execution.
+This document describes how FaultPlane behaves during execution.
 
-It focuses on runtime behavior rather than implementation details. The objective is to explain how requests move through the system, how execution state evolves, and how recovery decisions are made.
+It explains runtime lifecycle, request flow, state ownership, failure handling, and recovery behavior.
+
+Unlike implementation documentation, this document focuses on **runtime semantics** — how components interact during normal execution and infrastructure failures.
 
 ---
 
 # Runtime Overview
 
-AgentMesh consists of two logical layers.
+FaultPlane consists of two logical layers:
 
 ```text
-               Control Plane
+                 Control Plane
+
         ┌────────────────────────┐
         │ Gateway                │
-        │ Routing                │
-        │ Recovery               │
+        │ Routing Engine         │
+        │ Recovery Manager       │
         │ Telemetry              │
         └──────────┬─────────────┘
                    │
                    ▼
-               Data Plane
+
+                 Data Plane
+
         ┌────────────────────────┐
-        │ Primary Worker         │
-        │ Fallback Worker        │
-        │ Application Runtime    │
+        │ Worker Runtime         │
+        │ Application Execution  │
+        │ External Services      │
         └────────────────────────┘
 ```
 
-The control plane coordinates execution.
+The control plane coordinates traffic and recovery.
 
-The data plane performs application work.
+The data plane performs workload execution.
 
 ---
 
 # Runtime Lifecycle
 
-A request passes through a fixed sequence of stages.
+Every request follows a predictable execution lifecycle.
 
 ```text
 Receive Request
+
         │
+
         ▼
-Validate
+
+Validate Metadata
+
         │
+
         ▼
-Select Worker
+
+Select Runtime
+
         │
+
         ▼
+
 Forward Request
+
         │
+
         ▼
-Receive Response
+
+Execute Work
+
         │
+
         ▼
+
 Update Checkpoint
+
         │
+
         ▼
+
 Return Response
 ```
 
-Recovery is introduced only if execution cannot continue normally.
+Recovery is triggered only when execution cannot continue normally.
 
 ---
 
 # Gateway Lifecycle
 
-The gateway owns request coordination.
+The gateway manages request coordination.
+
+Lifecycle:
 
 ```text
 Start
-   │
-   ▼
+
+ │
+
+ ▼
+
 Load Configuration
-   │
-   ▼
+
+ │
+
+ ▼
+
 Initialize Storage
-   │
-   ▼
+
+ │
+
+ ▼
+
 Initialize Telemetry
-   │
-   ▼
-Accept Requests
-   │
-   ▼
+
+ │
+
+ ▼
+
+Accept Traffic
+
+ │
+
+ ▼
+
 Graceful Shutdown
 ```
 
-The gateway never executes workload logic.
+The gateway does not execute application workloads.
+
+Its responsibility is limited to:
+
+- routing
+- failure detection
+- recovery coordination
+- telemetry generation
 
 ---
 
 # Worker Lifecycle
 
-Workers execute user workloads independently from the gateway.
+Workers execute workload operations independently.
 
 ```text
 Start Worker
+
       │
+
       ▼
+
 Receive Request
+
       │
+
       ▼
-Execute Step
+
+Execute Operation
+
       │
+
       ▼
-Checkpoint Update
+
+Create Checkpoint
+
       │
+
       ▼
-Return Response
+
+Return Result
 ```
 
-Workers are expected to be replaceable.
+Workers are replaceable execution targets.
 
-The control plane should not depend on any individual worker instance.
+The control plane should not depend on any specific worker instance.
 
 ---
 
-# Request Processing
+# Request Processing Flow
 
-Incoming requests follow the same processing pipeline.
+Normal request execution:
 
 ```text
 Client
+
    │
+
    ▼
-Gateway
+
+FaultPlane Gateway
+
    │
+
    ▼
-Routing
+
+Routing Engine
+
    │
+
    ▼
-Worker
+
+Worker Runtime
+
    │
+
    ▼
+
 Response
 ```
 
-The gateway maintains request metadata required for recovery.
+The gateway maintains only the metadata required for routing and recovery.
 
 ---
 
-# Runtime State
+# Runtime State Model
 
-AgentMesh distinguishes between application state and infrastructure state.
+FaultPlane separates infrastructure state from application state.
 
 | State | Owner |
-|--------|-------|
-| Request metadata | Gateway |
-| Routing information | Control Plane |
-| Checkpoint | Storage |
-| Business data | Application |
-| Execution context | Worker |
+|---|---|
+| Request Metadata | Gateway |
+| Routing Decision | Control Plane |
+| Execution State | Checkpoint System |
+| Application Data | Workload |
+| Runtime Health | Telemetry Layer |
 
-Only checkpoint information is shared across recovery events.
+Only recovery-related state is shared across runtime failures.
 
 ---
 
-# Context Flow
+# Execution Context Flow
 
-Execution context evolves as work progresses.
+Execution state evolves through checkpoints.
 
 ```text
 Request
-    │
-    ▼
-Worker
-    │
-    ▼
-Checkpoint
-    │
-    ▼
-Storage
-    │
-    ▼
-Recovery
+
+   │
+
+   ▼
+
+Worker Runtime
+
+   │
+
+   ▼
+
+Checkpoint Manager
+
+   │
+
+   ▼
+
+Storage Backend
+
+   │
+
+   ▼
+
+Recovery Runtime
 ```
 
-Context should be captured after successful execution steps.
+Checkpoints should only represent successful execution progress.
 
-Failed operations must not overwrite the last valid checkpoint.
+Failed operations must not overwrite valid recovery state.
 
 ---
 
 # Recovery Trigger
 
-Recovery is initiated only after infrastructure failures.
+Recovery is initiated only for infrastructure failures.
 
-Typical triggers include:
+Examples:
 
-- worker unavailable
+- worker crash
 - connection timeout
-- HTTP 5xx
+- unavailable runtime
 - network interruption
+- upstream failure
 
-Application-specific failures remain outside the runtime recovery model.
+Application-level failures remain outside the recovery model.
 
 ---
 
 # Recovery Pipeline
 
+Recovery follows a deterministic sequence.
+
 ```text
-Worker Failure
-      │
-      ▼
-Detect Failure
-      │
-      ▼
-Lookup Checkpoint
-      │
-      ▼
-Select Fallback
-      │
-      ▼
-Restore Context
-      │
-      ▼
+Runtime Failure
+
+        │
+
+        ▼
+
+Failure Detection
+
+        │
+
+        ▼
+
+Locate Checkpoint
+
+        │
+
+        ▼
+
+Select Runtime
+
+        │
+
+        ▼
+
+Restore State
+
+        │
+
+        ▼
+
 Resume Execution
 ```
 
-Recovery is deterministic.
-
-The same checkpoint should always produce the same recovery decision.
+The same checkpoint should produce consistent recovery behavior.
 
 ---
 
 # Runtime Guarantees
 
-The runtime is designed around a small number of guarantees.
+FaultPlane provides several runtime guarantees.
 
 | Guarantee | Description |
-|-----------|-------------|
-| Stateless Gateway | Execution progress is not stored in gateway memory. |
-| Explicit Recovery | Recovery occurs only after validated failures. |
-| Replaceable Workers | Workers may be restarted without changing gateway behavior. |
-| Observable Execution | Recovery decisions are visible through telemetry. |
+|---|---|
+| Stateless Gateway | Execution state does not depend on gateway memory. |
+| Replaceable Workers | Workers can restart without losing progress. |
+| Explicit Recovery | Recovery happens through defined workflows. |
+| Observable Execution | Runtime events are measurable. |
 
-These guarantees define expected runtime behavior across all deployments.
+These guarantees define expected behavior across deployments.
+
 ---
 
-# Failure Handling
+# Failure Classification
 
-Failures are classified before recovery decisions are made.
-
-The runtime distinguishes between infrastructure failures and application failures.
+FaultPlane separates infrastructure failures from application failures.
 
 | Failure Type | Recoverable | Example |
-|--------------|-------------|---------|
+|---|---|---|
 | Worker crash | Yes | Process termination |
-| HTTP 5xx | Yes | Upstream unavailable |
-| Network timeout | Yes | Connection timeout |
-| Connection refused | Yes | Worker offline |
-| Invalid request | No | Malformed payload |
-| Business logic error | No | Application exception |
+| Container failure | Yes | Runtime restart |
+| Timeout | Yes | Network delay |
+| Connection failure | Yes | Worker unavailable |
+| Invalid request | No | Bad input |
+| Business error | No | Application exception |
 
-Only infrastructure failures trigger the recovery pipeline.
+Only infrastructure failures enter recovery workflows.
 
 ---
 
-# Health Checks
+# Health Model
 
-Workers expose lightweight health endpoints.
+Workers expose lightweight health information.
 
-Typical health states include:
+Example states:
 
 | State | Description |
-|--------|-------------|
-| Healthy | Worker accepts requests |
-| Degraded | Worker responds with increased latency |
-| Unavailable | Worker cannot process requests |
+|---|---|
+| Healthy | Accepting workload |
+| Degraded | Reduced reliability |
+| Unavailable | Cannot process requests |
 
-Health checks influence routing decisions but never modify application state.
+Health information influences routing decisions.
+
+It does not modify application state.
 
 ---
 
 # Concurrency Model
 
-AgentMesh does not execute workloads directly.
+FaultPlane coordinates concurrent execution without directly managing application threads.
 
-Its concurrency model focuses on coordinating request routing and checkpoint updates.
+Example:
 
 ```text
 Incoming Requests
+
         │
+
         ▼
+
 Gateway
-        │
-        ├─────────────┐
-        ▼             ▼
- Worker A       Worker B
-        │             │
-        └──────┬──────┘
-               ▼
-      Checkpoint Store
+
+   ┌────┴────┐
+
+   ▼         ▼
+
+Worker A   Worker B
+
+   │         │
+
+   └────┬────┘
+
+        ▼
+
+Checkpoint Storage
 ```
 
-Routing decisions should remain independent across concurrent requests.
+Routing decisions remain isolated between concurrent requests.
 
 ---
 
-# Scheduling
+# Scheduling Responsibility
 
-AgentMesh intentionally avoids implementing a workload scheduler.
+FaultPlane does not implement workload scheduling.
 
-Scheduling remains the responsibility of external systems such as:
+Scheduling remains the responsibility of external systems:
 
 - Kubernetes
-- Container runtimes
-- Orchestration frameworks
+- container platforms
+- orchestration systems
 
-The gateway selects an execution target but does not decide when workloads should run.
+FaultPlane selects execution targets but does not decide when workloads should execute.
 
 ---
 
 # Resource Management
 
-The control plane should maintain a small resource footprint.
+The runtime is designed to maintain a lightweight operational footprint.
 
-Operational priorities include:
+Important properties:
 
 - low memory usage
-- predictable CPU utilization
+- predictable CPU usage
 - minimal allocations
 - fast startup
 - graceful shutdown
 
-The gateway should remain lightweight regardless of workload complexity.
+The gateway should remain efficient regardless of workload complexity.
 
 ---
 
 # Graceful Shutdown
 
-Shutdown follows a controlled sequence.
+Shutdown follows a controlled lifecycle.
 
 ```text
 Stop Accepting Requests
-          │
-          ▼
+
+        │
+
+        ▼
+
 Complete Active Requests
-          │
-          ▼
+
+        │
+
+        ▼
+
 Flush Telemetry
-          │
-          ▼
+
+        │
+
+        ▼
+
 Release Resources
-          │
-          ▼
-Terminate Process
+
+        │
+
+        ▼
+
+Terminate Runtime
 ```
 
-New requests should not be accepted after shutdown begins.
+New traffic should not enter the system after shutdown begins.
 
 ---
 
 # Timeout Strategy
 
-Timeout values should be configured explicitly.
+Timeouts should be explicit and configurable.
 
-Different stages of the runtime may require different timeout thresholds.
-
-Examples include:
+Important timeout categories:
 
 - request timeout
 - worker timeout
 - checkpoint timeout
-- telemetry export timeout
+- telemetry timeout
 
-Using explicit timeouts improves operational predictability.
+Explicit timeout management improves operational predictability.
 
 ---
 
 # Retry Strategy
 
-AgentMesh does not perform unlimited retries.
+FaultPlane avoids unlimited retries.
 
-Recovery attempts should remain bounded.
+Recovery attempts should remain controlled.
 
-Typical strategy:
+Flow:
 
 ```text
 Request
+
    │
+
    ▼
+
 Worker
+
    │
+
 Failure
+
    │
+
    ▼
+
 Recovery
+
    │
+
 Success?
+
  ┌──┴──┐
+
  │     │
+
 Yes    No
+
  │     │
+
  ▼     ▼
-Done  Return Error
+
+Done  Error
 ```
 
-Repeated failures should be surfaced to operators rather than retried indefinitely.
+Repeated failures should become visible through telemetry.
 
 ---
 
-# Runtime Constraints
+# Current Runtime Constraints
 
-Current implementation intentionally limits scope.
+Current implementation focuses on establishing the recovery foundation.
 
-Current constraints include:
+Current limitations:
 
 - single gateway instance
-- in-memory checkpoints
+- in-memory checkpoint storage
 - HTTP transport
-- local development environment
+- local development focus
 
-These constraints simplify implementation while the recovery model matures.
+These constraints allow the recovery model to mature before introducing distributed complexity.
 
 ---
 
 # Performance Considerations
 
-Runtime optimizations focus on predictable behavior.
+Runtime optimization focuses on predictable behavior.
 
-Key areas include:
+Primary areas:
 
 - routing latency
 - checkpoint overhead
-- allocation reduction
-- telemetry efficiency
-- startup time
+- memory allocation
+- telemetry cost
+- startup performance
 
-Performance work should be driven by benchmark data rather than assumptions.
+Optimization decisions should be validated through benchmarks.
 
 ---
 
 # Observability
 
-Runtime events should be observable through telemetry.
+Runtime events should be visible through telemetry.
 
-Examples include:
+Examples:
 
 | Event | Description |
-|--------|-------------|
-| Gateway startup | Control plane initialization |
-| Request received | Incoming workload |
-| Worker selected | Routing decision |
-| Checkpoint updated | Successful execution step |
-| Recovery initiated | Infrastructure failure detected |
-| Recovery completed | Execution resumed |
-| Shutdown complete | Runtime termination |
+|---|---|
+| Gateway Started | Control plane initialization |
+| Request Received | Incoming traffic |
+| Runtime Selected | Routing decision |
+| Checkpoint Created | Execution progress saved |
+| Recovery Started | Failure handling initiated |
+| Recovery Completed | Execution restored |
+| Shutdown Complete | Runtime terminated |
 
-Operational visibility is considered a core runtime capability.
+Observability is a core runtime capability.
 
 ---
 
 # Operational Recommendations
 
-Recommended deployment practices include:
+Recommended practices:
 
 - monitor worker health
-- validate recovery regularly
-- export telemetry centrally
-- minimize gateway dependencies
-- keep checkpoint payloads small
-- test failure scenarios continuously
+- validate recovery paths
+- collect runtime metrics
+- test failure scenarios
+- keep checkpoints efficient
+- review telemetry regularly
 
-Reliable recovery depends on operational discipline as much as implementation quality.
+Reliable recovery requires both correct architecture and disciplined operations.
 
 ---
 
 # Runtime Summary
 
-The runtime is designed around a simple execution model.
+FaultPlane follows a simple execution model:
 
 ```text
 Request
+
    │
+
    ▼
+
 Gateway
+
    │
+
    ▼
-Worker
+
+Worker Runtime
+
    │
+
+   ▼
+
 Checkpoint
+
    │
+
    ▼
+
 Storage
+
    │
+
    ▼
+
 Recovery
+
    │
+
    ▼
-Continue
+
+Continue Execution
 ```
 
-The gateway coordinates execution.
+Responsibilities remain separated:
 
-Workers perform application logic.
+- Gateway coordinates traffic.
+- Workers execute workloads.
+- Storage preserves execution state.
+- Recovery restores progress.
 
-Storage preserves execution state.
-
-Recovery restores progress when infrastructure failures occur.
-
-Each component remains focused on a single responsibility.
-
----
+This separation allows FaultPlane to provide resilience for long-running AI infrastructure while keeping runtime behavior predictable and observable.

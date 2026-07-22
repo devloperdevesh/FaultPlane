@@ -1,235 +1,316 @@
 # Roadmap
 
-This document describes the planned evolution of AgentMesh.
+This document describes the planned evolution of FaultPlane.
 
-The roadmap is organized into incremental milestones rather than fixed release dates. Priorities may change as the project matures, implementation experience grows, and community feedback is incorporated.
+The roadmap focuses on incremental infrastructure improvements rather than fixed release deadlines.
 
-AgentMesh is currently focused on establishing a reliable recovery layer for long-running AI workloads before expanding into distributed deployments.
+Priorities may evolve based on:
+
+- engineering learnings
+- production requirements
+- community feedback
+- ecosystem changes
+
+FaultPlane is currently focused on building a reliable transport resilience layer for long-running AI workloads.
 
 ---
 
-# Guiding Principles
+# Engineering Principles
 
-Every milestone should improve one or more of the following areas.
+Every milestone should improve one or more core principles.
 
 | Principle | Description |
-|-----------|-------------|
-| Reliability | Recover execution without losing completed work. |
-| Simplicity | Keep the control plane small and understandable. |
-| Observability | Make every recovery decision measurable. |
-| Maintainability | Prefer explicit implementations over unnecessary abstractions. |
-| Compatibility | Remain independent of AI frameworks whenever practical. |
+|---|---|
+| Reliability | Preserve execution continuity during infrastructure failures. |
+| Simplicity | Keep runtime components understandable and maintainable. |
+| Observability | Make every important runtime decision measurable. |
+| Performance | Minimize latency and infrastructure overhead. |
+| Compatibility | Remain independent from specific AI frameworks. |
+| Extensibility | Support future storage, transport, and deployment models. |
 
 ---
 
 # Current Status
 
-| Area | Status |
-|------|--------|
-| Gateway | In Progress |
-| Control Plane | In Progress |
-| Checkpoint Engine | In Progress |
-| Recovery Workflow | In Progress |
-| Local Docker Environment | In Progress |
+| Component | Status |
+|---|---|
+| Gateway Runtime | Active Development |
+| Failure Detection | Active Development |
+| Recovery Workflow | Active Development |
+| Runtime State Layer | Active Development |
+| Local Simulation Environment | Active Development |
 | Documentation | Active |
 | Automated Testing | Planned |
+| Persistent Storage | Planned |
 | Production Deployment | Planned |
 
 ---
 
-# Milestone 1 — Local Recovery
+# Milestone 1 — Runtime Gateway Foundation
 
 ## Objective
 
-Validate the recovery model on a single machine using isolated worker processes.
+Build the core data-plane runtime responsible for traffic handling and failure awareness.
 
 ## Deliverables
 
-- HTTP gateway
-- Request routing
-- In-memory checkpoint storage
-- Local worker simulation
-- Failure detection
-- Automatic recovery
-- Docker Compose environment
+- Go gateway runtime
+- Request routing layer
+- Worker communication model
+- Runtime health detection
+- Local execution simulation
+- Development environment
 - Initial documentation
 
 ## Success Criteria
 
-- Recovery from worker failure
-- Deterministic routing behavior
-- Stable local development environment
+- Gateway can route workloads reliably
+- Worker failures can be detected
+- Runtime behavior is reproducible locally
 
-Status
+Status:
 
-**In Progress**
+**Active Development**
 
 ---
 
-# Milestone 2 — Observability
+# Milestone 2 — Recovery Runtime
 
 ## Objective
 
-Expose operational visibility into the recovery process.
+Introduce recovery coordination for failed execution environments.
+
+## Deliverables
+
+- Recovery lifecycle management
+- Failure event handling
+- Runtime state tracking
+- Recovery decision engine
+- Worker health evaluation
+
+## Success Criteria
+
+- Failed workers can be detected
+- Recovery workflows execute deterministically
+- Recovery decisions are observable
+
+Status:
+
+**Active Development**
+
+---
+
+# Milestone 3 — Runtime Observability
+
+## Objective
+
+Provide complete visibility into system behavior.
 
 ## Deliverables
 
 - OpenTelemetry integration
 - Prometheus metrics
-- Jaeger traces
 - Structured logging
+- Distributed tracing
 - Request correlation IDs
 
-## Metrics
+## Key Metrics
 
-- Recovery latency
-- Active workflows
-- Request throughput
-- Worker availability
-- Recovery success rate
+| Metric | Purpose |
+|---|---|
+| Recovery Latency | Measure recovery speed |
+| Request Throughput | Measure gateway capacity |
+| Worker Health | Monitor execution availability |
+| Recovery Success Rate | Measure reliability |
+| Runtime Errors | Identify failures |
 
 ## Success Criteria
 
-Every routing decision should be traceable through a single execution path.
+Every important runtime event should be traceable.
 
-Status
+Status:
 
 **Planned**
 
 ---
 
-# Milestone 3 — Persistent Checkpoints
+# Milestone 4 — Persistent Runtime State
 
 ## Objective
 
-Replace in-memory checkpoint storage with durable storage backends.
-
-## Planned Backends
-
-| Backend | Purpose |
-|----------|----------|
-| Redis | Fast checkpoint lookup |
-| PostgreSQL | Durable persistence |
-| Pluggable Storage Interface | Backend abstraction |
-
-## Success Criteria
-
-Recovery remains possible after gateway restart.
-
-Status
-
-**Planned**
-
----
-
-# Milestone 4 — gRPC Transport
-
-## Objective
-
-Support high-throughput communication between the gateway and workers.
+Move from development storage to production-grade state management.
 
 ## Deliverables
 
-- gRPC gateway
-- Streaming support
-- Protobuf definitions
-- HTTP compatibility
+Storage abstraction supporting:
+
+| Backend | Purpose |
+|---|---|
+| Memory Store | Local development |
+| Redis | Fast runtime state lookup |
+| PostgreSQL | Durable persistence |
+| Future Backends | Extensible storage model |
 
 ## Success Criteria
 
-Reduced transport overhead while preserving recovery behavior.
+Recovery remains possible after runtime restart.
 
-Status
+Status:
 
 **Planned**
 
 ---
 
-# Milestone 5 — Kubernetes Deployment
+# Milestone 5 — High Performance Transport
 
 ## Objective
 
-Deploy AgentMesh inside Kubernetes clusters.
+Improve communication efficiency between runtime components.
+
+## Deliverables
+
+- gRPC transport support
+- Streaming communication
+- Protocol definitions
+- Connection optimization
+- Transport benchmarks
+
+## Success Criteria
+
+- Lower communication overhead
+- Predictable latency
+- Maintain recovery capabilities
+
+Status:
+
+**Planned**
+
+---
+
+# Milestone 6 — Cloud Native Deployment
+
+## Objective
+
+Deploy FaultPlane in distributed environments.
 
 ## Deliverables
 
 - Kubernetes manifests
-- ConfigMaps
-- Secrets
+- Container images
 - Health probes
-- Rolling updates
-- Horizontal scaling
+- Configuration management
+- Deployment documentation
+- Horizontal scaling support
+
+Architecture target:
+
+```
+Users
+
+ ↓
+
+Load Balancer
+
+ ↓
+
+FaultPlane Gateway Cluster
+
+ ↓
+
+Recovery Layer
+
+ ↓
+
+Worker Fleet
+
+ ↓
+
+State Backend
+```
 
 ## Success Criteria
 
-Multiple gateway instances operate behind a load balancer while sharing checkpoint storage.
+Multiple FaultPlane instances operate reliably in production-like environments.
 
-Status
+Status:
 
 **Planned**
 
 ---
 
-# Milestone 6 — Distributed Recovery
+# Milestone 7 — Distributed Recovery
 
 ## Objective
 
-Support recovery across multiple gateway instances.
+Enable recovery across multiple runtime instances.
 
 ## Deliverables
 
-- Shared checkpoint backend
-- Distributed routing
+- Shared state backend
+- Distributed coordination
 - Worker discovery
 - Gateway coordination
+- Failure-aware routing
 
 ## Success Criteria
 
-Recovery remains available even when individual gateway instances fail.
+Recovery remains available even when individual runtime instances fail.
 
-Status
+Status:
 
 **Research**
 
 ---
 
-# Milestone 7 — Performance
+# Milestone 8 — Kernel-Level Observability
 
 ## Objective
 
-Reduce recovery overhead.
+Explore deeper infrastructure visibility.
 
-Areas of focus include:
+Research areas:
 
-- allocation reduction
-- routing latency
-- serialization overhead
-- checkpoint performance
-- startup time
+- eBPF telemetry
+- socket-level monitoring
+- Linux networking signals
+- kernel runtime insights
 
-Benchmarking will accompany every optimization.
+## Success Criteria
 
-Status
+Improve visibility without increasing application complexity.
+
+Status:
 
 **Research**
 
 ---
 
-# Milestone 8 — Production Readiness
+# Milestone 9 — Production Readiness
 
-The first production-ready release should include:
+A stable production release should include:
 
-- persistent checkpoint storage
+## Reliability
+
+- persistent state storage
+- recovery validation
+- failure testing
+- backup strategies
+
+## Observability
+
 - OpenTelemetry support
-- Prometheus metrics
-- gRPC transport
+- metrics dashboards
+- tracing support
+- operational documentation
+
+## Engineering
+
 - automated testing
 - benchmark suite
-- deployment documentation
 - CI/CD pipeline
 - versioned releases
 
-Status
+Status:
 
 **Future**
 
@@ -237,170 +318,189 @@ Status
 
 # Testing Roadmap
 
-Testing evolves alongside implementation.
-
-## Unit Tests
-
-- routing
-- storage
-- recovery
-- gateway
+Testing evolves alongside runtime capabilities.
 
 ---
 
-## Integration Tests
+## Unit Testing
 
-- checkpoint restoration
+Coverage areas:
+
+- routing logic
+- state management
+- recovery workflows
+- gateway behavior
+- telemetry components
+
+---
+
+## Integration Testing
+
+Scenarios:
+
 - worker recovery
+- runtime restart
 - timeout handling
-- retry behavior
+- connection failures
+- state restoration
 
 ---
 
-## Failure Injection
+## Failure Injection Testing
 
-Simulated scenarios include:
+Simulated failures:
 
-- worker crash
-- network timeout
-- connection reset
-- gateway restart
-- checkpoint corruption
+```
+Worker Crash
+
+        ↓
+
+Network Timeout
+
+        ↓
+
+Connection Failure
+
+        ↓
+
+Recovery Execution
+
+        ↓
+
+Runtime Validation
+```
 
 ---
 
-## Benchmarks
+## Performance Benchmarking
 
-Measure:
+Key measurements:
 
 | Metric | Goal |
-|----------|------|
-| Recovery Latency | Minimize |
-| Gateway Throughput | Increase |
-| Memory Allocation | Reduce |
-| CPU Usage | Predictable |
-| Recovery Success Rate | Maximize |
+|---|---|
+| Recovery Latency | Reduce |
+| Throughput | Increase |
+| Memory Usage | Optimize |
+| CPU Overhead | Maintain Predictability |
+| Recovery Reliability | Maximize |
 
 ---
 
 # Documentation Roadmap
 
-Documentation expands with implementation.
+Documentation will evolve with the system.
 
-Planned documents include:
+Planned documentation:
 
-```text
+```
 docs/
 
-design.md
+├── architecture.md
 
-runtime.md
+├── runtime.md
 
-routing.md
+├── gateway.md
 
-checkpoint.md
+├── recovery.md
 
-telemetry.md
+├── storage.md
 
-deployment.md
+├── telemetry.md
 
-benchmarks.md
+├── deployment.md
 
-faq.md
+├── benchmarks.md
+
+└── troubleshooting.md
 ```
 
-Documentation should remain synchronized with the implementation.
+Documentation should remain synchronized with implementation changes.
 
 ---
 
-# Future Research
+# Future Research Areas
 
-The following areas are under evaluation.
+Potential areas of exploration:
 
-- adaptive routing
 - distributed checkpoint replication
-- storage abstraction
-- worker discovery
-- policy engine
-- eBPF-based telemetry
-- recovery optimization
-- multi-region deployment
+- adaptive routing strategies
+- multi-region recovery
+- policy-driven recovery
+- advanced telemetry
+- eBPF integrations
+- workload-aware optimization
 
-Research items are exploratory and are not commitments.
+Research items are exploratory and may change.
 
 ---
 
 # Out of Scope
 
-The project does not currently plan to include:
+FaultPlane intentionally does not aim to become:
 
-- model hosting
-- workflow orchestration
-- prompt engineering
-- vector databases
-- model fine-tuning
-- GPU scheduling
-- user interfaces
-- workflow builders
+- AI workflow orchestrator
+- model hosting platform
+- vector database
+- prompt management system
+- GPU scheduler
+- application framework
 
-Keeping scope focused reduces long-term maintenance complexity.
+The project focuses on infrastructure resilience.
 
 ---
 
 # Release Strategy
 
-Releases follow incremental milestones.
+FaultPlane follows incremental releases.
 
-```text
+```
 Prototype
 
-      │
+    ↓
 
-      ▼
+Experimental Release
+
+    ↓
 
 Alpha
 
-      │
-
-      ▼
+    ↓
 
 Beta
 
-      │
+    ↓
 
-      ▼
-
-Release Candidate
-
-      │
-
-      ▼
-
-Stable
+Stable Release
 ```
 
-Breaking changes may occur before the first stable release.
+Before v1.0:
+
+- APIs may evolve
+- architecture may change
+- interfaces may be refined
+
+Major changes will be documented.
 
 ---
 
 # Long-Term Vision
 
-AgentMesh aims to provide a lightweight recovery layer for long-running AI systems.
+FaultPlane aims to become a reliability foundation for continuously running AI systems.
 
-The project will continue prioritizing:
+The project focuses on:
 
+- transparent failure handling
 - predictable recovery
-- operational simplicity
-- observable behavior
-- maintainable architecture
+- observable infrastructure
+- simple operational models
 
-New functionality should strengthen these principles rather than increase feature count.
+The long-term goal is to make distributed AI workloads more resilient without forcing every application developer to build their own recovery system.
 
 ---
 
 # Version History
 
 | Version | Status |
-|----------|--------|
+|---|---|
 | v0.x | Active Development |
 | v1.0 | Planned |

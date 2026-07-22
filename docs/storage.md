@@ -1,47 +1,64 @@
 # Storage
 
-This document describes the storage subsystem used by AgentMesh.
+This document describes the storage subsystem used by FaultPlane.
 
-The storage layer persists execution checkpoints and exposes a simple interface to the recovery system. It is intentionally isolated from routing, runtime execution, and telemetry.
+The storage layer is responsible for preserving execution checkpoints required for recovery.
 
-Storage exists to preserve workflow progress across infrastructure failures while remaining independent of worker processes.
+It is intentionally isolated from request routing, workload execution, and telemetry systems.
+
+The primary goal of the storage subsystem is to ensure execution progress survives infrastructure failures without coupling recovery behavior to a specific storage backend.
 
 ---
 
 # Overview
 
-The storage subsystem is responsible for persisting checkpoint state.
+FaultPlane separates execution state from worker lifetime.
+
+Workers generate checkpoint data.
+
+The checkpoint manager coordinates persistence.
+
+The storage layer provides durable state required during recovery.
 
 ```text
-Worker
-   │
-   ▼
+Worker Runtime
+
+      │
+
+      ▼
+
 Checkpoint Manager
-   │
-   ▼
+
+      │
+
+      ▼
+
 Storage Interface
-   │
-   ▼
+
+      │
+
+      ▼
+
 Storage Backend
 ```
 
 The storage implementation is replaceable.
 
-Recovery logic should not depend on a specific backend.
+Recovery logic should depend only on the storage contract, not the underlying backend.
 
 ---
 
 # Design Goals
 
-The storage layer is designed around the following principles.
+The storage subsystem follows several core principles.
 
 | Goal | Description |
-|------|-------------|
-| Durability | Preserve checkpoint state reliably. |
-| Simplicity | Keep the storage interface minimal. |
-| Portability | Support multiple storage implementations. |
-| Predictability | Provide deterministic read and write behavior. |
-| Independence | Separate persistence from recovery logic. |
+|---|---|
+| Reliability | Preserve valid execution state during failures. |
+| Simplicity | Maintain a small and predictable storage interface. |
+| Portability | Support multiple backend implementations. |
+| Consistency | Provide deterministic checkpoint reads and writes. |
+| Isolation | Keep persistence independent from runtime execution. |
 
 ---
 
@@ -49,289 +66,347 @@ The storage layer is designed around the following principles.
 
 The storage subsystem is responsible for:
 
-- writing checkpoints
-- reading checkpoints
-- deleting expired checkpoints
-- validating stored metadata
+- storing checkpoints
+- retrieving checkpoints
+- validating checkpoint metadata
+- removing obsolete checkpoints
+- maintaining recovery state
 
 The storage subsystem is not responsible for:
 
 - request routing
 - worker execution
+- workload scheduling
 - telemetry collection
-- workflow scheduling
-- business logic
+- application business logic
 
 ---
 
 # Storage Architecture
 
+The storage layer sits between execution recovery and physical persistence.
+
 ```text
-Gateway
-    │
-    ▼
-Checkpoint Manager
-    │
-    ▼
-Storage Interface
-    │
-    ▼
-Backend
+                 Recovery System
+
+                       │
+
+                       ▼
+
+              Checkpoint Manager
+
+                       │
+
+                       ▼
+
+              Storage Interface
+
+                       │
+
+          ┌────────────┼────────────┐
+
+          ▼            ▼            ▼
+
+       Memory       Redis      PostgreSQL
 ```
 
-The interface between the checkpoint manager and the backend should remain stable even if storage implementations change.
+The recovery system communicates only through the storage interface.
+
+Backend changes should not require modifications to recovery logic.
 
 ---
 
 # Storage Interface
 
-The storage interface should expose a small set of operations.
+The storage interface intentionally exposes minimal operations.
 
 | Operation | Purpose |
-|-----------|---------|
-| Save | Persist a checkpoint |
-| Load | Retrieve a checkpoint |
-| Delete | Remove a checkpoint |
-| Exists | Verify checkpoint presence |
-| List | Enumerate checkpoints (optional) |
+|---|---|
+| Save | Persist checkpoint state |
+| Load | Retrieve checkpoint state |
+| Delete | Remove obsolete checkpoints |
+| Exists | Verify checkpoint availability |
+| List | Inspect stored checkpoints |
 
-Additional operations should only be introduced when required by the recovery model.
+Additional operations should only be introduced when required by recovery semantics.
 
 ---
 
-# Backend Abstraction
+# Backend Implementations
 
-Storage implementations should satisfy the same interface.
-
-Possible backends include:
+FaultPlane supports interchangeable storage implementations.
 
 | Backend | Status |
-|----------|--------|
-| In-Memory | Current |
+|---|---|
+| In-Memory Storage | Current |
 | Redis | Planned |
 | PostgreSQL | Planned |
-| Distributed KV Store | Research |
+| Distributed KV Storage | Research |
 
-The recovery pipeline should not require changes when switching storage backends.
+The recovery model remains unchanged regardless of backend selection.
 
 ---
 
-# Data Model
+# Checkpoint Data Model
 
-A checkpoint record contains the minimum information required to resume execution.
+A checkpoint contains the minimum information required to resume execution.
 
 | Field | Description |
-|--------|-------------|
-| Agent ID | Workflow identifier |
-| Checkpoint ID | Unique record identifier |
-| Step | Last completed execution step |
+|---|---|
+| Workflow ID | Identifies execution flow |
+| Checkpoint ID | Unique checkpoint reference |
+| Execution Step | Latest completed operation |
 | Context | Serialized execution state |
-| Timestamp | Creation time |
+| Created At | Checkpoint creation timestamp |
+| Version | Schema compatibility identifier |
 
-Storage implementations may include additional metadata for operational purposes.
-
----
-
-# Read Operations
-
-The storage layer returns the latest valid checkpoint for a workflow.
-
-```text
-Agent ID
-    │
-    ▼
-Lookup
-    │
-    ▼
-Checkpoint
-```
-
-Read operations should be deterministic and low latency.
+Additional metadata may be added for operational requirements.
 
 ---
 
-# Write Operations
-
-Checkpoint updates occur after successful execution.
-
-```text
-Execute Step
-      │
-      ▼
-Serialize
-      │
-      ▼
-Persist
-      │
-      ▼
-Return
-```
-
-Failed writes should never replace an existing valid checkpoint.
-
----
-
-# Delete Operations
-
-Checkpoints may be removed after:
-
-- workflow completion
-- expiration
-- administrative cleanup
-
-Deletion policies should avoid removing checkpoints required for active workflows.
-
----
-
-# Consistency
-
-The storage subsystem follows a simple consistency model.
-
-- latest valid checkpoint is authoritative
-- completed work is preserved
-- failed writes are discarded
-- checkpoint history is append-oriented where practical
-
-Deterministic behavior is preferred over aggressive optimization.
-
----
-
-# Design Constraints
-
-The storage subsystem follows several constraints.
-
-- backend independent
-- deterministic reads
-- explicit writes
-- minimal metadata
-- predictable latency
-
-These constraints simplify maintenance and future backend expansion.
-
----
----
-
-# Persistence Strategy
-
-The storage subsystem separates persistence from execution.
-
-Workers never interact with storage directly.
-
-```text
-Worker
-    │
-    ▼
-Checkpoint Manager
-    │
-    ▼
-Storage Interface
-    │
-    ▼
-Storage Backend
-```
-
-This separation allows storage implementations to evolve independently of the execution pipeline.
-
----
-
-# Storage Lifecycle
+# Checkpoint Lifecycle
 
 Every checkpoint follows a predictable lifecycle.
 
 ```text
 Create
-   │
-   ▼
+
+  │
+
+  ▼
+
 Validate
-   │
-   ▼
+
+  │
+
+  ▼
+
 Persist
-   │
-   ▼
+
+  │
+
+  ▼
+
 Retrieve
-   │
-   ▼
-Delete
+
+  │
+
+  ▼
+
+Recover
+
+  │
+
+  ▼
+
+Expire
 ```
 
-Each stage should be deterministic and independently testable.
+Only successful execution states should become recovery candidates.
+
+---
+
+# Write Path
+
+Checkpoint writes occur after successful execution progress.
+
+```text
+Execute Operation
+
+        │
+
+        ▼
+
+Generate Checkpoint
+
+        │
+
+        ▼
+
+Validate State
+
+        │
+
+        ▼
+
+Persist
+
+        │
+
+        ▼
+
+Confirm Success
+```
+
+Failed writes must not overwrite the last valid checkpoint.
+
+---
+
+# Read Path
+
+Recovery begins by locating the latest valid checkpoint.
+
+```text
+Workflow ID
+
+      │
+
+      ▼
+
+Checkpoint Lookup
+
+      │
+
+      ▼
+
+Validate Metadata
+
+      │
+
+      ▼
+
+Restore State
+```
+
+Reads should be deterministic and optimized for recovery latency.
+
+---
+
+# Consistency Model
+
+The storage subsystem follows a simple consistency model.
+
+Principles:
+
+- latest valid checkpoint is authoritative
+- invalid checkpoints are rejected
+- failed writes preserve previous state
+- recovery uses validated state only
+
+Correctness is prioritized over aggressive optimization.
+
+---
+
+# Persistence Strategy
+
+Storage is separated from execution.
+
+Workers never directly manage persistence.
+
+```text
+Worker
+
+   │
+
+   ▼
+
+Checkpoint Manager
+
+   │
+
+   ▼
+
+Storage Interface
+
+   │
+
+   ▼
+
+Persistent Backend
+```
+
+This separation allows storage technology to evolve independently.
 
 ---
 
 # Failure Handling
 
-Storage failures should be handled explicitly.
+Storage failures are explicitly handled.
 
 | Failure | Expected Behavior |
-|----------|-------------------|
-| Backend unavailable | Return error to recovery manager |
-| Read timeout | Retry according to recovery policy |
-| Write timeout | Preserve previous checkpoint |
-| Corrupted record | Reject checkpoint |
-| Missing checkpoint | Restart workflow |
+|---|---|
+| Backend unavailable | Recovery request fails safely |
+| Read timeout | Retry according to policy |
+| Write failure | Preserve previous checkpoint |
+| Corrupted checkpoint | Reject restoration |
+| Missing checkpoint | Restart execution |
 
-The storage subsystem should never silently discard errors.
+Storage failures should never be silently ignored.
 
 ---
 
-# Validation
+# Checkpoint Validation
 
-Checkpoint metadata should be validated before persistence and before restoration.
+Before storing or restoring checkpoints, metadata validation should occur.
 
-Typical validation includes:
+Validation includes:
 
-- identifier format
-- checkpoint version
-- timestamp
-- serialized payload
-- required metadata
+- identifier correctness
+- schema version compatibility
+- timestamp validity
+- serialized data integrity
+- required metadata presence
 
-Validation failures should prevent the checkpoint from entering the recovery pipeline.
+Invalid checkpoints must never enter the recovery pipeline.
 
 ---
 
 # Versioning
 
-Storage formats evolve independently from runtime behavior.
+Checkpoint schemas evolve over time.
+
+Version identifiers allow controlled migrations.
 
 ```text
 Checkpoint
+
       │
+
       ▼
+
 Read Version
+
       │
+
       ▼
-Supported?
+
+Compatible?
+
  ┌────┴────┐
+
  │         │
+
 Yes        No
+
  │         │
+
  ▼         ▼
+
 Load    Reject
 ```
 
-Explicit versioning enables backward-compatible migrations when storage schemas change.
+Schema evolution should remain backward compatible whenever practical.
 
 ---
 
 # Garbage Collection
 
-Storage implementations should remove obsolete checkpoints in a controlled manner.
+Obsolete checkpoints should be removed safely.
 
-Possible strategies include:
+Possible cleanup strategies:
 
-- workflow completion
+- completed workflow cleanup
 - age-based expiration
-- scheduled cleanup
-- storage quota enforcement
+- storage quota management
+- scheduled garbage collection
 
-Cleanup should never remove checkpoints that may still be required for recovery.
+Active recovery checkpoints must never be removed.
 
 ---
 
 # Security Considerations
 
-Checkpoint storage may contain execution context.
+Checkpoint data may contain execution context.
 
 Production deployments should consider:
 
@@ -341,97 +416,108 @@ Production deployments should consider:
 - audit logging
 - secure deletion
 
-Applications should avoid storing secrets or unnecessary sensitive data inside checkpoint payloads.
+Applications should avoid storing unnecessary sensitive information.
 
 ---
 
 # Performance Considerations
 
-Storage performance directly affects recovery latency.
+Storage performance directly impacts recovery speed.
 
-Optimization priorities include:
+Optimization priorities:
 
+- low checkpoint write latency
 - efficient serialization
-- low write latency
+- compact state representation
 - predictable read performance
-- compact checkpoint representation
-- minimal allocation overhead
+- reduced memory allocation
 
-Performance improvements should be supported by benchmark results.
+All optimizations should be validated through benchmarks.
 
 ---
 
 # Operational Recommendations
 
-Recommended operational practices include:
+Recommended practices:
 
 - monitor storage latency
-- validate backup procedures
-- verify checkpoint integrity
-- monitor storage capacity
-- test recovery workflows regularly
+- validate checkpoint integrity
+- test recovery workflows
+- monitor storage growth
+- verify backup procedures
+- review retention policies
 
-Operational reliability depends on both implementation quality and deployment practices.
+Reliable recovery requires both correct implementation and operational discipline.
 
 ---
 
 # Future Storage Work
 
-Planned improvements include:
+Future improvements include:
 
-- persistent checkpoint storage
-- Redis backend
-- PostgreSQL backend
-- pluggable storage providers
+- persistent production backends
+- Redis integration
+- PostgreSQL integration
+- distributed checkpoint replication
 - checkpoint compression
-- distributed replication
-- incremental checkpoint support
+- incremental checkpoints
+- storage provider plugins
 
-These enhancements will be introduced incrementally as the control plane matures.
+These capabilities will be introduced as the recovery architecture matures.
 
 ---
 
 # Design Trade-offs
 
-The storage subsystem intentionally favors correctness over complexity.
+The storage design intentionally favors reliability and simplicity.
 
 | Decision | Benefit | Cost |
-|----------|---------|------|
-| Minimal interface | Easier maintenance | Fewer backend-specific features |
+|---|---|---|
+| Minimal interface | Easier maintenance | Limited backend-specific features |
 | Backend abstraction | Storage flexibility | Additional interface layer |
 | Explicit validation | Safer recovery | Small validation overhead |
-| Deterministic reads | Predictable behavior | Less implementation freedom |
+| Deterministic reads | Predictable recovery | Less optimization freedom |
 
-These trade-offs prioritize long-term maintainability.
+These trade-offs improve long-term maintainability.
 
 ---
 
 # Storage Summary
 
-The storage subsystem provides durable persistence for execution checkpoints while remaining independent of routing and execution.
+The storage subsystem preserves execution progress independently from worker lifetime.
 
 ```text
+Execution State
+
+        │
+
+        ▼
+
 Checkpoint
-      │
-      ▼
+
+        │
+
+        ▼
+
 Validate
-      │
-      ▼
+
+        │
+
+        ▼
+
 Persist
-      │
-      ▼
-Retrieve
-      │
-      ▼
+
+        │
+
+        ▼
+
 Recover
 ```
 
-Workers generate execution state.
+Workers produce execution state.
 
 The checkpoint manager coordinates persistence.
 
-The storage layer provides durable state required for recovery.
+The storage layer maintains recovery state.
 
-Together, these components ensure execution progress survives infrastructure failures.
-
----
+Together, these components allow FaultPlane to recover long-running AI workloads without losing completed execution progress.

@@ -2,11 +2,11 @@
 
 ## Purpose
 
-AgentMesh is an open source project that values respectful, professional, and constructive collaboration.
+FaultPlane is an open source infrastructure project that values respectful collaboration, technical excellence, and professional communication.
 
-This Code of Conduct establishes expectations for contributors, maintainers, and community members participating in project discussions, code reviews, issue tracking, and other community spaces.
+This Code of Conduct defines expectations for contributors, maintainers, reviewers, and community members participating in project discussions, issues, pull requests, documentation, and other community spaces.
 
-Our goal is to create an environment where technical discussions remain productive, inclusive, and focused on improving the project.
+Our goal is to build a welcoming environment where engineering discussions remain constructive, transparent, and focused on solving technical problems.
 
 ---
 
@@ -14,63 +14,65 @@ Our goal is to create an environment where technical discussions remain producti
 
 Community members are expected to:
 
-- communicate respectfully
+- communicate respectfully and professionally
 - provide constructive technical feedback
-- assume good intent during discussions
-- remain open to review and suggestions
-- respect differing technical opinions
-- focus discussions on the problem being solved
-- support a collaborative development process
+- assume positive intent during discussions
+- respect different technical approaches and opinions
+- accept feedback and participate in healthy review processes
+- keep discussions focused on improving the project
+- help new contributors understand project architecture and standards
 
-Professional disagreement is expected and encouraged when supported by technical reasoning.
+Technical disagreement is encouraged when supported by reasoning, evidence, and respectful discussion.
 
 ---
 
 # Unacceptable Behavior
 
-The following behavior is not acceptable within the project community.
+The following behaviors are not acceptable within the FaultPlane community:
 
-- personal attacks
-- harassment or intimidation
-- abusive or discriminatory language
-- trolling or intentionally disruptive behavior
-- repeated off-topic discussions
-- sharing private information without permission
-- knowingly submitting malicious code
-- spam or promotional content unrelated to the project
+- personal attacks or targeted harassment
+- discriminatory or abusive language
+- intimidation or threatening behavior
+- trolling or intentionally disruptive discussions
+- repeated unrelated conversations in project channels
+- publishing private or confidential information without permission
+- submitting malicious code or intentionally harmful changes
+- spam, scams, or unrelated promotional content
 
-Contributors are expected to maintain a professional standard of communication at all times.
+Contributors are expected to maintain professional standards across all project interactions.
 
 ---
 
 # Scope
 
-This Code of Conduct applies to all project spaces, including:
+This Code of Conduct applies to all FaultPlane community spaces, including:
 
 - GitHub issues
 - pull requests
 - discussions
+- code reviews
 - documentation contributions
 - project communication channels
-- community events organized by the project
+- community meetings and events
 
-It also applies when an individual is representing the project in public.
+It also applies when representing FaultPlane in public technical discussions or community activities.
 
 ---
 
 # Community Standards
 
-Healthy technical communities are built on collaboration.
+A strong engineering community is built through collaboration and trust.
 
-Contributors should strive to:
+Contributors should aim to:
 
 - write clear and respectful comments
-- provide actionable review feedback
-- explain technical decisions with evidence
-- keep discussions focused on implementation
-- help new contributors understand project conventions
+- provide actionable code review feedback
+- explain technical decisions with context and evidence
+- follow project contribution guidelines
+- keep discussions focused on engineering outcomes
+- support contributors learning the system
 
-Technical excellence and respectful communication are equally important.
+Technical quality and respectful communication are equally important.
 
 ---
 
@@ -78,12 +80,12 @@ Technical excellence and respectful communication are equally important.
 
 If you experience or observe behavior that violates this Code of Conduct, please report it privately to the project maintainers.
 
-When reporting an issue, include:
+Reports should include:
 
 - a description of the incident
 - relevant links or references
 - timestamps when available
-- any additional context that may assist the investigation
+- additional context that may help review the situation
 
 Reports will be handled confidentially whenever possible.
 
@@ -93,17 +95,22 @@ Reports will be handled confidentially whenever possible.
 
 Project maintainers are responsible for enforcing this Code of Conduct.
 
-Depending on the severity of the behavior, maintainers may take one or more of the following actions.
+Depending on the severity and impact of the violation, maintainers may take appropriate action.
 
 | Action | Description |
-|----------|-------------|
-| Guidance | Clarify expected behavior |
-| Warning | Request that inappropriate behavior stop |
-| Content Removal | Remove comments, issues, or pull requests |
-| Temporary Restriction | Temporarily limit participation |
-| Permanent Ban | Remove access to project spaces |
+|---|---|
+| Guidance | Provide clarification about expected community behavior |
+| Warning | Request that inappropriate behavior stops |
+| Content Removal | Remove harmful comments, issues, or contributions |
+| Temporary Restriction | Temporarily limit participation in project spaces |
+| Permanent Removal | Remove access to project community spaces |
 
-Enforcement decisions will be based on the impact of the behavior and the overall health of the community.
+Enforcement decisions will consider:
+
+- severity of the behavior
+- impact on contributors and community members
+- repeated violations
+- overall project health
 
 ---
 
@@ -112,53 +119,55 @@ Enforcement decisions will be based on the impact of the behavior and the overal
 Maintainers are expected to:
 
 - lead by example
-- enforce this Code of Conduct consistently
-- remain impartial during investigations
-- document enforcement decisions when appropriate
-- encourage respectful technical discussion
+- maintain professional communication standards
+- apply this Code of Conduct consistently
+- remain fair and impartial during investigations
+- protect contributors from harmful interactions
+- encourage productive technical collaboration
 
-Maintainers should focus on preserving a healthy development environment for all contributors.
+Maintainers should prioritize the long-term health of the FaultPlane community.
 
 ---
 
 # Conflict Resolution
 
-Technical disagreement is a normal part of software development.
+Technical disagreements are a natural part of engineering.
 
 When disagreements occur:
 
-- focus on facts rather than individuals
-- support proposals with evidence
-- remain respectful throughout discussion
-- seek consensus where practical
-- allow maintainers to make final decisions when necessary
+- focus on technical facts, not individuals
+- evaluate proposals based on evidence
+- explain reasoning clearly
+- remain respectful during discussions
+- seek practical consensus
+- allow maintainers to make final decisions when required
 
-The objective is to improve the project rather than win an argument.
+The goal is to improve FaultPlane, not to win arguments.
 
 ---
 
 # Enforcement Principles
 
-Enforcement decisions should be:
+Enforcement actions should be:
 
 - fair
 - consistent
 - proportional
 - transparent when appropriate
-- respectful of all parties involved
+- respectful of everyone involved
 
-Every report should be reviewed on its own merits.
+Every report will be evaluated based on its individual circumstances.
 
 ---
 
 # Attribution
 
-This Code of Conduct is inspired by established open source community standards, including the Contributor Covenant, and has been adapted to reflect the governance model of the AgentMesh project.
+This Code of Conduct is inspired by established open source community standards, including the Contributor Covenant, and has been adapted for the governance model and engineering culture of the FaultPlane project.
 
 ---
 
 # Questions
 
-Questions regarding this Code of Conduct may be directed to the project maintainers through the project's official communication channels.
+Questions regarding this Code of Conduct can be directed to the FaultPlane maintainers through the project's official communication channels.
 
-Thank you for helping maintain a respectful, collaborative, and professional community.
+Thank you for helping build a respectful, collaborative, and technically excellent open source community.

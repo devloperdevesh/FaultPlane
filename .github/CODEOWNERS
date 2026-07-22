@@ -1,25 +1,54 @@
 # ------------------------------------------------------------------
-# AgentMesh Code Owners
+# FaultPlane Code Owners
 #
-# Every pull request requires review from one of the code owners.
+# CODEOWNERS defines responsible reviewers for changes
+# across different areas of the repository.
+#
+# Pull requests modifying owned files should receive approval
+# from the listed maintainers before merging.
 # ------------------------------------------------------------------
 
-# Default owner
+# Default repository owner
 * @devloperdevesh
 
-# Runtime
+
+# ------------------------------------------------------------------
+# Core Runtime
+# Gateway, control plane, storage, telemetry, and execution runtime
+# ------------------------------------------------------------------
+
 /cmd/ @devloperdevesh
 /internal/ @devloperdevesh
 
+
+# ------------------------------------------------------------------
 # Documentation
+# Architecture, design docs, guides, and project specifications
+# ------------------------------------------------------------------
+
 /docs/ @devloperdevesh
 /*.md @devloperdevesh
 
-# GitHub configuration
+
+# ------------------------------------------------------------------
+# GitHub Configuration
+# Workflows, templates, repository automation
+# ------------------------------------------------------------------
+
 /.github/ @devloperdevesh
 
+
+# ------------------------------------------------------------------
 # Benchmarks
+# Performance tests and benchmarking infrastructure
+# ------------------------------------------------------------------
+
 /benchmark/ @devloperdevesh
 
+
+# ------------------------------------------------------------------
 # Examples
+# Reference implementations and sample workloads
+# ------------------------------------------------------------------
+
 /examples/ @devloperdevesh

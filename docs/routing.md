@@ -1,167 +1,233 @@
 # Routing
 
-This document describes how AgentMesh routes requests between execution workers.
+This document describes how FaultPlane routes requests between execution runtimes.
 
-Routing is responsible for selecting an appropriate execution target while remaining independent from application logic.
+The routing subsystem is responsible for selecting healthy execution targets, forwarding traffic, and coordinating recovery when infrastructure failures occur.
 
-The routing layer does not execute workloads, interpret prompts, or modify execution state. Its responsibility is limited to request forwarding and recovery coordination.
+Routing does not execute workloads, interpret application behavior, or modify business state.
+
+Its responsibility is limited to:
+
+- request forwarding
+- runtime selection
+- health evaluation
+- recovery coordination
+- routing observability
 
 ---
 
 # Overview
 
-Every incoming request passes through the routing subsystem before reaching a worker.
+Every incoming request passes through the FaultPlane routing layer before reaching an execution runtime.
+
+Architecture:
 
 ```text
 Client
+
    │
+
    ▼
-Gateway
+
+FaultPlane Gateway
+
    │
+
    ▼
+
 Routing Engine
+
    │
+
    ▼
-Worker
+
+Worker Runtime
 ```
 
-The routing engine determines where a request should execute based on infrastructure state rather than application behavior.
+The routing engine makes decisions based on infrastructure state.
+
+Application behavior remains outside the routing boundary.
 
 ---
 
-# Objectives
+# Design Goals
 
-The routing layer is designed around the following goals.
+The routing subsystem is designed around the following principles.
 
 | Goal | Description |
-|------|-------------|
-| Availability | Route requests to healthy workers. |
+|---|---|
+| Availability | Route traffic only to healthy runtimes. |
 | Recovery | Redirect execution after infrastructure failures. |
-| Simplicity | Keep routing deterministic and predictable. |
-| Low Latency | Introduce minimal routing overhead. |
-| Observability | Record routing decisions through telemetry. |
+| Predictability | Keep routing decisions deterministic. |
+| Performance | Minimize routing overhead. |
+| Observability | Expose routing behavior through telemetry. |
 
 ---
 
 # Responsibilities
 
-The routing subsystem is responsible for:
+The routing layer is responsible for:
 
 - selecting execution targets
-- evaluating worker availability
-- coordinating recovery
+- evaluating runtime health
 - forwarding requests
+- initiating recovery workflows
 - exposing routing metrics
 
-The routing subsystem is not responsible for:
+The routing layer is not responsible for:
 
-- scheduling workloads
-- load balancing clusters
-- executing business logic
-- model selection
+- executing workloads
 - workflow orchestration
+- model selection
+- business logic
+- application state management
 
 ---
 
 # Routing Pipeline
 
-Every request follows the same routing sequence.
+Every request follows a predictable routing lifecycle.
 
 ```text
 Receive Request
+
         │
+
         ▼
+
 Validate Metadata
+
         │
+
         ▼
-Evaluate Worker Health
+
+Evaluate Runtime Health
+
         │
+
         ▼
-Select Target
+
+Select Execution Target
+
         │
+
         ▼
+
 Forward Request
+
         │
+
         ▼
-Receive Response
+
+Return Response
 ```
 
-If the selected worker becomes unavailable, the recovery pipeline is invoked.
+If the selected runtime becomes unavailable, the recovery pipeline is triggered.
 
 ---
 
 # Routing Components
 
 | Component | Responsibility |
-|-----------|----------------|
-| Gateway | Entry point for requests |
-| Router | Select execution target |
-| Health Monitor | Evaluate worker availability |
-| Recovery Manager | Coordinate failover |
-| Telemetry | Record routing decisions |
+|---|---|
+| Gateway | External request entry point |
+| Router | Execution target selection |
+| Health Monitor | Runtime availability evaluation |
+| Recovery Manager | Failure handling coordination |
+| Telemetry Layer | Routing visibility |
 
-Each component has a single responsibility and communicates through well-defined interfaces.
+Each component maintains a clear responsibility boundary.
 
 ---
 
 # Worker Selection
 
-Worker selection is based on infrastructure state.
+Runtime selection is based on infrastructure signals.
 
-Current implementation considers:
+Current considerations:
 
-- worker availability
-- response status
+- runtime availability
+- response health
 - timeout conditions
+- connection status
 
-Future implementations may additionally consider:
+Future routing strategies may consider:
 
 - latency
 - resource utilization
-- geographic location
-- routing policies
+- geographic placement
+- workload policies
 
-Selection criteria should remain deterministic.
+Routing decisions should remain deterministic and explainable.
 
 ---
 
 # Healthy Request Flow
 
+When the primary runtime is healthy:
+
 ```text
 Client
+
    │
+
    ▼
+
 Gateway
+
    │
+
    ▼
-Primary Worker
+
+Primary Runtime
+
    │
+
    ▼
+
 Response
 ```
 
-When the primary worker is healthy, no recovery action is required.
+No recovery action is required.
 
 ---
 
-# Recovery Flow
+# Recovery Routing Flow
+
+When infrastructure failure occurs:
 
 ```text
 Client
+
    │
+
    ▼
+
 Gateway
+
    │
-Worker Failure
-   │
+
    ▼
+
+Runtime Failure Detected
+
+   │
+
+   ▼
+
 Checkpoint Lookup
+
    │
+
    ▼
-Fallback Worker
+
+Recovery Runtime Selected
+
    │
+
    ▼
-Response
+
+Execution Resumed
 ```
 
 Recovery occurs without modifying application logic.
@@ -170,291 +236,356 @@ Recovery occurs without modifying application logic.
 
 # Routing Decisions
 
-Routing decisions should satisfy three conditions.
+Every routing decision should satisfy three conditions:
 
-1. The selected worker is available.
-2. Recovery state is preserved.
-3. The routing decision is observable.
+1. Selected runtime is available.
+2. Execution state remains recoverable.
+3. Decision is observable.
 
-The router should not make application-specific decisions.
+The router should never make application-specific decisions.
 
 ---
 
-# Health Evaluation
+# Runtime Health Model
 
 Workers expose lightweight health information.
 
-Typical states include:
+Example states:
 
 | State | Description |
-|--------|-------------|
-| Healthy | Accepting requests |
-| Degraded | Increased latency or intermittent failures |
-| Unavailable | Unable to process requests |
+|---|---|
+| Healthy | Runtime can accept requests |
+| Degraded | Runtime shows reduced reliability |
+| Unavailable | Runtime cannot process requests |
 
-Routing decisions should react only to infrastructure state.
+Routing decisions should depend on infrastructure health rather than workload content.
 
 ---
 
 # Request Metadata
 
-The router operates on request metadata rather than application payloads.
+The routing subsystem operates primarily on metadata.
 
-Typical metadata includes:
+Typical fields:
 
 | Field | Purpose |
-|-------|---------|
-| Request ID | Correlation |
-| Agent ID | Workflow identification |
+|---|---|
+| Request ID | Request correlation |
+| Workflow ID | Execution identification |
 | Checkpoint ID | Recovery lookup |
 | Trace ID | Distributed tracing |
 
-Payload contents remain opaque to the routing layer.
+Application payloads remain opaque to the routing layer.
 
 ---
 
-# Design Constraints
+# Routing Constraints
 
-The routing subsystem follows several constraints.
+The routing subsystem follows several design constraints:
 
-- Stateless operation
-- Explicit routing decisions
-- Framework independence
-- Minimal allocations
-- Observable behavior
+- stateless operation
+- explicit decisions
+- minimal latency overhead
+- framework independence
+- observable behavior
 
-These constraints simplify operation and improve maintainability.
+These constraints simplify operation and long-term maintenance.
 
----
 ---
 
 # Routing Policies
 
-The current implementation follows a deterministic routing policy.
+The initial routing model uses deterministic selection.
 
-Requests are forwarded to the primary worker whenever it is considered healthy.
+Current behavior:
 
 ```text
-Request
-    │
-    ▼
-Primary Worker
-    │
-Healthy?
- ┌──┴──┐
- │     │
-Yes    No
- │     │
- ▼     ▼
-Done  Recovery
+Incoming Request
+
+        │
+
+        ▼
+
+Primary Runtime
+
+        │
+
+        ▼
+
+Health Check
+
+        │
+
+ ┌──────┴──────┐
+
+ │             │
+
+Healthy     Failed
+
+ │             │
+
+ ▼             ▼
+
+Execute     Recovery
 ```
 
-Future routing policies may support:
+Future policies may introduce:
 
-- latency-aware routing
+- round-robin routing
 - weighted routing
+- latency-aware routing
 - region-aware routing
-- policy-driven routing
+- adaptive policies
 
-The routing interface is intentionally designed to allow new strategies without changing the gateway architecture.
+The routing interface is designed to support future extensions without changing the gateway architecture.
 
 ---
 
 # Failure Detection
 
-The router classifies infrastructure failures before initiating recovery.
+The router identifies infrastructure failures before starting recovery.
 
-Supported recovery triggers include:
+Supported conditions:
 
 | Condition | Action |
-|-----------|--------|
-| HTTP 5xx | Recovery |
-| Connection timeout | Recovery |
-| Connection refused | Recovery |
-| Worker unavailable | Recovery |
+|---|---|
+| HTTP 5xx | Trigger recovery |
+| Timeout | Trigger recovery |
+| Connection failure | Trigger recovery |
+| Runtime unavailable | Trigger recovery |
 
-Application-specific failures are returned directly to the caller.
+Application-level errors are returned without infrastructure recovery.
 
 ---
 
 # Retry Strategy
 
-Retries are intentionally conservative.
+FaultPlane avoids aggressive retry behavior.
 
-The routing layer does not perform unlimited retries.
+Unlimited retries can hide infrastructure problems and increase system instability.
 
-Typical request flow:
+Typical flow:
 
 ```text
 Request
-    │
-    ▼
-Primary Worker
-    │
+
+   │
+
+   ▼
+
+Primary Runtime
+
+   │
+
 Failure
-    │
-    ▼
-Recovery
-    │
+
+   │
+
+   ▼
+
+Recovery Attempt
+
+   │
+
 Success?
+
  ┌──┴──┐
+
  │     │
+
 Yes    No
+
  │     │
+
  ▼     ▼
+
 Done  Return Error
 ```
 
-Repeated infrastructure failures should be surfaced through telemetry rather than hidden by continuous retries.
+Repeated failures should become visible through telemetry.
 
 ---
 
 # Load Distribution
 
-Current releases focus on correctness rather than sophisticated balancing.
+Current versions prioritize correctness and recovery reliability over advanced balancing.
 
-The gateway routes requests to a single execution target.
-
-Future implementations may introduce:
+Future routing strategies may include:
 
 | Strategy | Purpose |
-|----------|----------|
-| Round Robin | Even request distribution |
-| Least Connections | Prefer lightly loaded workers |
-| Latency Aware | Minimize response time |
-| Weighted Routing | Prioritize specific workers |
-| Adaptive Routing | Dynamic policy selection |
+|---|---|
+| Round Robin | Even traffic distribution |
+| Least Connections | Prefer less loaded runtimes |
+| Latency Aware | Optimize response time |
+| Weighted Routing | Control traffic distribution |
+| Adaptive Routing | Dynamic decision making |
 
-These strategies are intentionally deferred until the recovery model is stable.
+Advanced balancing will be introduced after recovery behavior is stable.
 
 ---
 
 # Telemetry Integration
 
-Every routing decision should be observable.
+Every routing decision should produce observable signals.
 
-Typical events include:
+Examples:
 
 | Event | Description |
-|--------|-------------|
-| Request Received | Gateway accepted a request |
-| Worker Selected | Routing decision completed |
-| Recovery Started | Infrastructure failure detected |
-| Recovery Completed | Execution resumed |
-| Request Completed | Processing finished |
+|---|---|
+| Request Received | Gateway accepted traffic |
+| Runtime Selected | Routing decision completed |
+| Failure Detected | Runtime became unhealthy |
+| Recovery Started | Failover initiated |
+| Recovery Completed | Execution restored |
+| Request Completed | Lifecycle finished |
 
-Tracing and metrics should describe infrastructure behavior rather than application logic.
+Telemetry should describe infrastructure behavior.
 
 ---
 
 # Performance Considerations
 
-The routing subsystem should introduce minimal overhead.
+Routing should introduce minimal overhead.
 
-Optimization priorities include:
+Optimization priorities:
 
-- efficient worker lookup
-- low allocation rate
+- efficient runtime lookup
+- low memory allocation
 - predictable latency
-- lightweight request forwarding
-- inexpensive health evaluation
+- lightweight health checks
+- efficient request forwarding
 
-Benchmark-driven optimization is preferred over speculative changes.
+All optimization decisions should be validated through benchmarks.
 
 ---
 
 # Scalability
 
-Routing components are designed to scale independently.
+Routing components should scale independently.
+
+Architecture:
 
 ```text
 Clients
+
    │
+
    ▼
+
 Load Balancer
+
    │
+
    ▼
-Gateway Cluster
+
+FaultPlane Gateway Cluster
+
    │
+
    ▼
+
 Worker Pool
 ```
 
-Because execution state is externalized, additional gateway instances can be introduced without changing routing semantics.
+Because recovery state is externalized, additional gateway instances can be added without changing routing behavior.
 
 ---
 
 # Operational Recommendations
 
-Recommended operational practices include:
+Recommended practices:
 
-- monitor worker health continuously
-- validate recovery paths regularly
-- centralize telemetry collection
-- keep routing configuration simple
-- avoid unnecessary routing policies
-- benchmark changes before deployment
+- monitor runtime health
+- validate recovery paths
+- collect routing metrics
+- keep policies simple
+- benchmark routing changes
+- review failure patterns regularly
 
-Operational simplicity improves long-term reliability.
+Operational simplicity improves reliability.
 
 ---
 
 # Future Routing Work
 
-Areas under evaluation include:
+Future areas include:
 
+- distributed runtime discovery
 - policy-based routing
-- distributed worker discovery
 - adaptive health evaluation
 - multi-region routing
 - service mesh integration
 - gRPC transport
-- pluggable routing policies
+- pluggable routing engines
 
-These items are exploratory and are not committed implementation milestones.
+These remain research directions.
 
 ---
 
 # Design Trade-offs
 
-The routing subsystem intentionally favors predictable behavior.
+FaultPlane routing prioritizes predictable behavior.
 
-| Decision | Benefit | Cost |
-|----------|---------|------|
-| Stateless router | Horizontal scalability | External checkpoint dependency |
-| Deterministic routing | Easier debugging | Fewer dynamic optimizations |
-| Explicit recovery | Predictable behavior | Slight recovery latency |
-| Small routing surface | Easier maintenance | Limited policy support |
+| Decision | Benefit | Trade-off |
+|---|---|---|
+| Stateless router | Easy horizontal scaling | Requires external recovery state |
+| Deterministic routing | Easier debugging | Less dynamic optimization |
+| Explicit recovery | Predictable failures | Additional recovery latency |
+| Minimal routing logic | Easier maintenance | Limited built-in policies |
 
-Each trade-off prioritizes maintainability and operational clarity.
+Each decision favors reliability and operational clarity.
 
 ---
 
 # Routing Summary
 
-The routing subsystem coordinates request forwarding without executing application logic.
+The routing subsystem coordinates traffic forwarding and recovery without executing application workloads.
 
 ```text
 Receive Request
+
         │
+
         ▼
-Evaluate Worker
+
+Evaluate Runtime
+
         │
+
         ▼
-Route Request
+
+Select Target
+
         │
+
         ▼
+
+Forward Request
+
+        │
+
+        ▼
+
 Detect Failure
+
         │
+
         ▼
-Recover If Needed
+
+Recover If Required
+
         │
+
         ▼
+
 Return Response
 ```
 
-The router is responsible for selecting execution targets, initiating recovery when infrastructure failures occur, and exposing routing behavior through telemetry.
+FaultPlane routing provides a predictable execution path while maintaining separation between:
 
-Application behavior remains outside the scope of the routing layer.
+- traffic management
+- workload execution
+- recovery state
+- observability
 
----
+This separation enables resilient long-running AI infrastructure.
