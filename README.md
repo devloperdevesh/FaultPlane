@@ -5,7 +5,9 @@
 > Zero-code-intrusion transport data-plane proxy providing state resilience and microsecond kernel failover for long-running AI agent workloads.
 
 
-[![Up For Grabs](https://shields.io)](https://up-for-grabs.net) [![Good First Issues](https://shields.io)](https://github.com)
+[![Up For Grabs](https://shields.io)](https://up-for-grabs.net)
+[![Good First Issues](https://shields.io)](https://github.com)
+[![Active Issues](https://shields.io)](https://github.com)
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://go.dev)
 [![Go Report Card](https://goreportcard.com/badge/github.com/devloperdevesh/FaultPlane)](https://goreportcard.com/report/github.com/devloperdevesh/FaultPlane)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
