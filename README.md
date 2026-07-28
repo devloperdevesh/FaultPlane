@@ -8,7 +8,6 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://go.dev)
 [![Go Report Card](https://goreportcard.com/badge/github.com/devloperdevesh/FaultPlane)](https://goreportcard.com/report/github.com/devloperdevesh/FaultPlane)
-[![Discord Systems Lab](https://shields.io)](https://discord.gg/tqk8DCenw)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![CI](https://github.com/devloperdevesh/FaultPlane/actions/workflows/ci.yml/badge.svg)](https://github.com/devloperdevesh/FaultPlane/actions)
 [![GitHub Issues](https://img.shields.io/github/issues/devloperdevesh/FaultPlane)](https://github.com/devloperdevesh/FaultPlane/issues)
