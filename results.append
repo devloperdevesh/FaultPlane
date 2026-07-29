@@ -1,0 +1,34 @@
+FROM golang:1.22-alpine AS builder
+
+RUN apk add --no-cache git ca-certificates tzdata && \
+    update-ca-certificates
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+COPY . .
+
+# Build fully static, unstripped binary without CGO dependencies
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-s -w -extldflags '-static'" \
+    -trimpath \
+    -o /app/sidecar-service ./cmd/sidecar
+
+# STAGE 2: Hardened Distroless Static Runtime
+FROM gcr.io/distroless/static-debian12:nonroot
+
+# Copy SSL Certs and Timezone Data from Builder
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
+
+# Copy compiled static binary with nonroot ownership
+COPY --chown=nonroot:nonroot --from=builder /app/sidecar-service /sidecar-service
+
+# Explicitly declare non-root user context (UID 65532 is standard distroless nonroot)
+USER nonroot:nonroot
+
+EXPOSE 8080
+
+ENTRYPOINT ["/sidecar-service"]
