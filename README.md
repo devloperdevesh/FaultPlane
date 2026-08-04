@@ -15,6 +15,7 @@
 FaultPlane is an open-source, bare-metal Go systems runtime designed to handle execution state checkpoints and non-invasive network routing for distributed multi-tenant workflows directly at the Linux Layer 4 transport socket boundary. 
 
 By separating execution compute from execution state, the runtime proxy captures stateless snapshot bit arrays seamlessly without requiring application-level orchestration adjustments or heavy SDK-injected micro-middlewares.
+
 ---
 
 ## Enterprise Technical Specifications & Moat Architecture Matrix
@@ -26,6 +27,9 @@ Before auditing lines of source configurations, review our core architectural bl
 *   **[Sub-Kernel Competitive Matrix](./docs/architecture/COMPETITIVE_ANALYSIS.md):** Verifying FaultPlane's absolute sub-2ms line-rate packet redirection defenses against legacy userspace abstractions, Erlang/OTP Actor frameworks, and high-latency CRIU process freezing.
 *   **[Enterprise Production Use-Cases](./docs/architecture/ENTERPRISE_USE_CASES.md):** Architectural execution profiles mapping multi-tenant memory ring layout isolation, explicit 64-byte struct cache-line padding boundaries, and failure-masking for recursive agent reasoning networks.
 *   **[Commercial Token Monetization Plan](./docs/architecture/MONETIZATION_PLAN.md):** Open-Core distribution pipeline metrics enforcing hardware-verified Ed25519 corporate license checks and Stripe Volumetric metered billing ingress taxation portals charged flat at $0.001 per 1,000 failure-masked inference loops.
+*   **[No-Code Interactive Cockpit Specification](./docs/architecture/UI_NO_CODE_COCKPIT.md):** Architectural design mapping a WebGL-powered drag-and-drop orchestration flow canvas letting infrastructure operators visually route Layer 4 node layouts natively.
+*   **[Semantic Observability Interceptor Guide](./docs/architecture/SENTRIAL_THETA_OBSERBABILITY_HOOKS.md):** Programmatic sub-kernel hooks interfacing with userspace guards like Sentrial and Theta to dynamically execute eBPF receive window backpressure before logic loops trigger connection drops.
+*   **[Deep Context Cache Splicing Architecture](./docs/architecture/MEMORY_STORE_HIVEMIND_PLUGINS.md):** High-throughput data-plane plugins linking corporate brains like Julep's Memory Store and Hivemind directly to DMA memory arrays, bypassing userspace serialization latency spikes natively.
 
 ---
 
