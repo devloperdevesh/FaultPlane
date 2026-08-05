@@ -4,7 +4,6 @@
 
 > "As digital economies transition from human HTTP requests to autonomous multi-agent reasoning networks, the foundational plumbing of the global internet is fundamentally broken. FaultPlane establishes an immutable sub-kernel data plane transit tax underneath these architectures natively—isolating failure blast radius and achieving microsecond state resiliency where legacy userspace frameworks sustain catastrophic preemption crashes."
 
-***
 
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://go.dev)
 [![Go Report Card](https://goreportcard.com/badge/github.com/devloperdevesh/FaultPlane)](https://goreportcard.com/report/github.com/devloperdevesh/FaultPlane)
@@ -16,7 +15,6 @@ FaultPlane is an open-source, bare-metal Go systems runtime designed to handle e
 
 By separating execution compute from execution state, the runtime proxy captures stateless snapshot bit arrays seamlessly without requiring application-level orchestration adjustments, heavy SDK-injected micro-middlewares, or legacy userspace allocation drag .
 
-***
 ---
 
 ## Enterprise Technical Specifications & Moat Architecture Matrix
