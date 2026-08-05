@@ -35,24 +35,15 @@ Before auditing lines of source configurations, review our core architectural bl
 
 ---
 
-## Technical Motivation
-
-Most cloud networking infrastructure was engineered specifically for short-lived, stateless request-response interaction paradigms. Modern autonomous multi-agent workloads introduce completely different execution constraints. An agent pipeline can execute hundreds of sequential external tool invocations, modify operational data sets, and process continuous telemetry context metrics over hours. 
-
-If an upstream computing server, fallback cluster node, or third-party model endpoint encounters a connection timeout or transient failure mid-flight, the application loses its volatile memory footprint and restarts the workflow from the beginning. This forces client runtimes into expensive re-computation loops, triggering massive token capital leakage and unpredictable tail latency spikes.
-
-FaultPlane isolates failure blast radius by intercepting packet byte streams natively at the transport line. When a degradation signature or a kernel-level socket disconnect signal (`tcp_set_state`) is identified, the gateway runtime hot-swaps the active connection descriptor onto a healthy fallback destination under less than 2 milliseconds—restoring execution context transparently with zero data loss.
-
----
 
 ## Architectural Principles
 
 | Principle | Description |
-|-----------|-------------|
-| Data-Plane Autonomy | Routing and crash recovery layers operate fully independent of computing runtimes. |
+| :--- | :--- |
+| Data-Plane Autonomy | Routing and crash recovery layers operate fully independent of computing runtimes natively. |
 | Non-Invasive Abstraction | Drop-in network proxy model that intercepts byte streams without application code changes. |
 | Failure Isolation | System loop exceptions or continuous crashes are contained natively to clear structural tenants boundaries. |
-| Recovery Dominated | Restores and cascades state progress variables automatically instead of triggering full process restarts. |
+| Recovery Dominated | Restores and cascades state progress variables automatically via sub-2ms shunts instead of full restarts. |
 | Observable Diagnostics | System optimization and failover metrics are logged through non-blocking asynchronous OpenTelemetry traces. |
 
 ---
@@ -93,19 +84,19 @@ The gateway runtime never mutates business logic definitions. Its exclusive func
 ## Engineering Roadmap Matrix
 
 | Subsystem Focus Area | Technical Objective | Current Status |
-|----------------------|---------------------|----------------|
-| In-Memory State Pool | High-throughput concurrent checkpoint engine managed via `sync.RWMutex` locks. | Completed |
-| Failure Tracking Loops | Automatic upstream transport disconnect detection and failure signature masking. | Completed |
+| :--- | :--- | :--- |
+| In-Memory State Pool | High-throughput concurrent checkpoint engine managed via lock-free atomic Compare-And-Swap (CAS) loop operations. | Completed |
+| Failure Tracking Loops | Automatic upstream transport disconnect detection and sub-2ms network failover state protection. | Completed |
 | Local Cluster Simulation | Multi-node fallback target orchestration driven natively within Docker Compose blocks. | Completed |
-| Modular Next.js Console | High-fidelity frontend workspace layer to isolate dashboard visualization widgets. | Completed |
-| Vectorized Serialization | Zero-allocation Msgpack binary array sync routines to eliminate heap overhead. | Active Backlog |
-| eBPF Socket Interception | C-based driver-level `XDP_REDIRECT` logic bypassing host Linux network stack layers. | Active Backlog |
-| Zero-Trust Multi-Tenancy | Granular permission enforcement natively using Linux Cgroups v2 isolation containers. | Active Backlog |
-| Hardware Offloading | Offloading ingress tracking variables arrays down to SmartNIC / DPU processing rings. | Research Phase |
+| Modular Next.js Console | High-fidelity frontend workspace layer to isolate cockpit dashboard visualization widgets live on Vercel. | Completed |
+| Vectorized Serialization | Zero-allocation Msgpack binary array sync routines to eliminate heap overhead completely. | Active Backlog |
+| eBPF Socket Interception | C-based driver-level sockmap and Traffic Control filters bypassing host Linux network stack layers. | Active Backlog |
+| Zero-Trust Multi-Tenancy | Granular permission enforcement natively using strict 64-byte structural cache-line alignment fencing. | Active Backlog |
+| Hardware Offloading | Offloading ingress tracking variables arrays down to SmartNIC / PCIe DMA processing rings. | Research Phase |
 
 ---
 
-## Repository Layout
+## Repository Layout & Governance
 
 ```text
 faultplane/
@@ -115,50 +106,44 @@ faultplane/
 │   ├── api/                # Low-overhead proxy HTTP connection controllers
 │   ├── control/            # Stateful session failover logic parameters
 │   ├── gateway/            # Bare-metal Layer 4 network routing pipelines
-│   ├── storage/            # Checkpoint engines and atomic memory interfaces
+│   ├── storage/            # Checkpoint engines and atomic memory ring buffer interfaces
 │   └── telemetry/          # Non-blocking OpenTelemetry trace collectors
-├── dashboard/
-│   ├── components/         # High-performance Next.js interface operations components
-│   └── public/             # Static visual elements configurations profiles
-├── deployments/            # Cloud-native infrastructure tracking manifests
-└── docs/                   # System optimization specifications text guides
+├── ui/
+│   ├── components/         # High-performance Next.js control mesh interface components
+│   └── public/             # Static visual assets and banner configuration profiles
+├── deployments/            # Cloud-native OCI-compliant infrastructure tracking manifests
+└── docs/                   # System optimization specifications and enterprise whitepapers
 ```
 
----
+Review our core operational protocols, security compliance rules, and engineering tracking registries directly on the root ledger:
 
-## Open Source Contributing Guidelines
-
-FaultPlane values modular engineering, strict interface boundaries, and system efficiency. The project roadmap is divided across explicit micro-components tracked transparently inside our public issue board. 
-
-### 🛠️ How to Contribute to the Dashboard Interface Layer:
-1. Review our 52 active open infrastructure issues marked with `good-first-issue` and `help-wanted` validation tags.
-2. Drop a comment onto any unassigned dashboard panel or animation component issue to get assigned by our repository workflows within minutes.
-3. Scaffold localized components within isolated next-gen style frames inside `dashboard/components/` utilizing pure CSS grid or Tailwind abstractions.
-4. Ensure frontend code modules communicate asynchronously via internal dashboard props metrics without blocking lower Go proxy execution lines.
+*   **[Repository Tracking Issues](https://github.com/devloperdevesh/FaultPlane/issues):** Track our all active open infrastructure issues across pre-allocated memory pools and Stripe volumetric modules.
+*   **[Open-Source Contributing Guidelines](./CONTRIBUTING.md):** Architectural contribution laws to scaffold localized Next.js visual modules without blocking Go paths.
+*   **[Project Code of Conduct](./CODE_OF_CONDUCT.md):** Community engagement compliance rules governing our decentralized systems registry.
+*   **[Core Maintainers Registry](./MAINTAINERS.md):** Operational tree specifying core pipeline ownership, human verification flags, and release paths.
+*   **[Systems Security Policy](./SECURITY.md):** Protocols for reporting low-level data plane isolation vulnerabilities or cross-tenant cache sharing risks.
 
 ---
 
 ## Verification & Local Micro-Benchmarking
 
-1. Clone the master repository branch:
+1. Clone the master repository branch directly to your workspace:
    ```bash
-   git clone https://github.com
+   git clone https://github.com/devloperdevesh/FaultPlane
    cd FaultPlane
    ```
 
-2. Spin up the isolated multi-node infrastructure nodes:
+2. Spin up the isolated multi-node infrastructure nodes natively:
    ```bash
    docker compose up --build
    ```
 
-3. Launch the core daemon ingress gateway:
+3. Launch the core daemon ingress gateway proxy engine:
    ```bash
    go run ./cmd/daemon
    ```
 
-4. Execute the asynchronous concurrent workload failure simulation tests:
+4. Execute the asynchronous concurrent workload failure simulation workflows:
    ```bash
-   python data-plane/agent_sim/main.py
+   python data-plane/agent_sim/demo.py
    ```
-
-The test framework evaluates performance metrics using standard Go tools (`go test -bench=...`), asserting that tail latency properties hold stable below target limits during active node disruptions.
