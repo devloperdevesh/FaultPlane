@@ -30,6 +30,7 @@ Before auditing lines of source configurations, review our core architectural bl
 *   **[No-Code Interactive Cockpit Specification](./docs/architecture/UI_NO_CODE_COCKPIT.md):** Architectural design mapping a WebGL-powered drag-and-drop orchestration flow canvas letting infrastructure operators visually route Layer 4 node layouts natively.
 *   **[Semantic Observability Interceptor Guide](./docs/architecture/SENTRIAL_THETA_OBSERBABILITY_HOOKS.md):** Programmatic sub-kernel hooks interfacing with userspace guards like Sentrial and Theta to dynamically execute eBPF receive window backpressure before logic loops trigger connection drops.
 *   **[Deep Context Cache Splicing Architecture](./docs/architecture/MEMORY_STORE_HIVEMIND_PLUGINS.md):** High-throughput data-plane plugins linking corporate brains like Julep's Memory Store and Hivemind directly to DMA memory arrays, bypassing userspace serialization latency spikes natively.
+*   **[NVIDIA DGX Bypass Plugins](./docs/architecture/NVIDIA_DGX_BYPASS_PLUGINS.md):** Low-overhead transport pathways forcing high-volume 550B Nemotron MoE offloading loops to bypass userspace serialization bottlenecks natively via PCIe DMA channels.
 
 ---
 
