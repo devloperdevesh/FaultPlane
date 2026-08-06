@@ -34,6 +34,8 @@ Before auditing lines of source configurations, review our core architectural bl
 *   **[Automated Hardware-Isolated Intel MPK Spec](./docs/architecture/EDGE_HARDWARE_BYPASS_PLUGINS.md):** Military-grade cross-tenant data fencing boundaries implemented via native silicon-level Intel MPK (Memory Protection Keys) registries to eliminate side-channel memory scraping vulnerabilities natively on shared hardware pools .
 *   **[FaultPlane Autonomous Context Flow Shunts](./docs/architecture/UNFETTERED_CONTEXT_ASYNC_SHUNTS.md):** Asynchronous low-latency data paths ensuring un-fettered long-context token stream velocity while enforcing Distributed Resilient Ingress Operational Control (DR-OPIC) failover protocols natively .
 *   **[FaultPlane Hardened Silicon Memory Vault Spec](./docs/architecture/INTELLECTSAFE_SILICON_VAULT.md):** Secure hardware-isolated memory fencing frameworks implementing native silicon-level Intel MPK registries to eradicate multi-tenant side-channel memory scraping risks flat under peak multithreaded surges.
+*   **[NVIDIA Rubin HBM4 Interconnect Splicing](./docs/architecture/NVIDIA_RUBIN_HBM4_BYPASS.md):** Native sub-kernel data paths engineered for NVIDIA's Rubin GPU platform and HBM4 architectures to execute zero-copy line-rate transport descriptor pointer-swaps natively under heavy surges .
+*   **[NVIDIA DGX Spark Failure Masking spec](./docs/architecture/DGX_SPARK_LOCAL_FAILOVER.md):** Workstation-level failure isolation frameworks scaffolding native local runtime proxies inside compact NVIDIA DGX Spark setups to guarantee zero context capital leakage.
 ---
 
 ## Architectural Principles
