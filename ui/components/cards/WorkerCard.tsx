@@ -1,3 +1,5 @@
+"use client";
+
 import { Cpu } from "lucide-react";
 import MetricCard from "./MetricCard";
 

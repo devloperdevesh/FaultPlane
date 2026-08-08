@@ -1,3 +1,5 @@
+"use client";
+
 import { Server } from "lucide-react";
 import MetricCard from "./MetricCard";
 
