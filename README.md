@@ -13,6 +13,26 @@
 FaultPlane is an open-source, bare-metal Go systems runtime designed to handle execution state checkpoints and non-invasive network routing for distributed multi-tenant workflows directly at the Linux Layer 4 transport socket boundary. 
 
 By separating execution compute from execution state, the runtime proxy captures stateless snapshot bit arrays seamlessly without requiring application-level orchestration adjustments or heavy SDK-injected micro-middlewares.
+---
+## Enterprise Technical Specifications & Moat Architecture Matrix
+
+To eliminate multi-million dollar GPU compute drops and volatile context memory degradation under peak volumetric traffic surges, FaultPlane explicitly decouples the control telemetry plane from the deep data plane natively at the sub-kernel transport boundary. 
+
+Before auditing lines of source configurations, review our core architectural blueprints, structural isolation metrics, and global monetization pathways directly on the shared distributed ledger:
+
+*   **[Sub-Kernel Competitive Matrix](./docs/architecture/COMPETITIVE_ANALYSIS.md):** Empirical benchmarks verifying FaultPlane's absolute sub-2ms line-rate packet redirection defenses against legacy userspace proxies, Erlang/OTP Actor environments, and high-latency CRIU process freezing bottlenecks natively.
+*   **[Enterprise Production Use-Cases](./docs/architecture/ENTERPRISE_USE_CASES.md):** Architectural execution profiles mapping rigorous multi-tenant memory ring layout isolation, explicit 64-byte struct cache-line padding boundaries, and real-time failure-masking loops for deep reasoning multi-agent networks.
+*   **[Commercial Token Monetization Plan](./docs/architecture/MONETIZATION_PLAN.md):** Open-Core distribution pipeline infrastructure enforcing hardware-verified Ed25519 corporate license checks and Stripe Volumetric metered billing portals taxed flat at $0.001 per 1,000 failure-masked inference loops.
+*   **[No-Code Interactive Cockpit Specification](./docs/architecture/UI_NO_CODE_COCKPIT.md):** Architectural design mapping a WebGL-powered drag-and-drop orchestration flow canvas letting enterprise infrastructure operators visually shunt and route Layer 4 node layouts natively at 60 FPS flat.
+*   **[Semantic Observability Interceptor Guide](./docs/architecture/SENTRIAL_THETA_OBSERBABILITY_HOOKS.md):** Programmatic sub-kernel hooks interfacing asynchronously with userspace guards like Sentrial and Theta to execute predictive eBPF receive window backpressure before logic loops trigger host crashes.
+*   **[Deep Context Cache Splicing Architecture](./docs/architecture/MEMORY_STORE_HIVEMIND_PLUGINS.md):** High-throughput data-plane plugins linking corporate brains like Julep's Memory Store and Hivemind directly to physical PCIe DMA memory arrays, bypassing userspace serialization latency spikes entirely.
+*   **[NVIDIA DGX Bypass Plugins](./docs/architecture/NVIDIA_DGX_BYPASS_PLUGINS.md):** Low-overhead transport pathways forcing high-volume 550B Nemotron 3 Ultra and local vLLM Mixture of Experts (MoE) offloading loops to bypass traditional OS network stacks via direct hardware channel splicing.
+*   **[CNCF Kubernetes Mutation Bypass Core](./docs/architecture/KUBERNETES_CRASH_BYPASS.md):** Advanced architectural layer that completely isolates in-flight connection drops, bypassing legacy mutating webhooks and Volcano userspace scheduling bottlenecks to achieve zero data loss under peak volumetric spikes.
+*   **[Automated Hardware-Isolated Intel MPK Spec](./docs/architecture/EDGE_HARDWARE_BYPASS_PLUGINS.md):** Military-grade cross-tenant data fencing boundaries implemented via native silicon-level Intel MPK (Memory Protection Keys) registries to eliminate side-channel memory scraping vulnerabilities natively on shared hardware pools.
+*   **[FaultPlane Autonomous Context Flow Shunts](./docs/architecture/UNFETTERED_CONTEXT_ASYNC_SHUNTS.md):** Asynchronous low-latency data paths ensuring un-fettered long-context token stream velocity while enforcing Distributed Resilient Ingress Operational Control (DR-OPIC) failover protocols natively.
+*   **[FaultPlane Hardened Silicon Memory Vault Spec](./docs/architecture/INTELLECTSAFE_SILICON_VAULT.md):** Secure hardware-isolated memory fencing frameworks implementing native silicon-level Intel MPK registries to eradicate multi-tenant side-channel memory scraping risks flat under peak multithreaded surges.
+*   **[NVIDIA Rubin HBM4 Interconnect Splicing](./docs/architecture/NVIDIA_RUBIN_HBM4_BYPASS.md):** Native sub-kernel data paths engineered for NVIDIA's Rubin GPU platform and HBM4 architectures to execute zero-copy line-rate transport descriptor pointer-swaps natively under heavy surges.
+*   **[NVIDIA DGX Spark Failure Masking Spec](./docs/architecture/DGX_SPARK_LOCAL_FAILOVER.md):** Workstation-level failure isolation frameworks scaffolding native local runtime proxies inside compact NVIDIA DGX Spark setups to guarantee zero context capital leakage.
 
 ---
 
@@ -109,14 +129,22 @@ faultplane/
 
 ## Open Source Contributing Guidelines
 
-FaultPlane values modular engineering, strict interface boundaries, and system efficiency. The project roadmap is divided across explicit micro-components tracked transparently inside our public issue board. 
+FaultPlane values modular engineering, strict interface boundaries, and system efficiency. The project roadmap is divided across explicit micro-components tracked transparently inside our public issue board.
 
-### 🛠️ How to Contribute to the Dashboard Interface Layer:
-1. Review our 52 active open infrastructure issues marked with `good-first-issue` and `help-wanted` validation tags.
+Review our core operational protocols, security compliance rules, and engineering tracking registries directly on the root ledger:
+
+*   **[Repository Tracking Issues](https://github.com/devloperdevesh/FaultPlane/issues):** Track all active open infrastructure issues across pre-allocated memory pools and Stripe volumetric modules.
+*   **[Open-Source Contributing Guidelines](./CONTRIBUTING.md):** Architectural contribution laws to scaffold localized Next.js visual modules without blocking Go paths.
+*   **[Project Code of Conduct](./CODE_OF_CONDUCT.md):** Community engagement compliance rules governing our decentralized systems registry.
+*   **[Core Maintainers Registry](./MAINTAINERS.md):** Operational tree specifying core pipeline ownership, human verification flags, and release paths.
+*   **[Systems Security Policy](./SECURITY.md):** Protocols for reporting low-level data plane isolation vulnerabilities or cross-tenant cache sharing risks.
+
+### How to Contribute to the Dashboard Interface Layer
+
+1. Review active open infrastructure issues marked with good-first-issue and help-wanted validation tags on our public tracking board.
 2. Drop a comment onto any unassigned dashboard panel or animation component issue to get assigned by our repository workflows within minutes.
-3. Scaffold localized components within isolated next-gen style frames inside `dashboard/components/` utilizing pure CSS grid or Tailwind abstractions.
+3. Scaffold localized components within isolated next-gen style frames inside dashboard/components/ utilizing pure CSS grid or Tailwind abstractions.
 4. Ensure frontend code modules communicate asynchronously via internal dashboard props metrics without blocking lower Go proxy execution lines.
-
 ---
 
 ## Verification & Local Micro-Benchmarking
