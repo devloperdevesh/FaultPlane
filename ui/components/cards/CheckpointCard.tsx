@@ -1,3 +1,5 @@
+"use client";
+
 import { Database } from "lucide-react";
 import MetricCard from "./MetricCard";
 
