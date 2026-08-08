@@ -32,3 +32,5 @@ go.work.sum
 # .vscode/
 .vercel
 .env*
+# Claude Code
+.claude/
