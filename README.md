@@ -13,6 +13,7 @@
 FaultPlane is an open-source, bare-metal Go systems runtime designed to handle execution state checkpoints and non-invasive network routing for distributed multi-tenant workflows directly at the Linux Layer 4 transport socket boundary. 
 
 By separating execution compute from execution state, the runtime proxy captures stateless snapshot bit arrays seamlessly without requiring application-level orchestration adjustments or heavy SDK-injected micro-middlewares.
+
 ---
 ## Enterprise Technical Specifications & Moat Architecture Matrix
 
