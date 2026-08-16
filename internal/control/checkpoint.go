@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/devloperdevesh/agentmesh/internal/domain"
+	"github.com/devloperdevesh/FaultPlane/internal/domain"
 )
 
 // CreateCheckpoint stores the current workflow state

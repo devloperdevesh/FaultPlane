@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/devloperdevesh/agentmesh/data-plane/agent_sim/simulator"
+	"github.com/devloperdevesh/FaultPlane/data-plane/agent_sim/simulator"
 )
 
 func main() {

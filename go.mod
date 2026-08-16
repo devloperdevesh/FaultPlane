@@ -1,3 +1,3 @@
-module github.com/devloperdevesh/agentmesh
+module github.com/devloperdevesh/FaultPlane
 
 go 1.26.4
