@@ -9,14 +9,12 @@ type Manager struct {
 	logger *slog.Logger
 }
 
-
 func New(logger *slog.Logger) *Manager {
 
 	return &Manager{
 		logger: logger,
 	}
 }
-
 
 func (m *Manager) Start(ctx context.Context) error {
 

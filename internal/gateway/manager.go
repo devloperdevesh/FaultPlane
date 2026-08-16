@@ -15,7 +15,6 @@ func New(logger *slog.Logger) *Manager {
 	}
 }
 
-
 func (m *Manager) Start(ctx context.Context) error {
 
 	m.logger.Info(

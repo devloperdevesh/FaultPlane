@@ -21,17 +21,14 @@ func main() {
 	// Load configuration
 	cfg := config.Load()
 
-
 	// Structured logger
 	logger := logging.New(
 		cfg.LogLevel,
 	)
 
-
 	logger.Info(
 		"starting FaultPlane daemon",
 	)
-
 
 	// Root context with shutdown handling
 	ctx, cancel := signal.NotifyContext(
@@ -42,19 +39,14 @@ func main() {
 
 	defer cancel()
 
-
-
 	// Telemetry initialization
 	telemetryRegistry :=
 		telemetry.NewRegistry()
-
 
 	collector :=
 		telemetry.NewCollector(
 			telemetryRegistry,
 		)
-
-
 
 	// Storage / control layer
 	controller :=
@@ -63,23 +55,17 @@ func main() {
 			collector,
 		)
 
-
-
 	// Gateway layer
 	gatewayManager :=
 		gateway.New(
 			logger,
 		)
 
-
-
 	// API layer
 	router :=
 		api.NewRouter(
 			controller,
 		)
-
-
 
 	// Runtime daemon
 	daemon :=
@@ -90,10 +76,8 @@ func main() {
 			router,
 		)
 
-
-
 	// Start daemon
-	go func(){
+	go func() {
 
 		if err := daemon.Start(ctx); err != nil {
 
@@ -108,18 +92,12 @@ func main() {
 
 	}()
 
-
-
 	// Wait shutdown signal
 	<-ctx.Done()
-
-
 
 	logger.Info(
 		"shutdown signal received",
 	)
-
-
 
 	// Graceful shutdown timeout
 	shutdownCtx, shutdownCancel :=
@@ -130,11 +108,8 @@ func main() {
 
 	defer shutdownCancel()
 
-
-
 	if err :=
 		daemon.Stop(shutdownCtx); err != nil {
-
 
 		logger.Error(
 			"graceful shutdown failed",
@@ -144,8 +119,6 @@ func main() {
 
 		os.Exit(1)
 	}
-
-
 
 	logger.Info(
 		"FaultPlane daemon stopped cleanly",
