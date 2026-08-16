@@ -35,9 +35,33 @@ func (d *Daemon) Start(ctx context.Context) error {
 		"faultplane daemon starting",
 	)
 
-	go d.control.Start(ctx)
+	go func() {
 
-	go d.gateway.Start(ctx)
+		err := d.control.Start(ctx)
+
+		if err != nil {
+			d.logger.Error(
+				"control manager failed",
+				"error",
+				err,
+			)
+		}
+
+	}()
+
+	go func() {
+
+		err := d.gateway.Start(ctx)
+
+		if err != nil {
+			d.logger.Error(
+				"gateway manager failed",
+				"error",
+				err,
+			)
+		}
+
+	}()
 
 	<-ctx.Done()
 
