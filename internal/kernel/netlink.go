@@ -3,9 +3,9 @@ package kernel
 import (
 	"context"
 	"fmt"
-	"sync"
-
 	"log/slog"
+	"sync"
+	"time"
 )
 
 // Event represents a kernel network event.
@@ -23,6 +23,8 @@ type NetlinkListener struct {
 
 	mu      sync.Mutex
 	running bool
+
+	cancel context.CancelFunc
 }
 
 // NewNetlinkListener creates a new kernel event listener.
@@ -36,13 +38,10 @@ func NewNetlinkListener(
 	}
 }
 
-
 // Events returns read-only kernel events stream.
 func (n *NetlinkListener) Events() <-chan Event {
-
 	return n.events
 }
-
 
 // Start initializes the kernel listener lifecycle.
 func (n *NetlinkListener) Start(
@@ -59,6 +58,9 @@ func (n *NetlinkListener) Start(
 		)
 	}
 
+	listenerCtx, cancel := context.WithCancel(ctx)
+
+	n.cancel = cancel
 	n.running = true
 
 	n.mu.Unlock()
@@ -69,46 +71,62 @@ func (n *NetlinkListener) Start(
 	)
 
 
-	go func() {
+	go n.loop(listenerCtx)
 
-		defer func() {
-
-			n.mu.Lock()
-			n.running = false
-			n.mu.Unlock()
-
-			close(n.events)
-
-			n.logger.Info(
-				"kernel netlink listener stopped",
-			)
-
-		}()
+	return nil
+}
 
 
-		for {
+// loop handles kernel events.
+func (n *NetlinkListener) loop(
+	ctx context.Context,
+) {
 
-			select {
+	defer func() {
 
-			case <-ctx.Done():
+		n.mu.Lock()
+		n.running = false
+		n.mu.Unlock()
 
-				return
-
-
-			default:
-
-				// Placeholder:
-				// Real Linux netlink socket read
-				// will be implemented here.
-
-			}
-
-		}
+		n.logger.Info(
+			"kernel netlink listener stopped",
+		)
 
 	}()
 
 
-	return nil
+	ticker := time.NewTicker(
+		100 * time.Millisecond,
+	)
+
+	defer ticker.Stop()
+
+
+	for {
+
+		select {
+
+
+		case <-ctx.Done():
+
+			return
+
+
+		case <-ticker.C:
+
+			// TODO:
+			// Replace this ticker with real Linux
+			// netlink socket receive.
+			//
+			// Future:
+			// tcp_set_state
+			// sock_diag
+			// eBPF events
+
+		}
+
+	}
+
 }
 
 
@@ -116,7 +134,6 @@ func (n *NetlinkListener) Start(
 func (n *NetlinkListener) Stop() {
 
 	n.mu.Lock()
-
 	defer n.mu.Unlock()
 
 
@@ -124,7 +141,15 @@ func (n *NetlinkListener) Stop() {
 		return
 	}
 
+
+	if n.cancel != nil {
+
+		n.cancel()
+	}
+
+
 	n.logger.Info(
 		"netlink shutdown requested",
 	)
+
 }
