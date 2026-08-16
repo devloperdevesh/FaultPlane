@@ -2,109 +2,152 @@ package main
 
 import (
 	"context"
-	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/devloperdevesh/agentmesh/internal/api"
-	"github.com/devloperdevesh/agentmesh/internal/control"
-	"github.com/devloperdevesh/agentmesh/internal/storage"
-	"github.com/devloperdevesh/agentmesh/internal/telemetry"
+	"github.com/devloperdevesh/FaultPlane/internal/api"
+	"github.com/devloperdevesh/FaultPlane/internal/config"
+	"github.com/devloperdevesh/FaultPlane/internal/control"
+	"github.com/devloperdevesh/FaultPlane/internal/gateway"
+	"github.com/devloperdevesh/FaultPlane/internal/logging"
+	"github.com/devloperdevesh/FaultPlane/internal/runtime"
+	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
 func main() {
 
-	// Storage layer
-	store := storage.NewMemoryStore()
+	// Load configuration
+	cfg := config.Load()
 
-	// Telemetry layer
-	registry := telemetry.NewRegistry()
 
-	collector := telemetry.NewCollector(
-		registry,
+	// Structured logger
+	logger := logging.New(
+		cfg.LogLevel,
 	)
 
-	// Control plane
-	controller := control.NewController(
-		store,
-		collector,
+
+	logger.Info(
+		"starting FaultPlane daemon",
 	)
 
-	// HTTP API Router
-	router := api.NewRouter(
-		controller,
+
+	// Root context with shutdown handling
+	ctx, cancel := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
 	)
 
-	server := &http.Server{
+	defer cancel()
 
-		Addr: ":8080",
 
-		Handler: router,
 
-		ReadTimeout: 10 * time.Second,
+	// Telemetry initialization
+	telemetryRegistry :=
+		telemetry.NewRegistry()
 
-		WriteTimeout: 10 * time.Second,
 
-		IdleTimeout: 60 * time.Second,
-	}
+	collector :=
+		telemetry.NewCollector(
+			telemetryRegistry,
+		)
 
-	log.Println("===================================")
-	log.Println(" AgentMesh Control Plane ")
-	log.Println(" HTTP :8080 ")
-	log.Println(" Storage : MemoryStore ")
-	log.Println(" Telemetry : Enabled ")
-	log.Println("===================================")
 
-	go func() {
 
-		err := server.ListenAndServe()
+	// Storage / control layer
+	controller :=
+		control.New(
+			logger,
+			collector,
+		)
 
-		if err != nil &&
-			err != http.ErrServerClosed {
 
-			log.Fatalf(
-				"server error: %v",
+
+	// Gateway layer
+	gatewayManager :=
+		gateway.New(
+			logger,
+		)
+
+
+
+	// API layer
+	router :=
+		api.NewRouter(
+			controller,
+		)
+
+
+
+	// Runtime daemon
+	daemon :=
+		runtime.New(
+			logger,
+			controller,
+			gatewayManager,
+			router,
+		)
+
+
+
+	// Start daemon
+	go func(){
+
+		if err := daemon.Start(ctx); err != nil {
+
+			logger.Error(
+				"daemon stopped with error",
+				"error",
 				err,
 			)
+
+			cancel()
 		}
 
 	}()
 
-	stop := make(chan os.Signal, 1)
 
-	signal.Notify(
-		stop,
-		syscall.SIGINT,
-		syscall.SIGTERM,
-	)
 
-	<-stop
+	// Wait shutdown signal
+	<-ctx.Done()
 
-	log.Println(
+
+
+	logger.Info(
 		"shutdown signal received",
 	)
 
-	ctx, cancel :=
+
+
+	// Graceful shutdown timeout
+	shutdownCtx, shutdownCancel :=
 		context.WithTimeout(
 			context.Background(),
-			5*time.Second,
+			10*time.Second,
 		)
 
-	defer cancel()
+	defer shutdownCancel()
+
+
 
 	if err :=
-		server.Shutdown(ctx); err != nil {
+		daemon.Stop(shutdownCtx); err != nil {
 
-		log.Fatalf(
-			"shutdown failed: %v",
+
+		logger.Error(
+			"graceful shutdown failed",
+			"error",
 			err,
 		)
+
+		os.Exit(1)
 	}
 
-	log.Println(
-		"AgentMesh stopped cleanly",
+
+
+	logger.Info(
+		"FaultPlane daemon stopped cleanly",
 	)
 }
