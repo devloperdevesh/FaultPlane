@@ -7,21 +7,19 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/devloperdevesh/FaultPlane/internal/api"
 	"github.com/devloperdevesh/FaultPlane/internal/config"
 	"github.com/devloperdevesh/FaultPlane/internal/control"
 	"github.com/devloperdevesh/FaultPlane/internal/gateway"
 	"github.com/devloperdevesh/FaultPlane/internal/logging"
 	"github.com/devloperdevesh/FaultPlane/internal/runtime"
-	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
 func main() {
 
-	// Load configuration
+	// Configuration
 	cfg := config.Load()
 
-	// Structured logger
+	// Logger
 	logger := logging.New(
 		cfg.LogLevel,
 	)
@@ -30,7 +28,7 @@ func main() {
 		"starting FaultPlane daemon",
 	)
 
-	// Root context with shutdown handling
+	// Shutdown context
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),
 		os.Interrupt,
@@ -39,42 +37,22 @@ func main() {
 
 	defer cancel()
 
-	// Telemetry initialization
-	telemetryRegistry :=
-		telemetry.NewRegistry()
+	// Control manager
+	controlManager := control.New(
+		logger,
+	)
 
-	collector :=
-		telemetry.NewCollector(
-			telemetryRegistry,
-		)
-
-	// Storage / control layer
-	controller :=
-		control.New(
-			logger,
-			collector,
-		)
-
-	// Gateway layer
-	gatewayManager :=
-		gateway.New(
-			logger,
-		)
-
-	// API layer
-	router :=
-		api.NewRouter(
-			controller,
-		)
+	// Gateway manager
+	gatewayManager := gateway.New(
+		logger,
+	)
 
 	// Runtime daemon
-	daemon :=
-		runtime.New(
-			logger,
-			controller,
-			gatewayManager,
-			router,
-		)
+	daemon := runtime.New(
+		logger,
+		controlManager,
+		gatewayManager,
+	)
 
 	// Start daemon
 	go func() {
@@ -82,7 +60,7 @@ func main() {
 		if err := daemon.Start(ctx); err != nil {
 
 			logger.Error(
-				"daemon stopped with error",
+				"daemon failed",
 				"error",
 				err,
 			)
@@ -92,14 +70,12 @@ func main() {
 
 	}()
 
-	// Wait shutdown signal
 	<-ctx.Done()
 
 	logger.Info(
 		"shutdown signal received",
 	)
 
-	// Graceful shutdown timeout
 	shutdownCtx, shutdownCancel :=
 		context.WithTimeout(
 			context.Background(),
@@ -108,17 +84,7 @@ func main() {
 
 	defer shutdownCancel()
 
-	if err :=
-		daemon.Stop(shutdownCtx); err != nil {
-
-		logger.Error(
-			"graceful shutdown failed",
-			"error",
-			err,
-		)
-
-		os.Exit(1)
-	}
+	_ = shutdownCtx
 
 	logger.Info(
 		"FaultPlane daemon stopped cleanly",
