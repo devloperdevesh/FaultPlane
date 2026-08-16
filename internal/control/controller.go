@@ -3,8 +3,8 @@ package control
 import (
 	"sync"
 
-	"github.com/devloperdevesh/agentmesh/internal/storage"
-	"github.com/devloperdevesh/agentmesh/internal/telemetry"
+	"github.com/devloperdevesh/FaultPlane/internal/storage"
+	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
 // Controller manages agent workflow lifecycle,

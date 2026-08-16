@@ -1,6 +1,6 @@
 package control
 
-import "github.com/devloperdevesh/agentmesh/internal/domain"
+import "github.com/devloperdevesh/FaultPlane/internal/domain"
 
 // Type aliases for domain types to maintain backward compatibility
 type WorkflowStatus = domain.WorkflowStatus

@@ -3,7 +3,7 @@ package storage
 import (
 	"context"
 
-	"github.com/devloperdevesh/agentmesh/internal/domain"
+	"github.com/devloperdevesh/FaultPlane/internal/domain"
 )
 
 type Store interface {

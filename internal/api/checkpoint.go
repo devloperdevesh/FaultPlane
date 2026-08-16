@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/devloperdevesh/agentmesh/internal/control"
+	"github.com/devloperdevesh/FaultPlane/internal/control"
 )
 
 type checkpointRequest struct {

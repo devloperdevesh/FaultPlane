@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/devloperdevesh/agentmesh/internal/control"
+	"github.com/devloperdevesh/FaultPlane/internal/control"
 )
 
 func NewRouter(
