@@ -45,7 +45,7 @@ func (scp *UniqueStateControlPlane) CommitCheckpoint(agentID string, step uint64
 	}
 }
 
-// HotSwapExecutionState extracts snapshots and recalculates validation anchors under 30ms chaos thresholds.
+// HotSwapExecutionState extracts snapshots and recalculates validation anchors under 30ms chaos threshnews.
 func (scp *UniqueStateControlPlane) HotSwapExecutionState(ctx context.Context, agentID string) (*AgentState, string, error) {
 	scp.mu.RLock()
 	state, exists := scp.ActiveStates[agentID]
