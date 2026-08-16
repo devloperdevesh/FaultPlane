@@ -3,6 +3,7 @@ package kernel
 import "testing"
 
 func TestTCPStateParser_DisconnectEvent(t *testing.T) {
+
 	parser := NewTCPStateParser()
 
 	event := TCPEvent{
@@ -28,6 +29,7 @@ func TestTCPStateParser_DisconnectEvent(t *testing.T) {
 }
 
 func TestTCPStateParser_InvalidState(t *testing.T) {
+
 	parser := NewTCPStateParser()
 
 	event := TCPEvent{}
@@ -51,14 +53,18 @@ func TestParseRawState(t *testing.T) {
 			input: "closed",
 			want:  TCPStateClosed,
 		},
+		{
+			name:  "established state",
+			input: "established",
+			want:  TCPStateEstablished,
+		},
 	}
 
-	parser := ParseRawState
-
 	for _, tt := range tests {
+
 		t.Run(tt.name, func(t *testing.T) {
 
-			got := parser(tt.input)
+			got := ParseRawState(tt.input)
 
 			if got != tt.want {
 				t.Fatalf(
