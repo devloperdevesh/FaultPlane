@@ -65,17 +65,14 @@ func (n *NetlinkListener) Start(
 
 	n.mu.Unlock()
 
-
 	n.logger.Info(
 		"kernel netlink listener started",
 	)
-
 
 	go n.loop(listenerCtx)
 
 	return nil
 }
-
 
 // loop handles kernel events.
 func (n *NetlinkListener) loop(
@@ -94,23 +91,19 @@ func (n *NetlinkListener) loop(
 
 	}()
 
-
 	ticker := time.NewTicker(
 		100 * time.Millisecond,
 	)
 
 	defer ticker.Stop()
 
-
 	for {
 
 		select {
 
-
 		case <-ctx.Done():
 
 			return
-
 
 		case <-ticker.C:
 
@@ -129,24 +122,20 @@ func (n *NetlinkListener) loop(
 
 }
 
-
 // Stop gracefully shuts down listener.
 func (n *NetlinkListener) Stop() {
 
 	n.mu.Lock()
 	defer n.mu.Unlock()
 
-
 	if !n.running {
 		return
 	}
-
 
 	if n.cancel != nil {
 
 		n.cancel()
 	}
-
 
 	n.logger.Info(
 		"netlink shutdown requested",
