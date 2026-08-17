@@ -34,3 +34,6 @@ go.work.sum
 .env*
 # Claude Code
 .claude/
+# eBPF build artifacts
+*.bpf.o
+*.o
