@@ -1,24 +1,55 @@
 // SPDX-License-Identifier: GPL-2.0
 
 #include <linux/bpf.h>
+#include <linux/types.h>
+
 #include <bpf/bpf_helpers.h>
-#include <bpf/bpf_endian.h>
 
 
 char LICENSE[] SEC("license") = "GPL";
 
 
-// Socket map used for redirecting TCP streams.
-struct {
+#define MAX_BACKENDS 1024
+#define DEFAULT_BACKEND_KEY 0
+
+
+/*
+ * Sockmap used by FaultPlane transport layer.
+ *
+ * Flow:
+ *
+ * Application socket
+ *        |
+ *        v
+ *     sock_map
+ *        |
+ *        v
+ * Healthy backend socket
+ *
+ */
+struct
+{
 	__uint(type, BPF_MAP_TYPE_SOCKMAP);
-	__uint(max_entries, 1024);
+	__uint(max_entries, MAX_BACKENDS);
+
 	__type(key, __u32);
 	__type(value, __u32);
-}
-sock_map SEC(".maps");
+
+} faultplane_sockmap SEC(".maps");
 
 
-// Attach to socket operations.
+
+/*
+ * Socket lifecycle hook.
+ *
+ * Used for:
+ * - observing TCP socket creation
+ * - registering backend sockets
+ * - attaching sockets into sockmap
+ *
+ * Actual backend selection happens
+ * from userspace control-plane.
+ */
 SEC("sockops")
 int faultplane_sockops(
 	struct bpf_sock_ops *ctx
@@ -27,20 +58,32 @@ int faultplane_sockops(
 
 	switch (ctx->op) {
 
-	case BPF_SOCK_OPS_PASSIVE_ESTABLISHED_CB:
-
-		// Future:
-		// register healthy backend sockets
-
-		break;
-
 
 	case BPF_SOCK_OPS_ACTIVE_ESTABLISHED_CB:
 
-		// Future:
-		// track outbound connections
-
+		/*
+		 * Active connection established.
+		 *
+		 * Future:
+		 * - attach socket metadata
+		 * - register connection state
+		 */
 		break;
+
+
+
+	case BPF_SOCK_OPS_PASSIVE_ESTABLISHED_CB:
+
+		/*
+		 * Incoming connection established.
+		 *
+		 * Future:
+		 * - validate backend health
+		 * - update routing state
+		 */
+		break;
+
+
 
 	default:
 
@@ -53,20 +96,35 @@ int faultplane_sockops(
 
 
 
-// Redirect socket messages.
+/*
+ * Kernel-level socket redirect.
+ *
+ * Traffic does not return to userspace.
+ *
+ * Kernel:
+ *
+ * socket
+ *   |
+ *   v
+ * sockmap
+ *   |
+ *   v
+ * backend socket
+ *
+ */
 SEC("sk_msg")
 int faultplane_redirect(
 	struct sk_msg_md *msg
 )
 {
 
-	int key = 0;
+	__u32 backend_key = DEFAULT_BACKEND_KEY;
 
 
 	return bpf_msg_redirect_map(
 		msg,
-		&sock_map,
-		key,
+		&faultplane_sockmap,
+		backend_key,
 		0
 	);
 }
