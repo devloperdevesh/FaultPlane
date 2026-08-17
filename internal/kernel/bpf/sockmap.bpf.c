@@ -10,25 +10,15 @@ char LICENSE[] SEC("license") = "GPL";
 
 
 #define MAX_BACKENDS 1024
-#define DEFAULT_BACKEND_KEY 0
+#define PRIMARY_BACKEND 0
 
 
 /*
- * Sockmap used by FaultPlane transport layer.
+ * Active transport sockets.
  *
- * Flow:
- *
- * Application socket
- *        |
- *        v
- *     sock_map
- *        |
- *        v
- * Healthy backend socket
- *
+ * Userspace control-plane manages backend lifecycle.
  */
-struct
-{
+struct {
 	__uint(type, BPF_MAP_TYPE_SOCKMAP);
 	__uint(max_entries, MAX_BACKENDS);
 
@@ -40,53 +30,53 @@ struct
 
 
 /*
- * Socket lifecycle hook.
+ * Backend health state.
  *
- * Used for:
- * - observing TCP socket creation
- * - registering backend sockets
- * - attaching sockets into sockmap
+ * Updated by Go control-plane.
  *
- * Actual backend selection happens
- * from userspace control-plane.
+ * 1 = healthy
+ * 0 = unavailable
+ */
+struct {
+	__uint(type, BPF_MAP_TYPE_ARRAY);
+	__uint(max_entries, MAX_BACKENDS);
+
+	__type(key, __u32);
+	__type(value, __u32);
+
+} faultplane_health SEC(".maps");
+
+
+
+/*
+ * Register established sockets
+ * into kernel transport table.
  */
 SEC("sockops")
 int faultplane_sockops(
 	struct bpf_sock_ops *ctx
 )
 {
+	__u32 key = PRIMARY_BACKEND;
 
-	switch (ctx->op) {
 
+	switch (ctx->op)
+	{
 
 	case BPF_SOCK_OPS_ACTIVE_ESTABLISHED_CB:
-
-		/*
-		 * Active connection established.
-		 *
-		 * Future:
-		 * - attach socket metadata
-		 * - register connection state
-		 */
-		break;
-
-
-
 	case BPF_SOCK_OPS_PASSIVE_ESTABLISHED_CB:
 
-		/*
-		 * Incoming connection established.
-		 *
-		 * Future:
-		 * - validate backend health
-		 * - update routing state
-		 */
-		break;
+		bpf_sock_map_update(
+			ctx,
+			&faultplane_sockmap,
+			&key,
+			BPF_ANY
+		);
 
+		break;
 
 
 	default:
-
 		break;
 	}
 
@@ -97,34 +87,42 @@ int faultplane_sockops(
 
 
 /*
- * Kernel-level socket redirect.
+ * Zero-copy kernel socket redirect.
  *
- * Traffic does not return to userspace.
- *
- * Kernel:
- *
- * socket
- *   |
- *   v
- * sockmap
- *   |
- *   v
- * backend socket
- *
+ * Decision happens inside kernel
+ * using backend health state.
  */
 SEC("sk_msg")
 int faultplane_redirect(
 	struct sk_msg_md *msg
 )
 {
+	__u32 backend = PRIMARY_BACKEND;
 
-	__u32 backend_key = DEFAULT_BACKEND_KEY;
+
+	__u32 *healthy =
+		bpf_map_lookup_elem(
+			&faultplane_health,
+			&backend
+		);
+
+
+	if (!healthy)
+	{
+		return SK_PASS;
+	}
+
+
+	if (*healthy == 0)
+	{
+		return SK_PASS;
+	}
 
 
 	return bpf_msg_redirect_map(
 		msg,
 		&faultplane_sockmap,
-		backend_key,
+		backend,
 		0
 	);
 }
