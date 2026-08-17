@@ -7,7 +7,6 @@ import (
 	"github.com/cilium/ebpf"
 )
 
-// Loader manages lifecycle of FaultPlane eBPF programs.
 type Loader struct {
 	mu sync.Mutex
 
@@ -15,28 +14,27 @@ type Loader struct {
 	loaded     bool
 }
 
-// NewLoader creates a new BPF loader.
 func NewLoader() *Loader {
 	return &Loader{}
 }
 
-// Load loads and initializes an eBPF collection.
-func (l *Loader) Load(objectPath string) error {
+func (l *Loader) Load(
+	objectPath string,
+) error {
 
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
 	if l.loaded {
 		return fmt.Errorf(
-			"bpf collection already loaded",
+			"bpf program already loaded",
 		)
 	}
 
 	spec, err := ebpf.LoadCollectionSpec(objectPath)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to load bpf object %q: %w",
-			objectPath,
+			"load bpf spec: %w",
 			err,
 		)
 	}
@@ -44,7 +42,7 @@ func (l *Loader) Load(objectPath string) error {
 	collection, err := ebpf.NewCollection(spec)
 	if err != nil {
 		return fmt.Errorf(
-			"failed to create bpf collection: %w",
+			"create bpf collection: %w",
 			err,
 		)
 	}
@@ -55,7 +53,6 @@ func (l *Loader) Load(objectPath string) error {
 	return nil
 }
 
-// Close releases all loaded eBPF resources.
 func (l *Loader) Close() error {
 
 	l.mu.Lock()
@@ -65,11 +62,8 @@ func (l *Loader) Close() error {
 		return nil
 	}
 
-	if l.collection != nil {
-		l.collection.Close()
-	}
+	l.collection.Close()
 
-	l.collection = nil
 	l.loaded = false
 
 	return nil
