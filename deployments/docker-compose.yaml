@@ -1,0 +1,48 @@
+services:
+  agent:
+    build:
+      context: ..
+      dockerfile: deployments/daemon/Dockerfile
+    depends_on:
+      - faultplane
+    environment:
+      FAULTPLANE_GATEWAY_HOST: faultplane
+      FAULTPLANE_GATEWAY_PORT: "8080"
+    networks:
+      - faultplane
+
+  faultplane:
+    build:
+      context: ..
+      dockerfile: deployments/daemon/Dockerfile
+    environment:
+      FAULTPLANE_GATEWAY_PORT: "8080"
+      FAULTPLANE_PRIMARY_ADDR: primary:8080
+      FAULTPLANE_FALLBACK_ADDR: fallback:8080
+    depends_on:
+      - primary
+      - fallback
+    ports:
+      - "8080:8080"
+    networks:
+      - faultplane
+
+  primary:
+    image: hashicorp/http-echo:1.0
+    command:
+      - "-listen=:8080"
+      - "-text=primary"
+    networks:
+      - faultplane
+
+  fallback:
+    image: hashicorp/http-echo:1.0
+    command:
+      - "-listen=:8080"
+      - "-text=fallback"
+    networks:
+      - faultplane
+
+networks:
+  faultplane:
+    driver: bridge
