@@ -28,3 +28,25 @@ func TestAtomicStateSwap(t *testing.T) {
 		)
 	}
 }
+
+func BenchmarkAtomicSwap(
+	b *testing.B,
+) {
+
+	store := NewStateStore(
+		StateHealthy,
+	)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+
+		store.Swap(
+			StateFailed,
+		)
+
+		store.Swap(
+			StateHealthy,
+		)
+	}
+}
