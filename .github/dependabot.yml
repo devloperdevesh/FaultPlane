@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+version: 2
+updates:
+  # 1. Automate Security & Dependency Tracking for Go Language Core Elements
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-requests-limit: 5
+
+  # 2. Automate GitHub Actions Toolchain Workflows Updates Natively
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-requests-limit: 3
