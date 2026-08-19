@@ -18,10 +18,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang-15 llvm-15 libelf-dev libbpf-dev linux-headers-generic
 
+      # FIX COMPILATION ERROR: Natively inject the arch-specific x86_64 include path
       - name: Execute Strict BPF Object Compilation
         run: |
           clang -O2 -g -target bpf \
             -Wall -Werror \
+            -I/usr/include/x86_64-linux-gnu \
             -I/usr/include/bpf \
             -c internal/kernel/bpf/sockmap.bpf.c \
             -o internal/kernel/bpf/sockmap.bpf.o
