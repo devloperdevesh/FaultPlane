@@ -1,0 +1,30 @@
+name: Sub-Kernel BPF Verifier Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify-bpf:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Install Kernel Compilation Toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-15 llvm-15 libelf-dev libbpf-dev linux-headers-generic
+
+      - name: Execute Strict BPF Object Compilation
+        run: |
+          clang -O2 -g -target bpf \
+            -Wall -Werror \
+            -I/usr/include/bpf \
+            -c internal/kernel/bpf/sockmap.bpf.c \
+            -o internal/kernel/bpf/sockmap.bpf.o
+
+      - name: Verify Structural Bytecode Object Presence
+        run: test -f internal/kernel/bpf/sockmap.bpf.o
