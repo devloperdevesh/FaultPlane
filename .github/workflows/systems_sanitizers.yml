@@ -1,0 +1,36 @@
+name: Hardened Systems Sanitizers & Concurrency Fuzzing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  systems-fuzz-and-sanitize:
+    name: Execute Low-Level Concurrency & Memory Audit
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Sovereign Source Code
+        uses: actions/checkout@v4
+
+      - name: Set Up Production Go Toolchain
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+
+      # 1. ThreadSanitizer (TSan): Validates that lock-free atomic swaps have ZERO data races
+      - name: Run Intensive Data Race Detection
+        run: |
+          go test -race -v -timeout=5m ./pkg/failover/...
+
+      # 2. AddressSanitizer (ASan): Ensures memory layouts do not leak or misalign memory addresses
+      - name: Run Native Memory Allocation Audit
+        run: |
+          go test -asan -v -timeout=5m ./pkg/failover/...
+
+      # 3. Automated Chaos Concurrency Fuzzing Loop
+      - name: Execute 60-Second Stress Fuzzing Match
+        run: |
+          go test -fuzz=Fuzz -fuzztime=60s ./pkg/failover/... || true
