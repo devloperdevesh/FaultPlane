@@ -78,11 +78,16 @@ func RunFailureWorkload(ctx context.Context, cfg FailureWorkloadConfig) error {
 				continue
 			}
 
-			resp.Body.Close()
+			if err := resp.Body.Close(); err != nil {
+				return fmt.Errorf("close response body: %w", err)
+			}
 
 			if resp.StatusCode >= http.StatusOK &&
 				resp.StatusCode < http.StatusMultipleChoices {
-				fmt.Printf("agent: workload healthy request=%d\n", requests)
+				fmt.Printf(
+					"agent: workload healthy request=%d\n",
+					requests,
+				)
 			} else {
 				fmt.Printf(
 					"agent: workload returned status=%d request=%d\n",
