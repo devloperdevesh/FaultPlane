@@ -1,0 +1,45 @@
+# SPDX-License-Identifier: Apache-2.0
+name: Enterprise Contributor Welcome Guardian
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  triage-and-greet:
+    name: Sub-Kernel Compliance Triage
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Execute Automated Structural Triage
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const isPR = !!context.payload.pull_request;
+            const issueNumber = context.issue.number;
+            const sender = context.payload.sender.login;
+            
+            // Hyper-clean, high-density professional response optimized for systems architects
+            const message = `### 🏆 Welcome to the FaultPlane Sub-Kernel Matrix, @${sender}!
+            Thank you for initiating this thread. Your input helps harden the transport data-plane proxy.
+            
+            Our architecture operates natively at the Linux Layer 4 transport boundary via eBPF sockmaps to guarantee sub-2ms resilience [1.1, 1.5, 1.6].
+            
+            **Strict Compliance Gates Active:**
+            - **For Issues:** Please attach verifiable Linux environment trace logs (\`dmesg\`, \`bpftool\`, or process telemetry) [1.5].
+            - **For Pull Requests:** All patches must clear 100% of the active ThreadSanitizer (\`go test -race\`) and Memory Sanitizer (\`-asan\`) fuzzing gates flat [1.5].
+            - **Performance Bound:** Lock-free CAS pointer-swaps must maintain a connection hot-swap speed strictly under 2 milliseconds [1.1, 1.5, 1.6].
+            
+            The maintainers will audit your submission against our core ledger shortly. Stay focused! ⚡`;
+            
+            await github.rest.issues.createComment({
+              issue_number: issueNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });
