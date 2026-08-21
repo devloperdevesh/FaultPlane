@@ -1,0 +1,153 @@
+# SPDX-License-Identifier: Apache-2.0
+
+name: FaultPlane Beta Feedback
+description: Report results from a controlled FaultPlane beta evaluation.
+title: "[Beta] "
+labels:
+  - beta-feedback
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## FaultPlane Beta Feedback
+
+        Thank you for evaluating FaultPlane.
+
+        Please submit results from a controlled test environment only.
+
+        **Do not include:**
+        - API keys
+        - passwords
+        - access tokens
+        - private keys
+        - customer data
+        - confidential production information
+
+  - type: input
+    id: environment
+    attributes:
+      label: Operating System
+      placeholder: "Ubuntu 24.04"
+    validations:
+      required: true
+
+  - type: input
+    id: kernel
+    attributes:
+      label: Linux Kernel
+      placeholder: "6.x.x"
+    validations:
+      required: true
+
+  - type: input
+    id: faultplane_commit
+    attributes:
+      label: FaultPlane Commit
+      placeholder: "e.g. 456a858"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment Method
+      options:
+        - Native Linux
+        - Docker
+        - WSL
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: workload
+    attributes:
+      label: Workload
+      description: Describe the workload used during the evaluation.
+      placeholder: |
+        Example:
+        Long-running HTTP workload with repeated upstream requests.
+    validations:
+      required: true
+
+  - type: textarea
+    id: failure
+    attributes:
+      label: Failure Injected
+      description: Describe the controlled failure that was introduced.
+      placeholder: |
+        Example:
+        Primary endpoint was stopped during the workload.
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed_behavior
+    attributes:
+      label: Observed Behavior
+      description: What did FaultPlane actually do?
+      placeholder: |
+        Describe:
+        - failure detection
+        - state transition
+        - fallback behavior
+        - workload behavior
+    validations:
+      required: true
+
+  - type: input
+    id: latency
+    attributes:
+      label: Measured Failover Latency
+      description: Report the actual measured value and unit.
+      placeholder: "e.g. 1.84 ms"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: workload_continuity
+    attributes:
+      label: Did the workload continue?
+      options:
+        - "Yes"
+        - "Partially"
+        - "No"
+        - "Unknown"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: data_loss
+    attributes:
+      label: Unexpected Data Loss
+      options:
+        - "None observed"
+        - "Observed"
+        - "Unknown"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs
+      description: Paste sanitized logs or benchmark output.
+      render: text
+
+  - type: textarea
+    id: improvements
+    attributes:
+      label: Improvements
+      description: What should FaultPlane improve before production use?
+
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Submission Confirmation
+      options:
+        - label: I have removed credentials and sensitive information.
+          required: true
+        - label: These results were produced from an actual test.
+          required: true
+        - label: I understand that benchmark results are environment-specific.
+          required: true
