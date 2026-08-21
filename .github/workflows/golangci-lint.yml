@@ -29,8 +29,8 @@ jobs:
           go-version: "1.23"
           cache: true
 
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.1
-          args: --timeout=5m
+          - name: Run golangci-lint
+          uses: golangci/golangci-lint-action@v8
+          with:
+            version: v1.64.8
+            args: --timeout=5m
