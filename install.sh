@@ -154,4 +154,8 @@ main() {
     log "Configuration: ${CONFIG_DIR}/environment"
 }
 
-main "$@"
+main "$@"cd /mnt/c/Users/hi/OneDrive/Music/Desktop/FaultPlane
+
+test -f install.sh && echo "install.sh exists"
+sh -n install.sh
+tail -n 10 install.sh
