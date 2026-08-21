@@ -1,0 +1,115 @@
+# SPDX-License-Identifier: Apache-2.0
+
+name: Developer Outreach Intelligence
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  outreach-intelligence:
+    name: Collect Outreach Leads and Prepare Review Queue
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Outreach Workspace
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p outreach
+
+          cat > outreach/README.md <<'EOF'
+          # FaultPlane Outreach Review Queue
+
+          This directory contains manually reviewed outreach material.
+
+          The automation must not automatically contact users,
+          post comments, send direct messages, or impersonate maintainers.
+
+          Every lead must be independently verified before outreach.
+
+          Do not store:
+
+          - passwords
+          - API keys
+          - access tokens
+          - private messages
+          - confidential customer information
+          - personal data that is not necessary for outreach
+          EOF
+
+      - name: Generate Technical Outreach Draft
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cat > outreach/pitch.md <<'EOF'
+          # FaultPlane Beta Outreach Draft
+
+          FaultPlane is an experimental infrastructure project focused on
+          controlled recovery from transient transport failures in
+          long-running workloads.
+
+          The project uses Go and Linux networking/eBPF components to
+          investigate failure detection, failover, and workload continuity.
+
+          We are looking for engineers who operate long-running,
+          network-dependent workloads and would be interested in testing
+          FaultPlane in a controlled environment.
+
+          Repository:
+          https://github.com/devloperdevesh/FaultPlane
+
+          If this problem is relevant to your workload, we would be happy
+          to discuss a technical beta evaluation.
+
+          Please only use measured benchmark results when discussing
+          performance. Results depend on the test environment and workload.
+          EOF
+
+          echo "Outreach draft generated for manual review."
+
+      - name: Generate Daily Review Report
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cat > outreach/daily-report.md <<'EOF'
+          # Daily Outreach Review
+
+          Date: $(date -u +"%Y-%m-%d")
+
+          ## Review Checklist
+
+          - [ ] Identify relevant public technical discussions.
+          - [ ] Verify that the problem is actually related to
+                network/session reliability.
+          - [ ] Confirm that outreach is appropriate for the community.
+          - [ ] Avoid duplicate outreach.
+          - [ ] Do not send unsolicited automated messages.
+          - [ ] Do not claim unverified performance numbers.
+          - [ ] Invite interested engineers to the FaultPlane repository.
+          - [ ] Record only the minimum information necessary.
+
+          ## Current Status
+
+          No outreach messages were automatically sent by this workflow.
+
+          Leads should be reviewed and contacted manually.
+          EOF
+
+          echo "Daily outreach review generated."
+
+      - name: Upload Outreach Review Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: faultplane-outreach-review
+          path: outreach/
