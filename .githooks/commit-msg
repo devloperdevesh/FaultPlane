@@ -1,0 +1,17 @@
+#!/bin/sh
+
+commit_msg=$(cat "$1")
+
+if ! echo "$commit_msg" | grep -Eq "^(feat|fix|docs|test|chore|perf|refactor):"; then
+
+    echo "Invalid commit message format."
+
+    echo "Example:"
+    echo "feat: add failover support"
+    echo "fix: repair bpf loader"
+    echo "docs: update troubleshooting"
+
+    exit 1
+fi
+
+echo "Commit message accepted."
