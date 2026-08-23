@@ -1,0 +1,14 @@
+#!/bin/sh
+
+echo "Running FaultPlane checks..."
+
+go fmt ./...
+
+go test ./...
+
+if [ $? -ne 0 ]; then
+    echo "Tests failed. Commit blocked."
+    exit 1
+fi
+
+echo "Checks passed."
