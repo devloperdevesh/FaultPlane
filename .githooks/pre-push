@@ -1,0 +1,24 @@
+#!/bin/sh
+
+echo "Running FaultPlane pre-push checks..."
+
+echo "Running tests..."
+go test ./...
+
+if [ $? -ne 0 ]; then
+    echo "Tests failed. Push blocked."
+    exit 1
+fi
+
+
+echo "Building daemon..."
+
+go build ./cmd/daemon
+
+if [ $? -ne 0 ]; then
+    echo "Build failed. Push blocked."
+    exit 1
+fi
+
+
+echo "Pre-push checks passed."
