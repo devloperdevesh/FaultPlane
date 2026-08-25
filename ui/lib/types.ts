@@ -90,16 +90,18 @@ export interface Checkpoint {
 // Metrics Contract
 // ===============================
 
+export interface DashboardMetrics {
+  requests: number;
+  latency: number;
+  cpu: number;
+  memory: number;
+}
+
 export interface Metric {
-
   name: string;
-
   value: number;
-
   unit?: string;
-
   timestamp?: string;
-
 }
 
 

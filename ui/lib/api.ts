@@ -1,3 +1,6 @@
+import type { Metrics } from "./types";
+import type { DashboardMetrics } from "./types";
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ??
   "http://localhost:8080";
@@ -15,7 +18,10 @@ function joinUrl(base: string, endpoint: string) {
   return `${base.replace(/\/$/, "")}${endpoint}`;
 }
 
-async function request<T>(endpoint: string, init?: RequestInit): Promise<T> {
+async function request<T>(
+  endpoint: string,
+  init?: RequestInit,
+): Promise<T> {
   const response = await fetch(joinUrl(API_URL, endpoint), {
     cache: "no-store",
     ...init,
@@ -25,11 +31,14 @@ async function request<T>(endpoint: string, init?: RequestInit): Promise<T> {
     const errorBody = await response.text().catch(() => "");
 
     throw new Error(
-      errorBody ? `API Error ${response.status}: ${errorBody}` : `API Error ${response.status}`,
+      errorBody
+        ? `API Error ${response.status}: ${errorBody}`
+        : `API Error ${response.status}`,
     );
   }
 
-  const contentType = response.headers.get("content-type") ?? "";
+  const contentType =
+    response.headers.get("content-type") ?? "";
 
   if (contentType.includes("application/json")) {
     return response.json() as Promise<T>;
@@ -44,10 +53,14 @@ export const api = {
   },
 
   metrics() {
-    return request<Record<string, number>>("/metrics");
+    return request<Metrics>("/api/metrics");
   },
 
-  checkpoint(payload: { workflow_id: string; step: number; payload: string }) {
+  checkpoint(payload: {
+    workflow_id: string;
+    step: number;
+    payload: string;
+  }) {
     return request<{ status: string }>("/checkpoint", {
       method: "POST",
       headers: {
@@ -57,7 +70,9 @@ export const api = {
     });
   },
 
-  recover(payload: { workflow_id: string }) {
+  recover(payload: {
+    workflow_id: string;
+  }) {
     return request<{ status: string }>("/recover", {
       method: "POST",
       headers: {
