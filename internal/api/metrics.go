@@ -3,6 +3,8 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/devloperdevesh/FaultPlane/internal/models"
 )
 
 func MetricsHandler(
@@ -10,26 +12,24 @@ func MetricsHandler(
 	r *http.Request,
 ) {
 
+	metrics := models.Metrics{
+		Requests: 120,
+		Latency:  35,
+		CPU:      40,
+		Memory:   512,
+	}
+
 	w.Header().Set(
 		"Content-Type",
 		"application/json",
 	)
 
-	response := map[string]int{
-		"active_workflows": 0,
-		"recoveries":       0,
-		"checkpoints":      0,
-	}
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-
+	if err := json.NewEncoder(w).Encode(metrics); err != nil {
 		http.Error(
 			w,
 			"failed to encode metrics response",
 			http.StatusInternalServerError,
 		)
-
 		return
 	}
-
 }

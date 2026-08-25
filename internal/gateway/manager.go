@@ -3,10 +3,12 @@ package gateway
 import (
 	"context"
 	"log/slog"
+	"time"
 )
 
 type Manager struct {
 	logger *slog.Logger
+	server *Server
 }
 
 func New(logger *slog.Logger) *Manager {
@@ -16,16 +18,33 @@ func New(logger *slog.Logger) *Manager {
 }
 
 func (m *Manager) Start(ctx context.Context) error {
+	m.logger.Info("gateway starting")
+
+	handler := NewRouter()
+
+	m.server = NewServer(handler)
+
+	go func() {
+		<-ctx.Done()
+
+		shutdownCtx, cancel := context.WithTimeout(
+			context.Background(),
+			10*time.Second,
+		)
+		defer cancel()
+
+		if err := m.server.Shutdown(shutdownCtx); err != nil {
+			m.logger.Error(
+				"gateway shutdown failed",
+				"error", err,
+			)
+		}
+	}()
 
 	m.logger.Info(
-		"gateway started",
+		"gateway listening",
+		"address", ":8080",
 	)
 
-	<-ctx.Done()
-
-	m.logger.Info(
-		"gateway stopped",
-	)
-
-	return nil
+	return m.server.Start()
 }
