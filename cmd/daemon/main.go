@@ -12,81 +12,61 @@ import (
 	"github.com/devloperdevesh/FaultPlane/internal/gateway"
 	"github.com/devloperdevesh/FaultPlane/internal/logging"
 	"github.com/devloperdevesh/FaultPlane/internal/runtime"
+	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
 func main() {
-
-	// Configuration
 	cfg := config.Load()
 
-	// Logger
-	logger := logging.New(
-		cfg.LogLevel,
-	)
+	logger := logging.New(cfg.LogLevel)
 
-	logger.Info(
-		"starting FaultPlane daemon",
-	)
+	logger.Info("starting FaultPlane daemon")
 
-	// Shutdown context
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),
 		os.Interrupt,
 		syscall.SIGTERM,
 	)
-
 	defer cancel()
 
-	// Control manager
-	controlManager := control.New(
-		logger,
-	)
+	registry := telemetry.NewRegistry()
+	collector := telemetry.NewCollector(registry)
 
-	// Gateway manager
+	controlManager := control.New(logger)
+
 	gatewayManager := gateway.New(
 		logger,
+		registry,
+		collector,
 	)
 
-	// Runtime daemon
 	daemon := runtime.New(
 		logger,
 		controlManager,
 		gatewayManager,
 	)
 
-	// Start daemon
 	go func() {
-
 		if err := daemon.Start(ctx); err != nil {
-
 			logger.Error(
 				"daemon failed",
-				"error",
-				err,
+				"error", err,
 			)
-
 			cancel()
 		}
-
 	}()
 
 	<-ctx.Done()
 
-	logger.Info(
-		"shutdown signal received",
+	logger.Info("shutdown signal received")
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(
+		context.Background(),
+		10*time.Second,
 	)
-
-	shutdownCtx, shutdownCancel :=
-		context.WithTimeout(
-			context.Background(),
-			10*time.Second,
-		)
-
 	defer shutdownCancel()
 
 	_ = shutdownCtx
 
-	logger.Info(
-		"FaultPlane daemon stopped cleanly",
-	)
+	logger.Info("FaultPlane daemon stopped cleanly")
 }

@@ -4,23 +4,36 @@ import (
 	"context"
 	"log/slog"
 	"time"
+
+	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
 type Manager struct {
-	logger *slog.Logger
-	server *Server
+	logger    *slog.Logger
+	server    *Server
+	registry  *telemetry.Registry
+	collector *telemetry.Collector
 }
 
-func New(logger *slog.Logger) *Manager {
+func New(
+	logger *slog.Logger,
+	registry *telemetry.Registry,
+	collector *telemetry.Collector,
+) *Manager {
 	return &Manager{
-		logger: logger,
+		logger:    logger,
+		registry:  registry,
+		collector: collector,
 	}
 }
 
 func (m *Manager) Start(ctx context.Context) error {
 	m.logger.Info("gateway starting")
 
-	handler := NewRouter()
+	handler := NewRouter(
+		m.registry,
+		m.collector,
+	)
 
 	m.server = NewServer(handler)
 
