@@ -11,11 +11,21 @@ func TestProductionTrafficLoggerWritesAuditRecord(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	path := f.Name()
-	f.Close()
-	defer os.Remove(path)
+
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Cleanup(func() {
+		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+			t.Errorf("remove temporary audit log: %v", err)
+		}
+	})
 
 	logger := NewTrafficLogger(path)
+
 	if err := logger.LogActiveEnterpriseTraffic(1024); err != nil {
 		t.Fatal(err)
 	}
