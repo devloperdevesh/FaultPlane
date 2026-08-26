@@ -16,7 +16,9 @@ func TestProductionTrafficLoggerWritesAuditRecord(t *testing.T) {
 	defer os.Remove(path)
 
 	logger := NewTrafficLogger(path)
-	logger.LogActiveEnterpriseTraffic(1024)
+	if err := logger.LogActiveEnterpriseTraffic(1024); err != nil {
+		t.Fatal(err)
+	}
 
 	data, err := os.ReadFile(path)
 	if err != nil {
