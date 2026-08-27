@@ -9,10 +9,8 @@ import (
 )
 
 type Daemon struct {
-	logger *slog.Logger
-
+	logger  *slog.Logger
 	control *control.Manager
-
 	gateway *gateway.Manager
 }
 
@@ -21,7 +19,6 @@ func New(
 	control *control.Manager,
 	gateway *gateway.Manager,
 ) *Daemon {
-
 	return &Daemon{
 		logger:  logger,
 		control: control,
@@ -30,44 +27,36 @@ func New(
 }
 
 func (d *Daemon) Start(ctx context.Context) error {
+	d.logger.Info("faultplane daemon starting")
 
-	d.logger.Info(
-		"faultplane daemon starting",
+	workerRegistry := NewWorkerRegistry(
+		d.gateway.WorkerStore(),
+		d.gateway.Registry(),
 	)
 
+	go workerRegistry.Start(ctx)
+
 	go func() {
-
-		err := d.control.Start(ctx)
-
-		if err != nil {
+		if err := d.control.Start(ctx); err != nil {
 			d.logger.Error(
 				"control manager failed",
-				"error",
-				err,
+				"error", err,
 			)
 		}
-
 	}()
 
 	go func() {
-
-		err := d.gateway.Start(ctx)
-
-		if err != nil {
+		if err := d.gateway.Start(ctx); err != nil {
 			d.logger.Error(
 				"gateway manager failed",
-				"error",
-				err,
+				"error", err,
 			)
 		}
-
 	}()
 
 	<-ctx.Done()
 
-	d.logger.Info(
-		"faultplane daemon stopped",
-	)
+	d.logger.Info("faultplane daemon stopped")
 
 	return nil
 }

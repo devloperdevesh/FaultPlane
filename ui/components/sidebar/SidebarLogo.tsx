@@ -1,43 +1,37 @@
 "use client";
 
-export default function SidebarLogo() {
+interface Props {
+  collapsed?: boolean;
+}
+
+export default function SidebarLogo({ collapsed = false }: Props) {
   return (
     <div
-      className="
-      flex
-      h-20
-      items-center
-      border-b
-      border-zinc-800
-      px-6
-      "
+      className={`flex h-20 shrink-0 items-center border-b border-white/[0.08] ${
+        collapsed ? "justify-center px-3" : "gap-3 px-5"
+      }`}
     >
-      <div
-        className="
-        mr-4
-        flex
-        h-11
-        w-11
-        items-center
-        justify-center
-        rounded-xl
-        border
-        border-blue-500/20
-        bg-blue-500/10
-        shadow-lg
-        shadow-blue-500/10
-        "
-      >
-        <div className="h-3 w-3 rounded-full bg-blue-500" />
+      <div className="relative shrink-0">
+        <img
+          src="/favicon.ico"
+          alt="FaultPlane"
+          width={42}
+          height={42}
+          className="h-[42px] w-[42px] rounded-xl border border-white/[0.08] object-cover shadow-[0_0_30px_rgba(255,255,255,0.06)]"
+        />
       </div>
 
-      <div>
-        <h1 className="text-lg font-semibold tracking-tight text-white">
-          FaultPlane
-        </h1>
+      {!collapsed && (
+        <div className="min-w-0">
+          <div className="truncate text-[15px] font-semibold tracking-[-0.02em] text-white">
+            FaultPlane
+          </div>
 
-        <p className="text-xs text-zinc-500">AI Runtime Control Plane</p>
-      </div>
+          <div className="mt-0.5 truncate text-[11px] tracking-wide text-zinc-500">
+            AI Runtime Control Plane
+          </div>
+        </div>
+      )}
     </div>
   );
 }

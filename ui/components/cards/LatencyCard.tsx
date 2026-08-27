@@ -1,17 +1,44 @@
 "use client";
 
-import { Activity } from "lucide-react";
-import MetricCard from "./MetricCard";
+import { useEffect, useState } from "react";
+import { getMetrics } from "../../lib/api";
+import type { DashboardMetrics } from "../../lib/types";
 
 export default function LatencyCard() {
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      try {
+        const data = await getMetrics();
+        if (active) setMetrics(data);
+      } catch {
+        if (active) setMetrics(null);
+      }
+    };
+
+    void load();
+    const timer = window.setInterval(() => void load(), 2000);
+
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, []);
+
   return (
-    <MetricCard
-      title="Latency P99"
-      value="2.3ms"
-      description="Runtime response latency"
-      icon={Activity}
-      status="healthy"
-      trend="↓ 18% improved"
-    />
+    <div className="rounded-xl border border-white/10 bg-zinc-950 p-5">
+      <p className="text-xs uppercase tracking-widest text-zinc-500">
+        Average Latency
+      </p>
+      <p className="mt-2 text-3xl font-semibold text-white">
+        {metrics ? `${metrics.latency.toFixed(2)} ms` : "Unavailable"}
+      </p>
+      <p className="mt-2 text-xs text-zinc-500">
+        Runtime API metric
+      </p>
+    </div>
   );
 }

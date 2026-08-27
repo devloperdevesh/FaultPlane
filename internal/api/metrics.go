@@ -4,32 +4,45 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/devloperdevesh/FaultPlane/internal/models"
+	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
-func MetricsHandler(
-	w http.ResponseWriter,
-	r *http.Request,
-) {
+type RuntimeMetricsResponse struct {
+	Requests    uint64  `json:"requests"`
+	Workers     uint64  `json:"workers"`
+	Recoveries  uint64  `json:"recoveries"`
+	Checkpoints uint64  `json:"checkpoints"`
+	Latency     float64 `json:"latency"`
+	CPU         float64 `json:"cpu"`
+	Memory      float64 `json:"memory"`
+	UpdatedAt   string  `json:"updated_at"`
+}
 
-	metrics := models.Metrics{
-		Requests: 120,
-		Latency:  35,
-		CPU:      40,
-		Memory:   512,
-	}
+func MetricsHandler(registry *telemetry.Registry) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 
-	w.Header().Set(
-		"Content-Type",
-		"application/json",
-	)
+		metrics := registry.Snapshot()
 
-	if err := json.NewEncoder(w).Encode(metrics); err != nil {
-		http.Error(
-			w,
-			"failed to encode metrics response",
-			http.StatusInternalServerError,
-		)
-		return
-	}
+		response := RuntimeMetricsResponse{
+			Requests:    metrics.Requests,
+			Workers:     metrics.Workers,
+			Recoveries:  metrics.Recoveries,
+			Checkpoints: metrics.Checkpoints,
+			Latency:     metrics.AverageLatency(),
+			CPU:         metrics.CPU,
+			Memory:      metrics.Memory,
+			UpdatedAt:   metrics.UpdatedAt.UTC().Format("2006-01-02T15:04:05.000Z"),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			return
+		}
+	})
 }

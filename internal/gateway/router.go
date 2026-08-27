@@ -3,34 +3,41 @@ package gateway
 import (
 	"net/http"
 
+	"github.com/devloperdevesh/FaultPlane/internal/api"
 	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
-// Router owns HTTP route registration.
 type Router struct {
 	mux *http.ServeMux
 }
 
-// NewRouter creates gateway router.
 func NewRouter(
 	registry *telemetry.Registry,
 	collector *telemetry.Collector,
+	workerStore *api.WorkerStore,
+	telemetryStore *api.TelemetryStore,
 ) http.Handler {
 	r := &Router{
 		mux: http.NewServeMux(),
 	}
 
-	r.registerRoutes(registry)
+	r.registerRoutes(
+		registry,
+		workerStore,
+		telemetryStore,
+	)
 
 	return TelemetryMiddleware(
 		collector,
+		telemetryStore,
 		r,
 	)
 }
 
-// registerRoutes defines gateway public API surface.
 func (r *Router) registerRoutes(
 	registry *telemetry.Registry,
+	workerStore *api.WorkerStore,
+	telemetryStore *api.TelemetryStore,
 ) {
 	r.mux.HandleFunc(
 		"/health",
@@ -42,13 +49,32 @@ func (r *Router) registerRoutes(
 		metricsHandler(registry),
 	)
 
-	r.mux.HandleFunc(
-		"/workers",
-		workersHandler,
+	r.mux.Handle(
+		"/api/workers",
+		api.WorkersHandler(workerStore),
+	)
+
+	r.mux.Handle(
+		"/api/workers/",
+		api.WorkersHandler(workerStore),
+	)
+
+	r.mux.Handle(
+		"/api/telemetry",
+		api.TelemetryHandler(telemetryStore),
+	)
+
+	r.mux.Handle(
+		"/api/logs",
+		api.LogsHandler(telemetryStore),
+	)
+
+	r.mux.Handle(
+		"/api/network/events",
+		api.NetworkEventsHandler(telemetryStore),
 	)
 }
 
-// ServeHTTP implements http.Handler.
 func (r *Router) ServeHTTP(
 	w http.ResponseWriter,
 	req *http.Request,
