@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: Apache-2.0
 package telemetry
 
 import (
@@ -38,16 +37,13 @@ func NewTractionSync(endpoint string) *InboundTractionSync {
 }
 
 // EmitDeploymentHeartbeat sends one deployment heartbeat.
-//
-// The authentication token is supplied by the caller and is never embedded
-// in source code.
 func (s *InboundTractionSync) EmitDeploymentHeartbeat(
 	ctx context.Context,
 	hostHash string,
 	kernelVer string,
 	socketsCount uint32,
 	verificationToken string,
-) error {
+) (err error) {
 	if s == nil || s.TelemetryEndpoint == "" {
 		return fmt.Errorf("telemetry endpoint is not configured")
 	}
@@ -88,7 +84,12 @@ func (s *InboundTractionSync) EmitDeploymentHeartbeat(
 	if err != nil {
 		return fmt.Errorf("send deployment heartbeat: %w", err)
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		if closeErr := resp.Body.Close(); err == nil && closeErr != nil {
+			err = fmt.Errorf("close telemetry response body: %w", closeErr)
+		}
+	}()
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		return fmt.Errorf("telemetry endpoint returned status %s", resp.Status)
