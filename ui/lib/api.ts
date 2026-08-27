@@ -52,6 +52,27 @@ export interface NetworkEventsResponse {
   events: TelemetryEvent[];
 }
 
+export interface TopologyNode {
+  id: string;
+  type: string;
+  name: string;
+  status: string;
+}
+
+export interface TopologyConnection {
+  id: string;
+  source: string;
+  target: string;
+  type: string;
+  status: string;
+}
+
+export interface TopologySnapshot {
+  nodes: TopologyNode[];
+  connections: TopologyConnection[];
+  updated_at: string;
+}
+
 export async function getWorkers(): Promise<RuntimeWorker[]> {
   return request<RuntimeWorker[]>("/api/workers");
 }
@@ -66,4 +87,8 @@ export async function getLogs(): Promise<LogsResponse> {
 
 export async function getNetworkEvents(): Promise<NetworkEventsResponse> {
   return request<NetworkEventsResponse>("/api/network/events");
+}
+
+export async function getTopology(): Promise<TopologySnapshot> {
+  return request<TopologySnapshot>("/api/topology");
 }
