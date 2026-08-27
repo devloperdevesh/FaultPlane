@@ -13,7 +13,6 @@ func TestProductionTrafficLoggerWritesAuditRecord(t *testing.T) {
 	}
 
 	path := f.Name()
-
 	if err := f.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +24,6 @@ func TestProductionTrafficLoggerWritesAuditRecord(t *testing.T) {
 	})
 
 	logger := NewTrafficLogger(path)
-
 	if err := logger.LogActiveEnterpriseTraffic(1024); err != nil {
 		t.Fatal(err)
 	}
