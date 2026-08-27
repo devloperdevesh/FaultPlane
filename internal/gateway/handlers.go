@@ -21,11 +21,6 @@ type MetricsResponse struct {
 	Memory   float64 `json:"memory"`
 }
 
-type WorkersResponse struct {
-	Workers int    `json:"workers"`
-	Status  string `json:"status"`
-}
-
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(
 		w,
@@ -53,17 +48,6 @@ func metricsHandler(registry *telemetry.Registry) http.Handler {
 			},
 		)
 	})
-}
-
-func workersHandler(w http.ResponseWriter, r *http.Request) {
-	writeJSON(
-		w,
-		http.StatusOK,
-		WorkersResponse{
-			Workers: 0,
-			Status:  "idle",
-		},
-	)
 }
 
 func writeJSON(w http.ResponseWriter, status int, value interface{}) {
