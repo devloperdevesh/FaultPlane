@@ -1,3 +1,5 @@
+//go:build windows
+
 package runtime
 
 import (
@@ -61,9 +63,7 @@ func (s *ProcessCPUSampler) Sample() float64 {
 	return usage
 }
 
-func processCPUTime(
-	process windows.Handle,
-) (time.Duration, bool) {
+func processCPUTime(process windows.Handle) (time.Duration, bool) {
 	var creation windows.Filetime
 	var exit windows.Filetime
 	var kernel windows.Filetime
