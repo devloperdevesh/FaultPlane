@@ -1,0 +1,64 @@
+name: FaultPlane Traction Tracker
+
+on:
+  repository_dispatch:
+    types: [live_node_checkin]
+
+permissions:
+  contents: write
+
+jobs:
+  update_traction_ledger:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate deployment payload
+        env:
+          CLIENT_NAME: ${{ github.event.client_payload.client_name }}
+          BAR_ADDRESS: ${{ github.event.client_payload.bar_address }}
+          FAILURES: ${{ github.event.client_payload.failures }}
+        run: |
+          test -n "$CLIENT_NAME"
+          test -n "$FAILURES"
+
+      - name: Update production manifest
+        env:
+          CLIENT_NAME: ${{ github.event.client_payload.client_name }}
+          BAR_ADDRESS: ${{ github.event.client_payload.bar_address }}
+          FAILURES: ${{ github.event.client_payload.failures }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+
+          const path = 'deployments/production/client_manifest.json';
+          const manifest = JSON.parse(fs.readFileSync(path, 'utf8'));
+
+          const clientName = process.env.CLIENT_NAME;
+          const barAddress = process.env.BAR_ADDRESS || null;
+          const failures = Number(process.env.FAILURES);
+
+          if (!clientName || !Number.isFinite(failures)) {
+            throw new Error('Invalid deployment payload');
+          }
+
+          manifest.active_enterprise_tenants.push({
+            client_name: clientName,
+            allocated_bar_address: barAddress,
+            masked_packet_failures_logged: failures
+          });
+
+          fs.writeFileSync(path, JSON.stringify(manifest, null, 2) + '\n');
+          NODE
+
+      - name: Validate generated manifest
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('deployments/production/client_manifest.json', 'utf8'))"
+
+      - name: Upload manifest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: traction-manifest
+          path: deployments/production/client_manifest.json
