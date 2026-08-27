@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/devloperdevesh/FaultPlane/internal/api"
+	"github.com/devloperdevesh/FaultPlane/internal/kernel"
 	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
@@ -45,6 +46,20 @@ func (m *Manager) TelemetryStore() *api.TelemetryStore {
 }
 
 func (m *Manager) Start(ctx context.Context) error {
+	return m.start(ctx, nil)
+}
+
+func (m *Manager) StartWithKernel(
+	ctx context.Context,
+	monitor *kernel.Monitor,
+) error {
+	return m.start(ctx, monitor)
+}
+
+func (m *Manager) start(
+	ctx context.Context,
+	monitor *kernel.Monitor,
+) error {
 	m.logger.Info("gateway starting")
 
 	handler := NewRouter(
@@ -52,6 +67,7 @@ func (m *Manager) Start(ctx context.Context) error {
 		m.collector,
 		m.workerStore,
 		m.telemetryStore,
+		monitor,
 	)
 
 	server := NewServer(handler)

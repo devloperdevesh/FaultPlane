@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/devloperdevesh/FaultPlane/internal/api"
+	"github.com/devloperdevesh/FaultPlane/internal/kernel"
 	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
@@ -16,6 +17,7 @@ func NewRouter(
 	collector *telemetry.Collector,
 	workerStore *api.WorkerStore,
 	telemetryStore *api.TelemetryStore,
+	kernelMonitor *kernel.Monitor,
 ) http.Handler {
 	r := &Router{
 		mux: http.NewServeMux(),
@@ -25,6 +27,7 @@ func NewRouter(
 		registry,
 		workerStore,
 		telemetryStore,
+		kernelMonitor,
 	)
 
 	return TelemetryMiddleware(
@@ -38,6 +41,7 @@ func (r *Router) registerRoutes(
 	registry *telemetry.Registry,
 	workerStore *api.WorkerStore,
 	telemetryStore *api.TelemetryStore,
+	kernelMonitor *kernel.Monitor,
 ) {
 	r.mux.HandleFunc(
 		"/health",
@@ -73,6 +77,25 @@ func (r *Router) registerRoutes(
 		"/api/network/events",
 		api.NetworkEventsHandler(telemetryStore),
 	)
+
+	if kernelMonitor != nil {
+		ebpfHandler := api.NewEBPFHandler(kernelMonitor)
+
+		r.mux.Handle(
+			"/api/ebpf/status",
+			http.HandlerFunc(ebpfHandler.Status),
+		)
+
+		r.mux.Handle(
+			"/api/ebpf/events",
+			http.HandlerFunc(ebpfHandler.Events),
+		)
+
+		r.mux.Handle(
+			"/api/ebpf/hooks",
+			http.HandlerFunc(ebpfHandler.Hooks),
+		)
+	}
 }
 
 func (r *Router) ServeHTTP(
