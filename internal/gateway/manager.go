@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/devloperdevesh/FaultPlane/internal/api"
+	"github.com/devloperdevesh/FaultPlane/internal/control"
 	"github.com/devloperdevesh/FaultPlane/internal/kernel"
 	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
@@ -17,6 +18,7 @@ type Manager struct {
 	collector      *telemetry.Collector
 	workerStore    *api.WorkerStore
 	telemetryStore *api.TelemetryStore
+	topology       *control.TopologyController
 }
 
 func New(
@@ -30,6 +32,7 @@ func New(
 		collector:      collector,
 		workerStore:    api.NewWorkerStore(),
 		telemetryStore: api.NewTelemetryStore(),
+		topology:       control.NewTopologyController(),
 	}
 }
 
@@ -43,6 +46,10 @@ func (m *Manager) WorkerStore() *api.WorkerStore {
 
 func (m *Manager) TelemetryStore() *api.TelemetryStore {
 	return m.telemetryStore
+}
+
+func (m *Manager) Topology() *control.TopologyController {
+	return m.topology
 }
 
 func (m *Manager) Start(ctx context.Context) error {
@@ -68,6 +75,7 @@ func (m *Manager) start(
 		m.workerStore,
 		m.telemetryStore,
 		monitor,
+		m.topology,
 	)
 
 	server := NewServer(handler)
