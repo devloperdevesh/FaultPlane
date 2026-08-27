@@ -6,12 +6,14 @@ import (
 
 	"github.com/devloperdevesh/FaultPlane/internal/control"
 	"github.com/devloperdevesh/FaultPlane/internal/gateway"
+	"github.com/devloperdevesh/FaultPlane/internal/kernel"
 )
 
 type Daemon struct {
 	logger  *slog.Logger
 	control *control.Manager
 	gateway *gateway.Manager
+	kernel  *kernel.Monitor
 }
 
 func New(
@@ -23,11 +25,16 @@ func New(
 		logger:  logger,
 		control: control,
 		gateway: gateway,
+		kernel:  kernel.NewMonitor(logger),
 	}
 }
 
 func (d *Daemon) Start(ctx context.Context) error {
 	d.logger.Info("faultplane daemon starting")
+
+	if err := d.kernel.Start(ctx); err != nil {
+		return err
+	}
 
 	workerRegistry := NewWorkerRegistry(
 		d.gateway.WorkerStore(),
@@ -46,7 +53,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 	}()
 
 	go func() {
-		if err := d.gateway.Start(ctx); err != nil {
+		if err := d.gateway.StartWithKernel(ctx, d.kernel); err != nil {
 			d.logger.Error(
 				"gateway manager failed",
 				"error", err,
@@ -55,6 +62,8 @@ func (d *Daemon) Start(ctx context.Context) error {
 	}()
 
 	<-ctx.Done()
+
+	d.kernel.Stop()
 
 	d.logger.Info("faultplane daemon stopped")
 
