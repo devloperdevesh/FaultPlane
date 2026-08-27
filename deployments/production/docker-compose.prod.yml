@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  faultplane-daemon:
+    image: faultplane/kmaskd:v1.4.2-hardened
+    container_name: faultplane_kmaskd_core
+    privileged: true
+    network_mode: "host"
+    pid: "host"
+    volumes:
+      - /sys/fs/bpf:/sys/fs/bpf:rw
+      - /var/log/faultplane:/var/log/faultplane:rw
+      - ./client_manifest.json:/etc/faultplane/client_manifest.json:ro
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+      FAULTPLANE_ENV: production
+      LOG_PATH: /var/log/faultplane/faultplane_traction_audit.log
+    restart: always
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/healthcheck"]
+      interval: 10s
+      timeout: 2s
+      retries: 3
+
+  prometheus-scraper:
+    image: prom/prometheus:v2.45.0
+    container_name: faultplane_metrics_prometheus
+    network_mode: "host"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    restart: unless-stopped
