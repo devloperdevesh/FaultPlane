@@ -1,0 +1,8 @@
+# ==============================================================================
+# FAULTPLANE — PRODUCTION AUDIT LEDGER TEMPLATE
+# NOTE: Populate this file only with measurements collected from real deployments.
+# ==============================================================================
+
+# TIMESTAMP               | CLIENT_ID | SHUNT_TYPE | BYTES_TRANSITED | LATENCY_MS | STATUS
+# ------------------------------------------------------------------------------
+# <RFC3339>               | <CLIENT>  | <TYPE>     | <BYTES>          | <MS>       | <STATUS>
