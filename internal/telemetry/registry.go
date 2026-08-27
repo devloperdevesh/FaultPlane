@@ -6,9 +6,14 @@ import (
 	"time"
 )
 
+type RuntimeCPUSampler interface {
+	Sample() float64
+}
+
 type Registry struct {
 	mu      sync.RWMutex
 	metrics RuntimeMetrics
+	cpu     RuntimeCPUSampler
 }
 
 func NewRegistry() *Registry {
@@ -17,6 +22,13 @@ func NewRegistry() *Registry {
 			UpdatedAt: time.Now(),
 		},
 	}
+}
+
+func (r *Registry) SetCPUSampler(sampler RuntimeCPUSampler) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.cpu = sampler
 }
 
 func (r *Registry) IncRequests() {
@@ -65,9 +77,19 @@ func (r *Registry) RefreshRuntimeMetrics() {
 	runtime.ReadMemStats(&mem)
 
 	r.mu.Lock()
+	sampler := r.cpu
+	r.mu.Unlock()
+
+	var cpu float64
+	if sampler != nil {
+		cpu = sampler.Sample()
+	}
+
+	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	r.metrics.Memory = float64(mem.Alloc) / 1024 / 1024
+	r.metrics.CPU = cpu
 	r.metrics.UpdatedAt = time.Now()
 }
 

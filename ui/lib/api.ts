@@ -1,84 +1,69 @@
-import type { Metrics } from "./types";
 import type { DashboardMetrics } from "./types";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ??
   "http://localhost:8080";
 
-type HealthResponse = {
-  status: string;
-  service: string;
-};
-
-function joinUrl(base: string, endpoint: string) {
-  if (!base) {
-    return endpoint;
-  }
-
-  return `${base.replace(/\/$/, "")}${endpoint}`;
+function joinUrl(base: string, endpoint: string): string {
+  return `${base.replace(/\/+$/, "")}/${endpoint.replace(/^\/+/, "")}`;
 }
 
-async function request<T>(
-  endpoint: string,
-  init?: RequestInit,
-): Promise<T> {
+async function request<T>(endpoint: string): Promise<T> {
   const response = await fetch(joinUrl(API_URL, endpoint), {
     cache: "no-store",
-    ...init,
   });
 
   if (!response.ok) {
-    const errorBody = await response.text().catch(() => "");
-
     throw new Error(
-      errorBody
-        ? `API Error ${response.status}: ${errorBody}`
-        : `API Error ${response.status}`,
+      `FaultPlane API request failed: ${response.status} ${response.statusText}`,
     );
   }
 
-  const contentType =
-    response.headers.get("content-type") ?? "";
-
-  if (contentType.includes("application/json")) {
-    return response.json() as Promise<T>;
-  }
-
-  return response.text() as Promise<T>;
+  return response.json() as Promise<T>;
 }
 
-export const api = {
-  health() {
-    return request<HealthResponse>("/health");
-  },
+export async function getMetrics(): Promise<DashboardMetrics> {
+  return request<DashboardMetrics>("/api/metrics");
+}
 
-  metrics() {
-    return request<Metrics>("/api/metrics");
-  },
+export interface RuntimeWorker {
+  id: string;
+  status: string;
+  cpu: number;
+  memory: number;
+}
 
-  checkpoint(payload: {
-    workflow_id: string;
-    step: number;
-    payload: string;
-  }) {
-    return request<{ status: string }>("/checkpoint", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-  },
+export interface TelemetryEvent {
+  type: string;
+  timestamp: string;
+  value?: number;
+  metadata?: Record<string, string>;
+}
 
-  recover(payload: {
-    workflow_id: string;
-  }) {
-    return request<{ status: string }>("/recover", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-  },
-};
+export interface TelemetryResponse {
+  events: TelemetryEvent[];
+}
+
+export interface LogsResponse {
+  logs: TelemetryEvent[];
+}
+
+export interface NetworkEventsResponse {
+  events: TelemetryEvent[];
+}
+
+export async function getWorkers(): Promise<RuntimeWorker[]> {
+  return request<RuntimeWorker[]>("/api/workers");
+}
+
+export async function getTelemetry(): Promise<TelemetryResponse> {
+  return request<TelemetryResponse>("/api/telemetry");
+}
+
+export async function getLogs(): Promise<LogsResponse> {
+  return request<LogsResponse>("/api/logs");
+}
+
+export async function getNetworkEvents(): Promise<NetworkEventsResponse> {
+  return request<NetworkEventsResponse>("/api/network/events");
+}

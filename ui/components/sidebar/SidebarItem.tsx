@@ -10,6 +10,7 @@ interface Props {
   icon: LucideIcon;
   active?: boolean;
   badge?: string;
+  collapsed?: boolean;
 }
 
 export default function SidebarItem({
@@ -18,54 +19,43 @@ export default function SidebarItem({
   icon: Icon,
   active,
   badge,
+  collapsed = false,
 }: Props) {
   return (
     <Link
       href={href}
+      aria-label={collapsed ? title : undefined}
+      title={collapsed ? title : undefined}
       className={clsx(
-        "group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all duration-200",
-
+        "group relative flex items-center rounded-xl text-sm transition-all duration-200",
+        collapsed ? "justify-center px-2 py-3" : "gap-3 px-4 py-3",
         active
           ? "bg-white/10 text-white shadow-lg"
           : "text-zinc-400 hover:bg-white/5 hover:text-white",
       )}
     >
       {active && (
-        <span
-          className="
-absolute
-left-0
-h-7
-w-1
-rounded-r-full
-bg-emerald-400
-"
-        />
+        <span className="absolute left-0 h-7 w-1 rounded-r-full bg-emerald-400" />
       )}
 
       <Icon
         size={18}
         className={clsx(
-          "transition-transform duration-200 group-hover:scale-110",
-
+          "shrink-0 transition-transform duration-200 group-hover:scale-110",
           active ? "text-emerald-400" : "text-zinc-500",
         )}
       />
 
-      <span className="flex-1">{title}</span>
+      {!collapsed && (
+        <>
+          <span className="flex-1">{title}</span>
 
-      {badge && (
-        <span
-          className="
-rounded-md
-bg-zinc-800
-px-2
-py-1
-text-[10px]
-"
-        >
-          {badge}
-        </span>
+          {badge && (
+            <span className="rounded-md bg-zinc-800 px-2 py-1 text-[10px]">
+              {badge}
+            </span>
+          )}
+        </>
       )}
     </Link>
   );

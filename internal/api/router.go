@@ -4,12 +4,13 @@ import (
 	"net/http"
 
 	"github.com/devloperdevesh/FaultPlane/internal/control"
+	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
 func NewRouter(
 	controller *control.Controller,
+	registry *telemetry.Registry,
 ) http.Handler {
-
 	mux := http.NewServeMux()
 
 	mux.HandleFunc(
@@ -27,9 +28,9 @@ func NewRouter(
 		RecoverHandler(controller),
 	)
 
-	mux.HandleFunc(
+	mux.Handle(
 		"/metrics",
-		MetricsHandler,
+		MetricsHandler(registry),
 	)
 
 	return LoggingMiddleware(mux)

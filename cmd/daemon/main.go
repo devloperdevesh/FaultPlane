@@ -30,6 +30,8 @@ func main() {
 	defer cancel()
 
 	registry := telemetry.NewRegistry()
+	cpuSampler := runtime.NewProcessCPUSampler()
+	registry.SetCPUSampler(cpuSampler)
 	collector := telemetry.NewCollector(registry)
 
 	controlManager := control.New(logger)

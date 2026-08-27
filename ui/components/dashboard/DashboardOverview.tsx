@@ -1,432 +1,156 @@
 "use client";
 
-import GatewayCard from "@/components/cards/GatewayCard";
-import WorkerCard from "@/components/cards/WorkerCard";
-import RecoveryCard from "@/components/cards/RecoveryCard";
-import LatencyCard from "@/components/cards/LatencyCard";
-import CheckpointCard from "@/components/cards/CheckpointCard";
-
-import LatencyChart from "@/components/charts/LatencyChart";
-import RecoveryTimeline from "@/components/charts/RecoveryTimeline";
-
-import WorkersTable from "@/components/tables/WorkersTable";
-import WorkflowTable from "@/components/tables/WorkflowTable";
-
-import TelemetryLogs from "@/components/logs/TelemetryLogs";
-import KernelLogs from "@/components/logs/KernelLogs";
-
-import EbpfMonitor from "@/components/ebpf/EbpfMonitor";
-
-import SocketMigration from "@/components/topology/SocketMigration";
-
-import MemoryGrid from "@/components/memory/MemoryGrid";
-
-import BlastGraph from "@/components/blast-radius/BlastGraph";
-import FailurePropagation from "@/components/blast-radius/FailurePropagation";
-import ImpactTimeline from "@/components/blast-radius/ImpactTimeline";
-
-import CheckpointTimeline from "@/components/gitops/CheckpointTimeline";
-import StateDiff from "@/components/gitops/StateDiff";
-
-import FinOpsOverview from "@/components/cards/FinOpsOverview";
-
-import TenantTable from "@/components/tables/TenantTable";
-
-import RuntimeShield from "@/components/status/RuntimeShield";
-import CapabilityMatrix from "@/components/status/CapabilityMatrix";
-import ThreatScore from "@/components/status/ThreatScore";
-
-import TransportMetrics from "@/components/telemetry/TransportMetrics";
-import InterceptorLogs from "@/components/telemetry/InterceptorLogs";
-import ProxyStream from "@/components/telemetry/ProxyStream";
-import HijackDetection from "@/components/telemetry/HijackDetection";
-
-import SpeculativePath from "@/components/workflows/SpeculativePath";
-
-import WorkerTable from "@/components/workers/WorkerTable";
-import AgentInspector from "@/components/inspector/AgentInspector";
-import TopologyGraph from "@/components/topology/TopologyGraph";
-
-import SystemResources from "@/components/status/SystemResources";
-import StateDiffViewer from "../experimental/time-travel/StateDiffViewer";
-import ExecutionTree from "@/components/experimental/speculative/ExecutionTree";
-
-import CostArbitrage from "@/components/experimental/finops/CostArbitrage";
-
-import WasmSandbox from "@/components/experimental/wasm/WasmSandbox";
-
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section
-      className="
-rounded-2xl
-border
-border-white/10
-bg-zinc-950/70
-backdrop-blur-xl
-p-6
-shadow-xl
-shadow-black/20
-"
-    >
-      <div
-        className="
-mb-6
-"
-      >
-        <h2
-          className="
-text-sm
-font-semibold
-tracking-wide
-text-white
-"
-        >
-          {title}
-        </h2>
-
-        <p
-          className="
-mt-1
-text-xs
-text-zinc-500
-"
-        >
-          {description}
-        </p>
-      </div>
-
-      {children}
-    </section>
-  );
-}
+import { useEffect, useState } from "react";
+import { Activity, Cpu, Database, Server } from "lucide-react";
+import MetricCard from "../cards/MetricCard";
+import { getMetrics } from "../../lib/api";
+import type { DashboardMetrics } from "../../lib/types";
 
 export default function DashboardOverview() {
-  return (
-    <div
-      className="
-space-y-8
-"
-    >
-      {/* Header */}
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-      <header>
-        <h1
-          className="
-text-3xl
-font-semibold
-tracking-tight
-text-white
-"
-        >
-          Operations Console
-        </h1>
+  useEffect(() => {
+    let mounted = true;
 
-        <p
-          className="
-mt-2
-text-sm
-text-zinc-500
-"
-        >
-          FaultPlane runtime observability, recovery intelligence and transport
-          resilience control plane.
+    const loadMetrics = async () => {
+      try {
+        const next = await getMetrics();
+
+        if (mounted) {
+          setMetrics(next);
+          setError(null);
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Unable to load FaultPlane runtime metrics",
+          );
+        }
+      }
+    };
+
+    void loadMetrics();
+
+    const interval = window.setInterval(() => {
+      void loadMetrics();
+    }, 2000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  if (error) {
+    return (
+      <section className="rounded-xl border border-red-500/20 bg-zinc-950 p-6">
+        <p className="text-sm font-medium text-red-400">
+          Runtime metrics unavailable
         </p>
-      </header>
+        <p className="mt-2 text-xs text-zinc-500">{error}</p>
+      </section>
+    );
+  }
 
-      {/* Runtime Overview */}
+  if (!metrics) {
+    return (
+      <section className="rounded-xl border border-white/10 bg-zinc-950 p-6">
+        <p className="text-sm text-zinc-400">
+          Loading live FaultPlane runtime metrics...
+        </p>
+      </section>
+    );
+  }
 
-      <Section
-        title="Runtime Overview"
-        description="Live infrastructure health and runtime metrics"
-      >
-        <div
-          className="
-grid
-gap-4
-md:grid-cols-2
-xl:grid-cols-5
-"
-        >
-          <GatewayCard />
+  return (
+    <section className="space-y-6">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          title="Requests"
+          value={metrics.requests.toLocaleString()}
+          description="Runtime requests recorded"
+          icon={Activity}
+          status="healthy"
+        />
 
-          <WorkerCard />
+        <MetricCard
+          title="Average Latency"
+          value={`${metrics.latency.toFixed(2)} ms`}
+          description="Runtime average latency"
+          icon={Activity}
+          status="healthy"
+        />
 
-          <RecoveryCard />
+        <MetricCard
+          title="CPU"
+          value={
+            metrics.cpu > 0
+              ? `${metrics.cpu.toFixed(2)}%`
+              : "Unavailable"
+          }
+          description="Runtime CPU metric"
+          icon={Cpu}
+          status={metrics.cpu > 0 ? "healthy" : "warning"}
+        />
 
-          <LatencyCard />
+        <MetricCard
+          title="Memory"
+          value={`${metrics.memory.toFixed(2)} MB`}
+          description="Runtime memory usage"
+          icon={Database}
+          status="healthy"
+        />
+      </div>
 
-          <CheckpointCard />
-        </div>
-      </Section>
+      <div className="grid gap-6 md:grid-cols-2">
+        <MetricCard
+          title="Workers"
+          value={metrics.workers.toLocaleString()}
+          description="Workers reported by runtime telemetry"
+          icon={Server}
+          status={metrics.workers > 0 ? "healthy" : "warning"}
+        />
 
-      {/* Performance */}
+        <MetricCard
+          title="Recoveries"
+          value={metrics.recoveries.toLocaleString()}
+          description="Recorded runtime recovery events"
+          icon={Activity}
+          status="healthy"
+        />
+      </div>
 
-      <Section
-        title="Performance Telemetry"
-        description="Latency boundaries and recovery execution"
-      >
-        <div
-          className="
-grid
-gap-6
-xl:grid-cols-2
-"
-        >
-          <LatencyChart />
+      <div className="rounded-xl border border-white/10 bg-zinc-950 p-5">
+        <p className="text-xs uppercase tracking-widest text-zinc-500">
+          Runtime snapshot
+        </p>
 
-          <RecoveryTimeline />
-        </div>
-      </Section>
-
-      {/* Workloads */}
-
-      <Section
-        title="Workload Runtime"
-        description="Worker execution and workflow orchestration"
-      >
-        <div
-          className="
-space-y-6
-"
-        >
-          <WorkersTable />
-
-          <WorkflowTable />
-        </div>
-      </Section>
-
-      {/* Kernel */}
-
-      <Section
-        title="Kernel Observability"
-        description="Low level runtime signals and system events"
-      >
-        <div
-          className="
-grid
-gap-6
-xl:grid-cols-2
-"
-        >
-          <TelemetryLogs />
-
-          <KernelLogs />
-        </div>
-
-        <div className="mt-6">
-          <EbpfMonitor />
-        </div>
-      </Section>
-
-      {/* Infrastructure */}
-
-      <Section
-        title="Transport Infrastructure"
-        description="Network migration and connection resilience"
-      >
-        <SocketMigration />
-      </Section>
-
-      {/* Memory */}
-
-      <Section
-        title="State Resilience"
-        description="Checkpoint recovery and memory migration"
-      >
-        <MemoryGrid />
-      </Section>
-
-      {/* Recovery Intelligence */}
-
-      <Section
-        title="Recovery Intelligence"
-        description="Failure analysis and blast radius containment"
-      >
-        <div
-          className="
-grid
-gap-6
-xl:grid-cols-3
-"
-        >
-          <BlastGraph />
-
-          <FailurePropagation />
-
-          <ImpactTimeline />
-        </div>
-
-        <div
-          className="
-mt-6
-"
-        >
-          <CheckpointTimeline />
-        </div>
-      </Section>
-
-      {/* Debugging */}
-
-      <Section
-        title="Checkpoint Debugging"
-        description="Runtime state comparison and recovery verification"
-      >
-        <StateDiff />
-      </Section>
-
-      {/* FinOps */}
-
-      <Section
-        title="FinOps Intelligence"
-        description="Cloud cost optimization and efficiency"
-      >
-        <FinOpsOverview />
-      </Section>
-
-      {/* Multi Tenant */}
-
-      <Section
-        title="Multi Tenant Governance"
-        description="Tenant isolation and resource control"
-      >
-        <TenantTable />
-      </Section>
-
-      {/* Security */}
-
-      <Section
-        title="Runtime Security"
-        description="Sandbox isolation and workload protection"
-      >
-        <div
-          className="
-space-y-6
-"
-        >
-          <RuntimeShield />
-
-          <div
-            className="
-grid
-gap-6
-xl:grid-cols-2
-"
-          >
-            <CapabilityMatrix />
-
-            <ThreatScore />
-          </div>
-        </div>
-      </Section>
-
-      {/* Network Security */}
-
-      <Section
-        title="Network Security Telemetry"
-        description="Transport interception intelligence"
-      >
-        <div
-          className="
-space-y-6
-"
-        >
-          <TransportMetrics />
-
-          <div
-            className="
-grid
-gap-6
-xl:grid-cols-2
-"
-          >
-            <InterceptorLogs />
-
-            <ProxyStream />
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div>
+            <p className="text-xs text-zinc-500">Checkpoints</p>
+            <p className="mt-1 text-xl font-semibold text-white">
+              {metrics.checkpoints.toLocaleString()}
+            </p>
           </div>
 
-          <HijackDetection />
+          <div>
+            <p className="text-xs text-zinc-500">Updated</p>
+            <p className="mt-1 text-sm text-zinc-300">
+              {new Date(metrics.updatedAt).toLocaleString()}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-xs text-zinc-500">Source</p>
+            <p className="mt-1 text-sm text-emerald-400">
+              FaultPlane runtime API
+            </p>
+          </div>
         </div>
-      </Section>
-
-      {/* Workflow Intelligence */}
-
-      <Section
-        title="Workflow Intelligence"
-        description="Speculative execution and branch prediction"
-      >
-        <SpeculativePath />
-      </Section>
-
-      {/* Worker Runtime */}
-
-      <Section
-        title="Worker Runtime"
-        description="Live worker execution health and checkpoint state"
-      >
-        <WorkerTable />
-      </Section>
-      {/* Agent Inspector */}
-      <Section
-        title="Agent Inspector"
-        description="Runtime agent diagnostics and monitoring"
-      >
-        <AgentInspector />
-      </Section>
-      {/* Infrastructure Topology */}
-      <Section
-        title="Infrastructure Topology"
-        description="Runtime service dependency graph"
-      >
-        <TopologyGraph />
-      </Section>
-      {/* Recovery Timeline */}
-
-      <Section
-        title="Recovery Timeline"
-        description="Failure recovery execution history"
-      >
-        <RecoveryTimeline />
-      </Section>
-      {/* System Health */}
-
-      <Section title="System Health" description="Runtime resource monitoring">
-        <SystemResources />
-      </Section>
-
-      {/* Time Travel Debugging */}
-
-      <Section
-        title="Time Travel Debugging"
-        description="Checkpoint based agent state comparison"
-      >
-        <StateDiffViewer />
-      </Section>
-      <Section
-        title="Speculative Execution"
-        description="AI workflow prediction engine"
-      >
-        <ExecutionTree />
-      </Section>
-
-      <Section
-        title="FinOps Optimization"
-        description="Runtime compute cost intelligence"
-      >
-        <CostArbitrage />
-      </Section>
-
-      <Section title="Sandbox Security" description="WASM workload isolation">
-        <WasmSandbox />
-      </Section>
-    </div>
+      </div>
+    </section>
   );
 }
