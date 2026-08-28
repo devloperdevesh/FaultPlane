@@ -3,6 +3,7 @@ package gateway
 import (
 	"net/http"
 
+	"github.com/devloperdevesh/FaultPlane/experimental/finops"
 	"github.com/devloperdevesh/FaultPlane/internal/api"
 	"github.com/devloperdevesh/FaultPlane/internal/control"
 	"github.com/devloperdevesh/FaultPlane/internal/kernel"
@@ -58,6 +59,11 @@ func (r *Router) registerRoutes(
 	r.mux.Handle(
 		"/api/metrics",
 		api.MetricsHandler(registry),
+	)
+
+	r.mux.Handle(
+		"/api/finops",
+		finops.NewHandler(registry),
 	)
 
 	r.mux.Handle(
