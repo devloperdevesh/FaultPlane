@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
-
-	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
 type HealthResponse struct {
@@ -31,23 +29,6 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 			Timestamp: time.Now(),
 		},
 	)
-}
-
-func metricsHandler(registry *telemetry.Registry) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		metrics := registry.Snapshot()
-
-		writeJSON(
-			w,
-			http.StatusOK,
-			MetricsResponse{
-				Requests: metrics.Requests,
-				Latency:  metrics.AverageLatency(),
-				CPU:      metrics.CPU,
-				Memory:   metrics.Memory,
-			},
-		)
-	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, value interface{}) {

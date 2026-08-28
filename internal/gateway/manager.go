@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/devloperdevesh/FaultPlane/internal/api"
+	"github.com/devloperdevesh/FaultPlane/internal/config"
 	"github.com/devloperdevesh/FaultPlane/internal/control"
 	"github.com/devloperdevesh/FaultPlane/internal/kernel"
 	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
@@ -19,12 +20,15 @@ type Manager struct {
 	workerStore    *api.WorkerStore
 	telemetryStore *api.TelemetryStore
 	topology       *control.TopologyController
+	controller     *control.Controller
+	config         config.Config
 }
 
 func New(
 	logger *slog.Logger,
 	registry *telemetry.Registry,
 	collector *telemetry.Collector,
+	controller *control.Controller,
 ) *Manager {
 	return &Manager{
 		logger:         logger,
@@ -33,6 +37,8 @@ func New(
 		workerStore:    api.NewWorkerStore(),
 		telemetryStore: api.NewTelemetryStore(),
 		topology:       control.NewTopologyController(),
+		controller:     controller,
+		config:         config.Load(),
 	}
 }
 
@@ -67,7 +73,11 @@ func (m *Manager) start(
 	ctx context.Context,
 	monitor *kernel.Monitor,
 ) error {
-	m.logger.Info("gateway starting")
+	m.logger.Info(
+		"gateway starting",
+		"host", m.config.Host,
+		"port", m.config.Port,
+	)
 
 	handler := NewRouter(
 		m.registry,
@@ -76,9 +86,10 @@ func (m *Manager) start(
 		m.telemetryStore,
 		monitor,
 		m.topology,
+		m.controller,
 	)
 
-	server := NewServer(handler)
+	server := NewServer(handler, m.config)
 
 	go func() {
 		<-ctx.Done()

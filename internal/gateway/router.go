@@ -20,6 +20,7 @@ func NewRouter(
 	telemetryStore *api.TelemetryStore,
 	kernelMonitor *kernel.Monitor,
 	topologyController *control.TopologyController,
+	controller *control.Controller,
 ) http.Handler {
 	r := &Router{
 		mux: http.NewServeMux(),
@@ -31,6 +32,7 @@ func NewRouter(
 		telemetryStore,
 		kernelMonitor,
 		topologyController,
+		controller,
 	)
 
 	return TelemetryMiddleware(
@@ -46,6 +48,7 @@ func (r *Router) registerRoutes(
 	telemetryStore *api.TelemetryStore,
 	kernelMonitor *kernel.Monitor,
 	topologyController *control.TopologyController,
+	controller *control.Controller,
 ) {
 	r.mux.HandleFunc(
 		"/health",
@@ -54,7 +57,7 @@ func (r *Router) registerRoutes(
 
 	r.mux.Handle(
 		"/api/metrics",
-		metricsHandler(registry),
+		api.MetricsHandler(registry),
 	)
 
 	r.mux.Handle(
@@ -107,6 +110,23 @@ func (r *Router) registerRoutes(
 		r.mux.HandleFunc(
 			"/api/topology",
 			topologyHandler.Get,
+		)
+	}
+
+	if controller != nil {
+		r.mux.HandleFunc(
+			"/api/workflows",
+			api.WorkflowHandler(controller),
+		)
+
+		r.mux.HandleFunc(
+			"/api/checkpoint",
+			api.CheckpointHandler(controller),
+		)
+
+		r.mux.HandleFunc(
+			"/api/recover",
+			api.RecoverHandler(controller),
 		)
 	}
 }

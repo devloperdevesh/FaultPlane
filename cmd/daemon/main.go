@@ -12,6 +12,7 @@ import (
 	"github.com/devloperdevesh/FaultPlane/internal/gateway"
 	"github.com/devloperdevesh/FaultPlane/internal/logging"
 	"github.com/devloperdevesh/FaultPlane/internal/runtime"
+	"github.com/devloperdevesh/FaultPlane/internal/storage"
 	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
@@ -30,16 +31,25 @@ func main() {
 	defer cancel()
 
 	registry := telemetry.NewRegistry()
+
 	cpuSampler := runtime.NewProcessCPUSampler()
 	registry.SetCPUSampler(cpuSampler)
+
 	collector := telemetry.NewCollector(registry)
 
-	controlManager := control.New(logger)
+	store := storage.NewMemoryStore()
+
+	controlManager := control.New(
+		logger,
+		store,
+		collector,
+	)
 
 	gatewayManager := gateway.New(
 		logger,
 		registry,
 		collector,
+		controlManager.Controller(),
 	)
 
 	daemon := runtime.New(
@@ -48,7 +58,11 @@ func main() {
 		gatewayManager,
 	)
 
+	daemonDone := make(chan struct{})
+
 	go func() {
+		defer close(daemonDone)
+
 		if err := daemon.Start(ctx); err != nil {
 			logger.Error(
 				"daemon failed",
@@ -68,7 +82,16 @@ func main() {
 	)
 	defer shutdownCancel()
 
-	_ = shutdownCtx
+	select {
+	case <-daemonDone:
+		logger.Info("daemon runtime stopped")
+	case <-shutdownCtx.Done():
+		logger.Error(
+			"daemon shutdown timeout",
+			"error", shutdownCtx.Err(),
+		)
+		return
+	}
 
 	logger.Info("FaultPlane daemon stopped cleanly")
 }
