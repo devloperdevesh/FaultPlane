@@ -3,6 +3,8 @@ package control
 import (
 	"sync"
 	"time"
+
+	"github.com/devloperdevesh/FaultPlane/internal/models"
 )
 
 type TopologyNode struct {
@@ -34,43 +36,9 @@ type TopologyController struct {
 func NewTopologyController() *TopologyController {
 	return &TopologyController{
 		snapshot: TopologySnapshot{
-			Nodes: []TopologyNode{
-				{
-					ID:     "gateway",
-					Type:   "gateway",
-					Name:   "Gateway",
-					Status: "healthy",
-				},
-				{
-					ID:     "worker-01",
-					Type:   "worker",
-					Name:   "Worker-01",
-					Status: "running",
-				},
-				{
-					ID:     "checkpoint-store",
-					Type:   "checkpoint",
-					Name:   "Checkpoint Store",
-					Status: "healthy",
-				},
-			},
-			Connections: []TopologyConnection{
-				{
-					ID:     "gateway-worker-01",
-					Source: "gateway",
-					Target: "worker-01",
-					Type:   "tcp",
-					Status: "active",
-				},
-				{
-					ID:     "worker-01-checkpoint",
-					Source: "worker-01",
-					Target: "checkpoint-store",
-					Type:   "checkpoint-sync",
-					Status: "active",
-				},
-			},
-			UpdatedAt: time.Now().UTC(),
+			Nodes:       []TopologyNode{},
+			Connections: []TopologyConnection{},
+			UpdatedAt:   time.Now().UTC(),
 		},
 	}
 }
@@ -81,7 +49,11 @@ func (c *TopologyController) Snapshot() TopologySnapshot {
 
 	snapshot := c.snapshot
 
-	snapshot.Nodes = append([]TopologyNode(nil), c.snapshot.Nodes...)
+	snapshot.Nodes = append(
+		[]TopologyNode(nil),
+		c.snapshot.Nodes...,
+	)
+
 	snapshot.Connections = append(
 		[]TopologyConnection(nil),
 		c.snapshot.Connections...,
@@ -90,10 +62,91 @@ func (c *TopologyController) Snapshot() TopologySnapshot {
 	return snapshot
 }
 
-func (c *TopologyController) SetSnapshot(snapshot TopologySnapshot) {
+func (c *TopologyController) SetSnapshot(
+	snapshot TopologySnapshot,
+) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	snapshot.UpdatedAt = time.Now().UTC()
 	c.snapshot = snapshot
+}
+
+func (c *TopologyController) RefreshFromWorkers(
+	workers []models.Worker,
+) {
+	nodes := make(
+		[]TopologyNode,
+		0,
+		len(workers)+2,
+	)
+
+	connections := make(
+		[]TopologyConnection,
+		0,
+		len(workers)*2,
+	)
+
+	nodes = append(
+		nodes,
+		TopologyNode{
+			ID:     "gateway",
+			Type:   "gateway",
+			Name:   "Gateway",
+			Status: "healthy",
+		},
+	)
+
+	for _, worker := range workers {
+		nodes = append(
+			nodes,
+			TopologyNode{
+				ID:     worker.ID,
+				Type:   "worker",
+				Name:   worker.ID,
+				Status: worker.Status,
+			},
+		)
+
+		connections = append(
+			connections,
+			TopologyConnection{
+				ID:     "gateway-" + worker.ID,
+				Source: "gateway",
+				Target: worker.ID,
+				Type:   "runtime",
+				Status: "active",
+			},
+		)
+	}
+
+	nodes = append(
+		nodes,
+		TopologyNode{
+			ID:     "checkpoint-store",
+			Type:   "checkpoint",
+			Name:   "Checkpoint Store",
+			Status: "healthy",
+		},
+	)
+
+	for _, worker := range workers {
+		connections = append(
+			connections,
+			TopologyConnection{
+				ID:     worker.ID + "-checkpoint",
+				Source: worker.ID,
+				Target: "checkpoint-store",
+				Type:   "checkpoint-sync",
+				Status: "active",
+			},
+		)
+	}
+
+	c.SetSnapshot(
+		TopologySnapshot{
+			Nodes:       nodes,
+			Connections: connections,
+		},
+	)
 }

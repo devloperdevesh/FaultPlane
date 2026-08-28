@@ -18,13 +18,13 @@ type Daemon struct {
 
 func New(
 	logger *slog.Logger,
-	control *control.Manager,
-	gateway *gateway.Manager,
+	controlManager *control.Manager,
+	gatewayManager *gateway.Manager,
 ) *Daemon {
 	return &Daemon{
 		logger:  logger,
-		control: control,
-		gateway: gateway,
+		control: controlManager,
+		gateway: gatewayManager,
 		kernel:  kernel.NewMonitor(logger),
 	}
 }
@@ -39,6 +39,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 	workerRegistry := NewWorkerRegistry(
 		d.gateway.WorkerStore(),
 		d.gateway.Registry(),
+		d.gateway.Topology(),
 	)
 
 	go workerRegistry.Start(ctx)

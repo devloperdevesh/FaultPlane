@@ -7,21 +7,27 @@ import (
 	"time"
 
 	"github.com/devloperdevesh/FaultPlane/internal/api"
+	"github.com/devloperdevesh/FaultPlane/internal/control"
 	"github.com/devloperdevesh/FaultPlane/internal/models"
 	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
 type WorkerRegistry struct {
 	store      *api.WorkerStore
+	topology   *control.TopologyController
 	cpuSampler *ProcessCPUSampler
 }
 
 func NewWorkerRegistry(
 	store *api.WorkerStore,
-	_ ...*telemetry.Registry,
+	registry *telemetry.Registry,
+	topology *control.TopologyController,
 ) *WorkerRegistry {
+	_ = registry
+
 	return &WorkerRegistry{
 		store:      store,
+		topology:   topology,
 		cpuSampler: NewProcessCPUSampler(),
 	}
 }
@@ -54,4 +60,10 @@ func (r *WorkerRegistry) publish() {
 		CPU:    cpu,
 		Memory: int64(mem.Alloc),
 	})
+
+	if r.topology != nil {
+		r.topology.RefreshFromWorkers(
+			r.store.List(),
+		)
+	}
 }
