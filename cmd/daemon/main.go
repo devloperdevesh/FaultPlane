@@ -58,7 +58,11 @@ func main() {
 		gatewayManager,
 	)
 
+	daemonDone := make(chan struct{})
+
 	go func() {
+		defer close(daemonDone)
+
 		if err := daemon.Start(ctx); err != nil {
 			logger.Error(
 				"daemon failed",
@@ -78,7 +82,16 @@ func main() {
 	)
 	defer shutdownCancel()
 
-	_ = shutdownCtx
+	select {
+	case <-daemonDone:
+		logger.Info("daemon runtime stopped")
+	case <-shutdownCtx.Done():
+		logger.Error(
+			"daemon shutdown timeout",
+			"error", shutdownCtx.Err(),
+		)
+		return
+	}
 
 	logger.Info("FaultPlane daemon stopped cleanly")
 }

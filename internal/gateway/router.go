@@ -57,7 +57,7 @@ func (r *Router) registerRoutes(
 
 	r.mux.Handle(
 		"/api/metrics",
-		metricsHandler(registry),
+		api.MetricsHandler(registry),
 	)
 
 	r.mux.Handle(
@@ -114,6 +114,11 @@ func (r *Router) registerRoutes(
 	}
 
 	if controller != nil {
+		r.mux.HandleFunc(
+			"/api/workflows",
+			api.WorkflowHandler(controller),
+		)
+
 		r.mux.HandleFunc(
 			"/api/checkpoint",
 			api.CheckpointHandler(controller),
