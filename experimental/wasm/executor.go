@@ -66,22 +66,31 @@ func (e *Executor) Execute(
 			return Result{}, ErrTimeout
 		}
 
+		if errors.Is(execCtx.Err(), context.Canceled) {
+			return Result{}, context.Canceled
+		}
+
 		return Result{}, fmt.Errorf("compile wasm module: %w", err)
 	}
 
-	defer compiled.Close(execCtx)
+	defer func() {
+		if closeErr := compiled.Close(execCtx); closeErr != nil && err == nil {
+			err = fmt.Errorf("close compiled wasm module: %w", closeErr)
+		}
+	}()
 
 	_, err = e.runtime.InstantiateModule(
-
 		execCtx,
-
 		compiled,
-
 		wazero.NewModuleConfig(),
 	)
 	if err != nil {
 		if errors.Is(execCtx.Err(), context.DeadlineExceeded) {
 			return Result{}, ErrTimeout
+		}
+
+		if errors.Is(execCtx.Err(), context.Canceled) {
+			return Result{}, context.Canceled
 		}
 
 		return Result{}, fmt.Errorf("instantiate wasm module: %w", err)

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/tetratelabs/wazero"
-	"github.com/tetratelabs/wazero/api"
 )
 
 func minimalWASM(t *testing.T) []byte {
@@ -14,7 +13,12 @@ func minimalWASM(t *testing.T) []byte {
 
 	ctx := context.Background()
 	runtime := wazero.NewRuntime(ctx)
-	defer runtime.Close(ctx)
+
+	defer func() {
+		if err := runtime.Close(ctx); err != nil {
+			t.Fatalf("runtime.Close() error = %v", err)
+		}
+	}()
 
 	module, err := runtime.CompileModule(ctx, []byte{
 		0x00, 0x61, 0x73, 0x6d,
@@ -24,7 +28,11 @@ func minimalWASM(t *testing.T) []byte {
 		t.Fatalf("compile minimal wasm: %v", err)
 	}
 
-	defer module.Close(ctx)
+	defer func() {
+		if err := module.Close(ctx); err != nil {
+			t.Fatalf("module.Close() error = %v", err)
+		}
+	}()
 
 	return []byte{
 		0x00, 0x61, 0x73, 0x6d,
@@ -34,7 +42,12 @@ func minimalWASM(t *testing.T) []byte {
 
 func TestExecutorRejectsEmptyModule(t *testing.T) {
 	executor := New(context.Background())
-	defer executor.Close(context.Background())
+
+	defer func() {
+		if err := executor.Close(context.Background()); err != nil {
+			t.Fatalf("executor.Close() error = %v", err)
+		}
+	}()
 
 	_, err := executor.Execute(
 		context.Background(),
@@ -49,7 +62,12 @@ func TestExecutorRejectsEmptyModule(t *testing.T) {
 
 func TestExecutorExecutesValidModule(t *testing.T) {
 	executor := New(context.Background())
-	defer executor.Close(context.Background())
+
+	defer func() {
+		if err := executor.Close(context.Background()); err != nil {
+			t.Fatalf("executor.Close() error = %v", err)
+		}
+	}()
 
 	module := minimalWASM(t)
 
@@ -74,7 +92,12 @@ func TestExecutorExecutesValidModule(t *testing.T) {
 
 func TestExecutorRespectsCancellation(t *testing.T) {
 	executor := New(context.Background())
-	defer executor.Close(context.Background())
+
+	defer func() {
+		if err := executor.Close(context.Background()); err != nil {
+			t.Fatalf("executor.Close() error = %v", err)
+		}
+	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -91,6 +114,4 @@ func TestExecutorRespectsCancellation(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected cancellation error")
 	}
-
-	_ = api.Module(nil)
 }
