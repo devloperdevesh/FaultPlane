@@ -19,12 +19,14 @@ type Manager struct {
 	workerStore    *api.WorkerStore
 	telemetryStore *api.TelemetryStore
 	topology       *control.TopologyController
+	controller     *control.Controller
 }
 
 func New(
 	logger *slog.Logger,
 	registry *telemetry.Registry,
 	collector *telemetry.Collector,
+	controller *control.Controller,
 ) *Manager {
 	return &Manager{
 		logger:         logger,
@@ -33,6 +35,7 @@ func New(
 		workerStore:    api.NewWorkerStore(),
 		telemetryStore: api.NewTelemetryStore(),
 		topology:       control.NewTopologyController(),
+		controller:     controller,
 	}
 }
 
@@ -76,6 +79,7 @@ func (m *Manager) start(
 		m.telemetryStore,
 		monitor,
 		m.topology,
+		m.controller,
 	)
 
 	server := NewServer(handler)

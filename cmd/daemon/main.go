@@ -12,6 +12,7 @@ import (
 	"github.com/devloperdevesh/FaultPlane/internal/gateway"
 	"github.com/devloperdevesh/FaultPlane/internal/logging"
 	"github.com/devloperdevesh/FaultPlane/internal/runtime"
+	"github.com/devloperdevesh/FaultPlane/internal/storage"
 	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
@@ -30,16 +31,25 @@ func main() {
 	defer cancel()
 
 	registry := telemetry.NewRegistry()
+
 	cpuSampler := runtime.NewProcessCPUSampler()
 	registry.SetCPUSampler(cpuSampler)
+
 	collector := telemetry.NewCollector(registry)
 
-	controlManager := control.New(logger)
+	store := storage.NewMemoryStore()
+
+	controlManager := control.New(
+		logger,
+		store,
+		collector,
+	)
 
 	gatewayManager := gateway.New(
 		logger,
 		registry,
 		collector,
+		controlManager.Controller(),
 	)
 
 	daemon := runtime.New(
