@@ -6,6 +6,7 @@ import (
 
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
+	"github.com/cilium/ebpf/rlimit"
 )
 
 const defaultCgroupPath = "/sys/fs/cgroup"
@@ -28,6 +29,9 @@ func NewLoader() *Loader {
 }
 
 func (l *Loader) Load(objectPath string) error {
+	if err := rlimit.RemoveMemlock(); err != nil {
+		return fmt.Errorf("remove eBPF memlock limit: %w", err)
+	}
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
