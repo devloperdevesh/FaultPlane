@@ -5,9 +5,10 @@ import (
 )
 
 type Config struct {
-	Host     string
-	Port     string
-	LogLevel string
+	Host          string
+	Port          string
+	LogLevel      string
+	BPFObjectPath string
 }
 
 func Load() Config {
@@ -15,6 +16,10 @@ func Load() Config {
 		Host:     getEnv("FAULTPLANE_HOST", "0.0.0.0"),
 		Port:     getEnv("FAULTPLANE_PORT", "8080"),
 		LogLevel: getEnv("FAULTPLANE_LOG_LEVEL", "info"),
+		BPFObjectPath: getEnv(
+			"FAULTPLANE_BPF_OBJECT",
+			"/usr/local/lib/faultplane/bpf/sockmap.bpf.o",
+		),
 	}
 }
 
