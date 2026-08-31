@@ -92,7 +92,9 @@ func (s *PcieBusSplicer) SyncDeviceMapping(bar PcieBAR) error {
 
 	// Prevent the compiler/runtime from treating the mapped range as unused.
 	// This does not perform an unsafe hardware register write.
-	unix.Msync(bar.Mapping(), unix.MS_SYNC)
+	if err := unix.Msync(bar.Mapping(), unix.MS_SYNC); err != nil {
+		return fmt.Errorf("sync PCIe BAR mapping: %w", err)
+	}
 
 	return nil
 }
