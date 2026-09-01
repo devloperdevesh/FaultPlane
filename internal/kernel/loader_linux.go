@@ -16,10 +16,7 @@ type Loader struct {
 
 	collection *ebpf.Collection
 	sockops    link.Link
-
-	skmsgTarget   int
-	skmsgProgram  *ebpf.Program
-	skmsgAttached bool
+	skmsg      *link.RawLink
 
 	loaded bool
 }
@@ -30,8 +27,9 @@ func NewLoader() *Loader {
 
 func (l *Loader) Load(objectPath string) error {
 	if err := rlimit.RemoveMemlock(); err != nil {
-		return fmt.Errorf("remove eBPF memlock limit: %w", err)
+		return fmt.Errorf("remove eBPF memlock: %w", err)
 	}
+
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -76,11 +74,12 @@ func (l *Loader) Load(objectPath string) error {
 		return fmt.Errorf("attach sockops: %w", err)
 	}
 
-	if err := link.RawAttachProgram(link.RawAttachProgramOptions{
+	skmsg, err := link.AttachRawLink(link.RawLinkOptions{
 		Target:  objs.SockMap.FD(),
 		Program: objs.Redirect,
 		Attach:  ebpf.AttachSkMsgVerdict,
-	}); err != nil {
+	})
+	if err != nil {
 		_ = sockops.Close()
 		closeObjects()
 		return fmt.Errorf("attach sk_msg: %w", err)
@@ -97,9 +96,7 @@ func (l *Loader) Load(objectPath string) error {
 	}
 
 	l.sockops = sockops
-	l.skmsgTarget = objs.SockMap.FD()
-	l.skmsgProgram = objs.Redirect
-	l.skmsgAttached = true
+	l.skmsg = skmsg
 	l.loaded = true
 
 	return nil
@@ -122,18 +119,11 @@ func (l *Loader) Close() error {
 
 	var firstErr error
 
-	if l.skmsgAttached && l.skmsgProgram != nil {
-		if err := link.RawDetachProgram(link.RawDetachProgramOptions{
-			Target:  l.skmsgTarget,
-			Program: l.skmsgProgram,
-			Attach:  ebpf.AttachSkMsgVerdict,
-		}); err != nil && firstErr == nil {
+	if l.skmsg != nil {
+		if err := l.skmsg.Close(); err != nil {
 			firstErr = fmt.Errorf("detach sk_msg: %w", err)
 		}
-
-		l.skmsgAttached = false
-		l.skmsgTarget = 0
-		l.skmsgProgram = nil
+		l.skmsg = nil
 	}
 
 	if l.sockops != nil {
