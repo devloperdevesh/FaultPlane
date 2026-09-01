@@ -64,7 +64,6 @@ func (l *Loader) Load(objectPath string) error {
 		}
 	}
 
-	// Attach the sockops program to the cgroup.
 	sockops, err := link.AttachCgroup(link.CgroupOptions{
 		Path:    defaultCgroupPath,
 		Program: objs.SockOps,
@@ -75,7 +74,6 @@ func (l *Loader) Load(objectPath string) error {
 		return fmt.Errorf("attach sockops: %w", err)
 	}
 
-	// Attach the sk_msg program to the SOCKMAP.
 	skmsg, err := link.AttachRawLink(link.RawLinkOptions{
 		Target:  objs.SockMap.FD(),
 		Program: objs.Redirect,
@@ -136,9 +134,7 @@ func (l *Loader) Close() error {
 	}
 
 	if l.collection != nil {
-		if err := l.collection.Close(); err != nil && firstErr == nil {
-			firstErr = fmt.Errorf("close eBPF collection: %w", err)
-		}
+		l.collection.Close()
 		l.collection = nil
 	}
 
