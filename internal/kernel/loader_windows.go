@@ -2,9 +2,7 @@
 
 package kernel
 
-import "fmt"
-
-// Loader is a Windows-compatible placeholder.
+// Loader is a Windows-compatible no-op.
 // FaultPlane's real eBPF loader is implemented in loader_linux.go.
 type Loader struct {
 	loaded bool
@@ -15,7 +13,7 @@ func NewLoader() *Loader {
 }
 
 func (l *Loader) Load(objectPath string) error {
-	return fmt.Errorf("FaultPlane eBPF loader requires Linux; Windows is unsupported")
+	return nil
 }
 
 func (l *Loader) Loaded() bool {
