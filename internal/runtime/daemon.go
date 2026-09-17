@@ -38,13 +38,10 @@ func New(
 func (d *Daemon) Start(ctx context.Context) error {
 	d.logger.Info("faultplane daemon starting")
 
-	// Existing kernel monitor remains the gateway/API event source.
 	if err := d.kernel.Start(ctx); err != nil {
 		return err
 	}
 
-	// Linux: starts the real rtnetlink source.
-	// Non-Linux: starts the platform-safe no-op source.
 	if err := d.kernelSource.Start(ctx); err != nil {
 		d.kernel.Stop()
 		return fmt.Errorf("start kernel event source: %w", err)
@@ -65,11 +62,29 @@ func (d *Daemon) Start(ctx context.Context) error {
 		d.kernel.Stop()
 		return fmt.Errorf("load production eBPF programs: %w", err)
 	}
-	// Platform-specific kernel state enforcement.
+
+	// Create the live platform-specific kernel runtime.
 	kernelStateRuntime := newKernelStateRuntime(d.logger, d.bpfLoader)
+
+	// Wire the live runtime into the control plane before either
+	// component starts accepting work.
+	if d.control == nil {
+		_ = d.bpfLoader.Close()
+		d.kernelSource.Stop()
+		d.kernel.Stop()
+		return fmt.Errorf("control manager is nil")
+	}
+
+	if err := d.control.SetRuntime(kernelStateRuntime); err != nil {
+		_ = d.bpfLoader.Close()
+		d.kernelSource.Stop()
+		d.kernel.Stop()
+		return fmt.Errorf("wire kernel runtime into control plane: %w", err)
+	}
 
 	if err := kernelStateRuntime.Start(ctx); err != nil {
 		_ = d.bpfLoader.Close()
+		d.kernelSource.Stop()
 		d.kernel.Stop()
 		return fmt.Errorf("start kernel state runtime: %w", err)
 	}
@@ -102,10 +117,8 @@ func (d *Daemon) Start(ctx context.Context) error {
 
 	<-ctx.Done()
 
-	// --------------------------------------------------------
-	// Graceful shutdown in reverse dependency order.
-	// --------------------------------------------------------
 	kernelStateRuntime.Stop()
+
 	if err := d.bpfLoader.Close(); err != nil {
 		d.logger.Error(
 			"failed to close production eBPF loader",
@@ -115,6 +128,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 
 	d.kernelSource.Stop()
 	d.kernel.Stop()
+
 	transitions, errors := kernelStateRuntime.Stats()
 
 	d.logger.Info(
@@ -127,10 +141,6 @@ func (d *Daemon) Start(ctx context.Context) error {
 	return nil
 }
 
-// consumeKernelEvents keeps the platform kernel event source alive.
-//
-// On Linux this consumes real rtnetlink events.
-// On non-Linux platforms the event source is intentionally a no-op.
 func (d *Daemon) consumeKernelEvents(ctx context.Context) {
 	events := d.kernelSource.Events()
 

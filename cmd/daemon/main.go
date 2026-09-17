@@ -39,10 +39,13 @@ func main() {
 
 	store := storage.NewMemoryStore()
 
+	// Runtime is attached after the daemon creates its platform-specific
+	// kernel state runtime. The control manager starts with no executor.
 	controlManager := control.New(
 		logger,
 		store,
 		collector,
+		nil,
 	)
 
 	gatewayManager := gateway.New(

@@ -1,5 +1,3 @@
-//go:build linux
-
 package runtime
 
 import (
@@ -76,6 +74,36 @@ func (r *linuxKernelStateRuntime) Start(ctx context.Context) error {
 			)
 		}
 	}()
+
+	return nil
+}
+
+// Recover applies an explicit control-plane recovery signal to the
+// production kernel state enforcer. The workflow ID is carried for
+// observability and does not alter kernel policy selection.
+func (r *linuxKernelStateRuntime) Recover(ctx context.Context, workflowID string) error {
+	if r == nil || r.enforcer == nil {
+		return fmt.Errorf("recover kernel state: runtime is not initialized")
+	}
+	if ctx == nil {
+		return fmt.Errorf("recover kernel state: context is nil")
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if workflowID == "" {
+		return fmt.Errorf("recover kernel state: workflow ID is empty")
+	}
+
+	if err := r.enforcer.Handle(ctx, kernel.FaultEvent{
+		Type:   "recovery_success",
+		Source: "control/recovery",
+		Metadata: map[string]string{
+			"workflow_id": workflowID,
+		},
+	}); err != nil {
+		return fmt.Errorf("recover kernel state for workflow %s: %w", workflowID, err)
+	}
 
 	return nil
 }

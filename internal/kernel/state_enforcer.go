@@ -332,6 +332,7 @@ func validTransition(from, to EnforcerState) bool {
 		return to == StateDegraded ||
 			to == StateRecovering ||
 			to == StateEnforced ||
+			to == StateHealthy ||
 			to == StateFailed
 
 	case StateRecovering:
