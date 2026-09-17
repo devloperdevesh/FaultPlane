@@ -11,61 +11,28 @@ type recoverRequest struct {
 	WorkflowID string `json:"workflow_id"`
 }
 
-func RecoverHandler(
-	controller *control.Controller,
-) http.HandlerFunc {
-
-	return func(
-		w http.ResponseWriter,
-		r *http.Request,
-	) {
-
+func RecoverHandler(controller *control.Controller) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var req recoverRequest
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-
-			http.Error(
-				w,
-				"invalid recovery request",
-				http.StatusBadRequest,
-			)
-
+			http.Error(w, "invalid request body", http.StatusBadRequest)
 			return
 		}
 
-		if err := controller.Recover(
-			req.WorkflowID,
-		); err != nil {
-
-			http.Error(
-				w,
-				err.Error(),
-				http.StatusInternalServerError,
-			)
-
+		if req.WorkflowID == "" {
+			http.Error(w, "workflow_id is required", http.StatusBadRequest)
 			return
 		}
 
-		w.Header().Set(
-			"Content-Type",
-			"application/json",
-		)
-
-		if err := json.NewEncoder(w).Encode(
-			map[string]string{
-				"status": "recovered",
-			},
-		); err != nil {
-
-			http.Error(
-				w,
-				"failed to encode recovery response",
-				http.StatusInternalServerError,
-			)
-
+		if err := controller.RecoverContext(r.Context(), req.WorkflowID); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"status": "recovered",
+		})
 	}
-
 }

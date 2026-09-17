@@ -1,81 +1,83 @@
 package control
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/devloperdevesh/FaultPlane/internal/storage"
 	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
-// Controller manages agent workflow lifecycle,
-// state tracking and recovery operations.
 type Controller struct {
-
-	// protects concurrent workflow access
-	mu sync.RWMutex
-
-	// workflow registry
+	mu        sync.RWMutex
 	workflows map[string]*Workflow
-
-	// persistent state storage
-	storage storage.Store
-
-	// telemetry collector
+	storage   storage.Store
 	telemetry *telemetry.Collector
+	runtime   RuntimeExecutor
 }
 
-// NewController creates a new control plane controller.
 func NewController(
 	store storage.Store,
 	collector *telemetry.Collector,
+	runtime RuntimeExecutor,
 ) *Controller {
-
 	return &Controller{
-
 		workflows: make(map[string]*Workflow),
-
-		storage: store,
-
+		storage:   store,
 		telemetry: collector,
+		runtime:   runtime,
 	}
 }
 
-// Register adds a new workflow into controller state.
-func (c *Controller) Register(
-	id string,
-	workflow *Workflow,
-) {
+// SetRuntime attaches the live runtime executor to the control plane.
+func (c *Controller) SetRuntime(runtime RuntimeExecutor) error {
+	if c == nil {
+		return fmt.Errorf("set runtime: controller is nil")
+	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.workflows[id] = workflow
+	if runtime == nil {
+		return fmt.Errorf("set runtime: runtime is nil")
+	}
+
+	c.runtime = runtime
+	return nil
 }
 
-// Get retrieves workflow by ID.
-func (c *Controller) Get(
-	id string,
-) (*Workflow, error) {
+func (c *Controller) Register(workflow *Workflow) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
+	if _, exists := c.workflows[workflow.ID]; exists {
+		return ErrWorkflowExists
+	}
+
+	c.workflows[workflow.ID] = workflow
+	return nil
+}
+
+func (c *Controller) Get(id string) (*Workflow, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
-	workflow, exists := c.workflows[id]
-
-	if !exists {
+	workflow, ok := c.workflows[id]
+	if !ok {
 		return nil, ErrWorkflowNotFound
 	}
 
 	return workflow, nil
 }
 
-// Remove deletes workflow from controller.
-func (c *Controller) Remove(
-	id string,
-) {
-
+func (c *Controller) Remove(id string) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	if _, ok := c.workflows[id]; !ok {
+		return ErrWorkflowNotFound
+	}
+
 	delete(c.workflows, id)
+	return nil
 }
