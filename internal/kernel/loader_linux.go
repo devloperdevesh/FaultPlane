@@ -27,15 +27,15 @@ func NewLoader() *Loader {
 }
 
 func (l *Loader) Load(objectPath string) error {
-	if err := rlimit.RemoveMemlock(); err != nil {
-		return fmt.Errorf("remove eBPF memlock: %w", err)
-	}
-
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
 	if l.loaded {
 		return fmt.Errorf("eBPF collection already loaded")
+	}
+
+	if err := rlimit.RemoveMemlock(); err != nil {
+		return fmt.Errorf("remove eBPF memlock: %w", err)
 	}
 
 	spec, err := ebpf.LoadCollectionSpec(objectPath)
