@@ -4,7 +4,7 @@ import "context"
 
 type windowsKernelStateRuntime struct{}
 
-func newKernelStateRuntime(_ interface{}, _ interface{}) KernelStateRuntime {
+func newKernelStateRuntime(_ interface{}, _ interface{}, _ interface{}) KernelStateRuntime {
 	return &windowsKernelStateRuntime{}
 }
 
@@ -21,12 +21,15 @@ func (r *windowsKernelStateRuntime) Recover(ctx context.Context, workflowID stri
 	if ctx == nil {
 		return context.Canceled
 	}
+
 	if err := ctx.Err(); err != nil {
 		return err
 	}
+
 	if workflowID == "" {
 		return nil
 	}
+
 	return nil
 }
 

@@ -64,7 +64,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 	}
 
 	// Create the live platform-specific kernel runtime.
-	kernelStateRuntime := newKernelStateRuntime(d.logger, d.bpfLoader)
+	kernelStateRuntime := newKernelStateRuntime(d.logger, d.bpfLoader, d.gateway.Registry())
 
 	// Wire the live runtime into the control plane before either
 	// component starts accepting work.

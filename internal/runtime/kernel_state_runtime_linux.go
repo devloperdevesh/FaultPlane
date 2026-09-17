@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/devloperdevesh/FaultPlane/internal/kernel"
+	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
 type linuxKernelStateRuntime struct {
@@ -15,16 +16,26 @@ type linuxKernelStateRuntime struct {
 	logger   *slog.Logger
 }
 
-func newKernelStateRuntime(logger *slog.Logger, loader *kernel.Loader) KernelStateRuntime {
+func newKernelStateRuntime(
+	logger *slog.Logger,
+	loader *kernel.Loader,
+	registry *telemetry.Registry,
+) KernelStateRuntime {
 	if logger == nil {
 		logger = slog.Default()
 	}
+
 	if loader == nil {
 		panic("create kernel state runtime: BPF loader is required")
 	}
 
+	if registry == nil {
+		panic("create kernel state runtime: telemetry registry is required")
+	}
+
 	listener := kernel.NewNetlinkListener(logger)
-	telemetry := &kernel.InMemoryStateTelemetry{}
+
+	telemetryAdapter := NewKernelTelemetryAdapter(registry)
 
 	kernelAction, err := kernel.NewBPFKernelAction(logger, loader)
 	if err != nil {
@@ -35,7 +46,7 @@ func newKernelStateRuntime(logger *slog.Logger, loader *kernel.Loader) KernelSta
 		logger,
 		kernel.DefaultFaultPolicy{},
 		kernelAction,
-		telemetry,
+		telemetryAdapter,
 	)
 	if err != nil {
 		panic(fmt.Sprintf("create production kernel enforcer: %v", err))
@@ -58,6 +69,7 @@ func (r *linuxKernelStateRuntime) Start(ctx context.Context) error {
 	if ctx == nil {
 		return fmt.Errorf("start kernel state runtime: context is nil")
 	}
+
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -85,12 +97,15 @@ func (r *linuxKernelStateRuntime) Recover(ctx context.Context, workflowID string
 	if r == nil || r.enforcer == nil {
 		return fmt.Errorf("recover kernel state: runtime is not initialized")
 	}
+
 	if ctx == nil {
 		return fmt.Errorf("recover kernel state: context is nil")
 	}
+
 	if err := ctx.Err(); err != nil {
 		return err
 	}
+
 	if workflowID == "" {
 		return fmt.Errorf("recover kernel state: workflow ID is empty")
 	}

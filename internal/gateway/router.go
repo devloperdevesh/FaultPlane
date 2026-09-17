@@ -62,6 +62,11 @@ func (r *Router) registerRoutes(
 	)
 
 	r.mux.Handle(
+		"/api/v1/metrics/prometheus",
+		telemetry.PrometheusHandler(registry),
+	)
+
+	r.mux.Handle(
 		"/api/finops",
 		finops.NewHandler(registry),
 	)
