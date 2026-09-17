@@ -12,6 +12,28 @@ char LICENSE[] SEC("license") = "GPL";
 #define MAX_BACKENDS 1024
 #define DEFAULT_BACKEND_KEY 0
 
+/*
+ * Runtime enforcement control.
+ *
+ * key 0:
+ *   0 = allow / normal path
+ *   1 = enforce sockmap redirect
+ *   2 = fail closed / drop
+ *
+ * Userspace updates this map without detaching the BPF programs.
+ */
+#define ENFORCEMENT_ALLOW    0
+#define ENFORCEMENT_REDIRECT 1
+#define ENFORCEMENT_DROP     2
+
+struct
+{
+        __uint(type, BPF_MAP_TYPE_ARRAY);
+        __uint(max_entries, 1);
+        __type(key, __u32);
+        __type(value, __u32);
+} faultplane_enforcement SEC(".maps");
+
 
 /*
  * Sockmap used by FaultPlane transport layer.
@@ -114,17 +136,33 @@ int faultplane_sockops(
  */
 SEC("sk_msg")
 int faultplane_redirect(
-	struct sk_msg_md *msg
+        struct sk_msg_md *msg
 )
 {
+        __u32 backend_key = DEFAULT_BACKEND_KEY;
+        __u32 control_key = 0;
+        __u32 *mode;
 
-	__u32 backend_key = DEFAULT_BACKEND_KEY;
+        mode = bpf_map_lookup_elem(
+                &faultplane_enforcement,
+                &control_key
+        );
 
+        /*
+         * Explicit fail-closed mode.
+         */
+        if (mode && *mode == ENFORCEMENT_DROP) {
+                return SK_DROP;
+        }
 
-	return bpf_msg_redirect_map(
-		msg,
-		&faultplane_sockmap,
-		backend_key,
-		0
-	);
+        /*
+         * Normal/enforced traffic continues through the existing
+         * sockmap data-plane path.
+         */
+        return bpf_msg_redirect_map(
+                msg,
+                &faultplane_sockmap,
+                backend_key,
+                0
+        );
 }

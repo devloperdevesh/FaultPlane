@@ -18,7 +18,8 @@ type Loader struct {
 	sockops    link.Link
 	skmsg      *link.RawLink
 
-	loaded bool
+	enforcement *ebpf.Map
+	loaded      bool
 }
 
 func NewLoader() *Loader {
@@ -43,9 +44,10 @@ func (l *Loader) Load(objectPath string) error {
 	}
 
 	var objs struct {
-		SockOps  *ebpf.Program `ebpf:"faultplane_sockops"`
-		Redirect *ebpf.Program `ebpf:"faultplane_redirect"`
-		SockMap  *ebpf.Map     `ebpf:"faultplane_sockmap"`
+		SockOps     *ebpf.Program `ebpf:"faultplane_sockops"`
+		Redirect    *ebpf.Program `ebpf:"faultplane_redirect"`
+		SockMap     *ebpf.Map     `ebpf:"faultplane_sockmap"`
+		Enforcement *ebpf.Map     `ebpf:"faultplane_enforcement"`
 	}
 
 	if err := spec.LoadAndAssign(&objs, nil); err != nil {
@@ -53,6 +55,10 @@ func (l *Loader) Load(objectPath string) error {
 	}
 
 	closeObjects := func() {
+		if objs.Enforcement != nil {
+			_ = objs.Enforcement.Close()
+		}
+
 		if objs.SockMap != nil {
 			_ = objs.SockMap.Close()
 		}
@@ -91,12 +97,14 @@ func (l *Loader) Load(objectPath string) error {
 			"faultplane_redirect": objs.Redirect,
 		},
 		Maps: map[string]*ebpf.Map{
-			"faultplane_sockmap": objs.SockMap,
+			"faultplane_sockmap":     objs.SockMap,
+			"faultplane_enforcement": objs.Enforcement,
 		},
 	}
 
 	l.sockops = sockops
 	l.skmsg = skmsg
+	l.enforcement = objs.Enforcement
 	l.loaded = true
 
 	return nil
@@ -137,8 +145,64 @@ func (l *Loader) Close() error {
 		l.collection.Close()
 		l.collection = nil
 	}
+	l.enforcement = nil
 
 	l.loaded = false
 
 	return firstErr
+}
+
+const (
+	EnforcementAllow    uint32 = 0
+	EnforcementRedirect uint32 = 1
+	EnforcementDrop     uint32 = 2
+)
+
+// SetEnforcementMode updates the live eBPF enforcement control map.
+func (l *Loader) SetEnforcementMode(mode uint32) error {
+	if mode > EnforcementDrop {
+		return fmt.Errorf("invalid enforcement mode: %d", mode)
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if !l.loaded {
+		return fmt.Errorf("eBPF collection is not loaded")
+	}
+
+	if l.enforcement == nil {
+		return fmt.Errorf("eBPF enforcement map is unavailable")
+	}
+
+	key := uint32(0)
+
+	if err := l.enforcement.Update(&key, &mode, ebpf.UpdateAny); err != nil {
+		return fmt.Errorf("update enforcement mode: %w", err)
+	}
+
+	return nil
+}
+
+// EnforcementMode returns the current live eBPF enforcement mode.
+func (l *Loader) EnforcementMode() (uint32, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if !l.loaded {
+		return 0, fmt.Errorf("eBPF collection is not loaded")
+	}
+
+	if l.enforcement == nil {
+		return 0, fmt.Errorf("eBPF enforcement map is unavailable")
+	}
+
+	key := uint32(0)
+	var mode uint32
+
+	if err := l.enforcement.Lookup(&key, &mode); err != nil {
+		return 0, fmt.Errorf("read enforcement mode: %w", err)
+	}
+
+	return mode, nil
 }

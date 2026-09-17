@@ -36,6 +36,7 @@ func New(
 func (d *Daemon) Start(ctx context.Context) error {
 	d.logger.Info("faultplane daemon starting")
 
+	// Existing kernel monitor remains the gateway/API event source.
 	if err := d.kernel.Start(ctx); err != nil {
 		return err
 	}
@@ -50,6 +51,14 @@ func (d *Daemon) Start(ctx context.Context) error {
 	if err := d.bpfLoader.Load(runtimeConfig.BPFObjectPath); err != nil {
 		d.kernel.Stop()
 		return fmt.Errorf("load production eBPF programs: %w", err)
+	}
+	// Platform-specific kernel state enforcement.
+	kernelStateRuntime := newKernelStateRuntime(d.logger, d.bpfLoader)
+
+	if err := kernelStateRuntime.Start(ctx); err != nil {
+		_ = d.bpfLoader.Close()
+		d.kernel.Stop()
+		return fmt.Errorf("start kernel state runtime: %w", err)
 	}
 
 	workerRegistry := NewWorkerRegistry(
@@ -80,6 +89,10 @@ func (d *Daemon) Start(ctx context.Context) error {
 
 	<-ctx.Done()
 
+	// --------------------------------------------------------
+	// Graceful shutdown in reverse dependency order.
+	// --------------------------------------------------------
+	kernelStateRuntime.Stop()
 	if err := d.bpfLoader.Close(); err != nil {
 		d.logger.Error(
 			"failed to close production eBPF loader",
@@ -88,8 +101,14 @@ func (d *Daemon) Start(ctx context.Context) error {
 	}
 
 	d.kernel.Stop()
+	transitions, errors := kernelStateRuntime.Stats()
 
-	d.logger.Info("faultplane daemon stopped")
+	d.logger.Info(
+		"faultplane daemon stopped",
+		"kernel_enforcer_state", kernelStateRuntime.State(),
+		"kernel_enforcer_transitions", transitions,
+		"kernel_enforcer_errors", errors,
+	)
 
 	return nil
 }
