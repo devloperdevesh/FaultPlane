@@ -10,7 +10,11 @@ import (
 	"time"
 
 	rtnetlink "github.com/jsimonetti/rtnetlink/v2"
+
+	"github.com/mdlayher/netlink"
 )
+
+const netlinkEventGroups uint32 = 0x00000055
 
 const (
 	netlinkEventBuffer  = 256
@@ -66,7 +70,9 @@ func (n *NetlinkListener) Start(ctx context.Context) error {
 		return fmt.Errorf("netlink listener already running")
 	}
 
-	conn, err := rtnetlink.Dial(nil)
+	conn, err := rtnetlink.Dial(&netlink.Config{
+		Groups: netlinkEventGroups,
+	})
 	if err != nil {
 		n.mu.Unlock()
 		return fmt.Errorf("dial rtnetlink: %w", err)

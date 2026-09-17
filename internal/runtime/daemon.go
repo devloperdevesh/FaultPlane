@@ -12,11 +12,12 @@ import (
 )
 
 type Daemon struct {
-	logger    *slog.Logger
-	control   *control.Manager
-	gateway   *gateway.Manager
-	kernel    *kernel.Monitor
-	bpfLoader *kernel.Loader
+	logger       *slog.Logger
+	control      *control.Manager
+	gateway      *gateway.Manager
+	kernel       *kernel.Monitor
+	kernelSource KernelEventSource
+	bpfLoader    *kernel.Loader
 }
 
 func New(
@@ -25,11 +26,12 @@ func New(
 	gatewayManager *gateway.Manager,
 ) *Daemon {
 	return &Daemon{
-		logger:    logger,
-		control:   controlManager,
-		gateway:   gatewayManager,
-		kernel:    kernel.NewMonitor(logger),
-		bpfLoader: kernel.NewLoader(),
+		logger:       logger,
+		control:      controlManager,
+		gateway:      gatewayManager,
+		kernel:       kernel.NewMonitor(logger),
+		kernelSource: NewKernelEventSource(logger),
+		bpfLoader:    kernel.NewLoader(),
 	}
 }
 
@@ -40,14 +42,25 @@ func (d *Daemon) Start(ctx context.Context) error {
 		return err
 	}
 
+	// Linux: starts the real rtnetlink source.
+	// Non-Linux: starts the platform-safe no-op source.
+	if err := d.kernelSource.Start(ctx); err != nil {
+		d.kernel.Stop()
+		return fmt.Errorf("start kernel event source: %w", err)
+	}
+
+	go d.consumeKernelEvents(ctx)
+
 	runtimeConfig := config.Load()
 
 	if runtimeConfig.BPFObjectPath == "" {
+		d.kernelSource.Stop()
 		d.kernel.Stop()
 		return fmt.Errorf("BPF object path is empty")
 	}
 
 	if err := d.bpfLoader.Load(runtimeConfig.BPFObjectPath); err != nil {
+		d.kernelSource.Stop()
 		d.kernel.Stop()
 		return fmt.Errorf("load production eBPF programs: %w", err)
 	}
@@ -87,9 +100,40 @@ func (d *Daemon) Start(ctx context.Context) error {
 		)
 	}
 
+	d.kernelSource.Stop()
 	d.kernel.Stop()
 
 	d.logger.Info("faultplane daemon stopped")
 
 	return nil
+}
+
+// consumeKernelEvents keeps the platform kernel event source alive.
+//
+// On Linux this consumes real rtnetlink events.
+// On non-Linux platforms the event source is intentionally a no-op.
+func (d *Daemon) consumeKernelEvents(ctx context.Context) {
+	events := d.kernelSource.Events()
+
+	if events == nil {
+		return
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case event, ok := <-events:
+			if !ok {
+				return
+			}
+
+			d.logger.Info(
+				"kernel event entered runtime",
+				"type", event.Type,
+				"source", "kernel-event-source",
+			)
+		}
+	}
 }
