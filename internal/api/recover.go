@@ -29,10 +29,16 @@ func RecoverHandler(controller *control.Controller) func(http.ResponseWriter, *h
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]string{
+		payload, err := json.Marshal(map[string]string{
 			"status": "recovered",
 		})
+		if err != nil {
+			http.Error(w, "failed to encode recovery response", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(payload)
 	}
 }

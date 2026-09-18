@@ -74,8 +74,15 @@ func WorkersHandler(store *WorkerStore) http.Handler {
 }
 
 func writeJSON(w http.ResponseWriter, status int, value interface{}) {
+	payload, err := json.Marshal(value)
+	if err != nil {
+		http.Error(w, "failed to encode JSON response", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-
-	_ = json.NewEncoder(w).Encode(value)
+	if _, err := w.Write(payload); err != nil {
+		return
+	}
 }

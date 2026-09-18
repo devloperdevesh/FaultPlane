@@ -63,7 +63,7 @@ func (scp *UniqueStateControlPlane) HotSwapExecutionState(ctx context.Context, a
 		state.CapabilityAnchor = reissuedAnchor
 		scp.mu.Unlock()
 
-		return state, "http://fallback-mock-node:8001/api/v1/resume", nil
+		return state, "", errors.New("circuit is open: no configured recovery endpoint")
 	}
 
 	return state, "http://primary-data-node:8000", nil

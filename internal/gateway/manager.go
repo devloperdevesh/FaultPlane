@@ -100,7 +100,12 @@ func (m *Manager) start(
 		)
 		defer cancel()
 
-		_ = server.Shutdown(shutdownCtx)
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			m.logger.Error(
+				"gateway shutdown failed",
+				"error", err,
+			)
+		}
 	}()
 
 	err := server.Start()
