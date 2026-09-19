@@ -1,74 +1,48 @@
 "use client";
 
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-
-const data = [
-  {
-    time: "10:00",
-    p50: 80,
-    p95: 160,
-    p99: 240,
-  },
-  {
-    time: "10:05",
-    p50: 90,
-    p95: 180,
-    p99: 260,
-  },
-  {
-    time: "10:10",
-    p50: 70,
-    p95: 150,
-    p99: 220,
-  },
-  {
-    time: "10:15",
-    p50: 110,
-    p95: 210,
-    p99: 320,
-  },
-];
+import { useEffect, useState } from "react";
+import { getMetrics } from "@/lib/api";
+import type { DashboardMetrics } from "@/lib/types";
 
 export default function LatencyChart() {
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      try {
+        const data = await getMetrics();
+        if (active) setMetrics(data);
+      } catch {
+        if (active) setMetrics(null);
+      }
+    };
+
+    void load();
+    const interval = window.setInterval(load, 2000);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
   return (
-    <div
-      className="
-      rounded-xl
-      border
-      border-zinc-800
-      bg-zinc-950
-      p-5
-      "
-    >
+    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
       <h3 className="mb-4 text-sm font-medium text-white">
-        Latency Distribution
+        Runtime Latency
       </h3>
-
-      <ResponsiveContainer width="100%" height={260}>
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-
-          <XAxis dataKey="time" />
-
-          <YAxis />
-
-          <Tooltip />
-
-          <Line type="monotone" dataKey="p50" strokeWidth={2} />
-
-          <Line type="monotone" dataKey="p95" strokeWidth={2} />
-
-          <Line type="monotone" dataKey="p99" strokeWidth={2} />
-        </LineChart>
-      </ResponsiveContainer>
+      <div className="flex h-[260px] items-center justify-center">
+        <div className="text-center">
+          <p className="text-3xl font-semibold text-white">
+            {metrics ? `${metrics.latency.toFixed(2)} ms` : "Unavailable"}
+          </p>
+          <p className="mt-2 text-xs text-zinc-500">
+            Live average latency from /api/metrics
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

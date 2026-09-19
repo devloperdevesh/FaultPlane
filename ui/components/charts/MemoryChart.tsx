@@ -1,53 +1,46 @@
 "use client";
 
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
-
-const memoryData = [
-  {
-    time: "10:00",
-    memory: 52,
-  },
-  {
-    time: "10:05",
-    memory: 61,
-  },
-  {
-    time: "10:10",
-    memory: 58,
-  },
-];
+import { useEffect, useState } from "react";
+import { getMetrics } from "@/lib/api";
+import type { DashboardMetrics } from "@/lib/types";
 
 export default function MemoryChart() {
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      try {
+        const data = await getMetrics();
+        if (active) setMetrics(data);
+      } catch {
+        if (active) setMetrics(null);
+      }
+    };
+
+    void load();
+    const interval = window.setInterval(load, 2000);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
   return (
-    <div
-      className="
-rounded-xl
-border
-border-zinc-800
-bg-zinc-950
-p-5
-"
-    >
+    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
       <h3 className="mb-4 text-sm text-white">Memory Usage</h3>
-
-      <ResponsiveContainer width="100%" height={200}>
-        <AreaChart data={memoryData}>
-          <XAxis dataKey="time" />
-
-          <YAxis />
-
-          <Tooltip />
-
-          <Area dataKey="memory" type="monotone" />
-        </AreaChart>
-      </ResponsiveContainer>
+      <div className="flex h-[200px] items-center justify-center">
+        <div className="text-center">
+          <p className="text-3xl font-semibold text-white">
+            {metrics ? `${metrics.memory.toFixed(2)} MB` : "Unavailable"}
+          </p>
+          <p className="mt-2 text-xs text-zinc-500">
+            Live runtime memory from /api/metrics
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

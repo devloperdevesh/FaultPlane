@@ -1,53 +1,46 @@
 "use client";
 
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
-
-const cpuData = [
-  {
-    time: "10:00",
-    cpu: 35,
-  },
-  {
-    time: "10:05",
-    cpu: 48,
-  },
-  {
-    time: "10:10",
-    cpu: 42,
-  },
-];
+import { useEffect, useState } from "react";
+import { getMetrics } from "@/lib/api";
+import type { DashboardMetrics } from "@/lib/types";
 
 export default function CpuChart() {
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      try {
+        const data = await getMetrics();
+        if (active) setMetrics(data);
+      } catch {
+        if (active) setMetrics(null);
+      }
+    };
+
+    void load();
+    const interval = window.setInterval(load, 2000);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
   return (
-    <div
-      className="
-      rounded-xl
-      border
-      border-zinc-800
-      bg-zinc-950
-      p-5
-      "
-    >
-      <h3 className="text-sm text-white mb-4">CPU Usage</h3>
-
-      <ResponsiveContainer width="100%" height={200}>
-        <LineChart data={cpuData}>
-          <XAxis dataKey="time" />
-
-          <YAxis />
-
-          <Tooltip />
-
-          <Line dataKey="cpu" type="monotone" strokeWidth={2} />
-        </LineChart>
-      </ResponsiveContainer>
+    <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
+      <h3 className="mb-4 text-sm text-white">CPU Usage</h3>
+      <div className="flex h-[200px] items-center justify-center">
+        <div className="text-center">
+          <p className="text-3xl font-semibold text-white">
+            {metrics ? `${metrics.cpu.toFixed(2)}%` : "Unavailable"}
+          </p>
+          <p className="mt-2 text-xs text-zinc-500">
+            Live runtime CPU from /api/metrics
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
