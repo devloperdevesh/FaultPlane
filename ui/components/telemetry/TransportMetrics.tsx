@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { getMetrics } from "@/lib/api";
@@ -6,32 +6,24 @@ import type { DashboardMetrics } from "@/lib/types";
 
 export default function TransportMetrics() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [error, setError] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
+    let active = true;
 
-    async function loadMetrics() {
+    const loadMetrics = async () => {
       try {
         const data = await getMetrics();
-
-        if (mounted) {
-          setMetrics(data);
-          setError(false);
-        }
+        if (active) setMetrics(data);
       } catch {
-        if (mounted) {
-          setError(true);
-        }
+        if (active) setMetrics(null);
       }
-    }
+    };
 
     void loadMetrics();
-
     const interval = window.setInterval(loadMetrics, 2000);
 
     return () => {
-      mounted = false;
+      active = false;
       window.clearInterval(interval);
     };
   }, []);
@@ -39,30 +31,27 @@ export default function TransportMetrics() {
   const data = [
     ["Requests", metrics ? metrics.requests.toLocaleString() : "—"],
     ["Latency", metrics ? `${metrics.latency.toFixed(2)} ms` : "—"],
-    ["Connections", "—"],
-    ["Dropped", "—"],
+    ["Workers", metrics ? metrics.workers.toLocaleString() : "—"],
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-4">
-      {data.map(([name, value]) => (
-        <div
-          key={name}
-          className="rounded-xl border border-white/10 bg-zinc-950 p-4"
-        >
-          <p className="text-xs text-zinc-500">{name}</p>
+    <div className="rounded-xl border border-white/10 bg-zinc-950 p-5">
+      <h3 className="mb-4 text-sm font-semibold text-white">
+        Transport Metrics
+      </h3>
 
-          <p className="mt-2 font-mono text-white">
-            {value}
-          </p>
-        </div>
-      ))}
+      <div className="grid gap-4 md:grid-cols-3">
+        {data.map(([label, value]) => (
+          <div key={label} className="rounded-lg bg-zinc-900/70 p-4">
+            <p className="text-xs text-zinc-500">{label}</p>
+            <p className="mt-1 text-lg font-medium text-white">{value}</p>
+          </div>
+        ))}
+      </div>
 
-      {error && (
-        <div className="md:col-span-4 rounded-xl border border-white/10 bg-zinc-900/60 p-3 text-xs text-zinc-500">
-          Transport metrics unavailable.
-        </div>
-      )}
+      <p className="mt-4 text-xs text-zinc-600">
+        Source: /api/metrics
+      </p>
     </div>
   );
 }

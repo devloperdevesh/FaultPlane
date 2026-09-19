@@ -1,37 +1,20 @@
-import CostComparison from "./CostComparison";
-import SavingsCard from "./SavingsCard";
+"use client";
 
 export default function CostArbitrage() {
   return (
-    <section
-      className="
-space-y-5
-rounded-2xl
-border
-border-white/10
-bg-zinc-950
-p-6
-"
-    >
-      <h2 className="text-white font-semibold">Cloud Runtime Cost</h2>
-
-      <div className="grid gap-5 xl:grid-cols-3">
-        <div className="rounded-xl bg-zinc-900 p-5">
-          <p className="text-xs text-zinc-500">Standard Compute</p>
-
-          <p className="mt-2 text-white">$4.20/hr</p>
-        </div>
-
-        <div className="rounded-xl bg-zinc-900 p-5">
-          <p className="text-xs text-zinc-500">Optimized Runtime</p>
-
-          <p className="mt-2 text-emerald-400">$0.85/hr</p>
-        </div>
-
-        <SavingsCard />
+    <section className="space-y-5 rounded-2xl border border-white/10 bg-zinc-950 p-6">
+      <div>
+        <h2 className="font-semibold text-white">Cloud Runtime Cost</h2>
+        <p className="mt-1 text-xs text-zinc-500">
+          Experimental FinOps view. No live billing or cloud-cost telemetry is
+          connected to the current runtime API.
+        </p>
       </div>
 
-      <CostComparison />
+      <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-5 text-sm text-zinc-500">
+        Standard compute pricing, optimized runtime pricing, savings estimates,
+        and billing data are not currently reported by FaultPlane.
+      </div>
     </section>
   );
 }

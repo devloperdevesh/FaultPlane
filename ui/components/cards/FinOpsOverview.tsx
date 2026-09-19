@@ -1,30 +1,17 @@
-import CostSavings from "./CostSavings";
-import SpotComparison from "./SpotComparison";
-import OptimizationScore from "./OptimizationScore";
-import ResourceWaste from "./ResourceWaste";
-
 export default function FinOpsOverview() {
   return (
-    <div
-      className="
-space-y-6
-"
-    >
-      <CostSavings />
-
-      <div
-        className="
-grid
-gap-6
-xl:grid-cols-3
-"
-      >
-        <SpotComparison />
-
-        <OptimizationScore />
-
-        <ResourceWaste />
+    <section className="rounded-xl border border-white/10 bg-zinc-950 p-6">
+      <div className="mb-5">
+        <h2 className="text-sm font-semibold text-white">FinOps</h2>
+        <p className="mt-1 text-xs text-zinc-500">
+          Experimental cost and resource optimization visibility.
+        </p>
       </div>
-    </div>
+
+      <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-5 text-sm text-zinc-500">
+        Live FinOps, billing, revenue, savings, and customer cost data are not
+        exposed by the current backend.
+      </div>
+    </section>
   );
 }
