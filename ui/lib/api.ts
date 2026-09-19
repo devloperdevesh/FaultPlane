@@ -1,16 +1,30 @@
-import type { DashboardMetrics } from "./types";
+import type {
+  DashboardMetrics,
+  RuntimeWorker,
+  TelemetryResponse,
+  LogsResponse,
+  NetworkEventsResponse,
+  TopologySnapshot,
+  HealthResponse,
+  EbpfStatusResponse,
+  EbpfHooksResponse,
+  EbpfEventsResponse,
+} from "./types";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ??
-  "http://localhost:8080";
+const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/+$/, "");
 
-function joinUrl(base: string, endpoint: string): string {
-  return `${base.replace(/\/+$/, "")}/${endpoint.replace(/^\/+/, "")}`;
+function joinUrl(endpoint: string): string {
+  return `${API_URL}/${endpoint.replace(/^\/+/, "")}`;
 }
 
-async function request<T>(endpoint: string): Promise<T> {
-  const response = await fetch(joinUrl(API_URL, endpoint), {
+async function request<T>(endpoint: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(joinUrl(endpoint), {
+    ...init,
     cache: "no-store",
+    headers: {
+      Accept: "application/json",
+      ...(init?.headers ?? {}),
+    },
   });
 
   if (!response.ok) {
@@ -22,55 +36,16 @@ async function request<T>(endpoint: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export function getApiUrl(): string {
+  return API_URL;
+}
+
+export async function getHealth(): Promise<HealthResponse> {
+  return request<HealthResponse>("/health");
+}
+
 export async function getMetrics(): Promise<DashboardMetrics> {
   return request<DashboardMetrics>("/api/metrics");
-}
-
-export interface RuntimeWorker {
-  id: string;
-  status: string;
-  cpu: number;
-  memory: number;
-}
-
-export interface TelemetryEvent {
-  type: string;
-  timestamp: string;
-  value?: number;
-  metadata?: Record<string, string>;
-}
-
-export interface TelemetryResponse {
-  events: TelemetryEvent[];
-}
-
-export interface LogsResponse {
-  logs: TelemetryEvent[];
-}
-
-export interface NetworkEventsResponse {
-  events: TelemetryEvent[];
-}
-
-export interface TopologyNode {
-  id: string;
-  type: string;
-  name: string;
-  status: string;
-}
-
-export interface TopologyConnection {
-  id: string;
-  source: string;
-  target: string;
-  type: string;
-  status: string;
-}
-
-export interface TopologySnapshot {
-  nodes: TopologyNode[];
-  connections: TopologyConnection[];
-  updated_at: string;
 }
 
 export async function getWorkers(): Promise<RuntimeWorker[]> {
@@ -92,3 +67,17 @@ export async function getNetworkEvents(): Promise<NetworkEventsResponse> {
 export async function getTopology(): Promise<TopologySnapshot> {
   return request<TopologySnapshot>("/api/topology");
 }
+
+export async function getEbpfStatus(): Promise<EbpfStatusResponse> {
+  return request<EbpfStatusResponse>("/api/ebpf/status");
+}
+
+export async function getEbpfEvents(): Promise<EbpfEventsResponse> {
+  return request<EbpfEventsResponse>("/api/ebpf/events");
+}
+
+export async function getEbpfHooks(): Promise<EbpfHooksResponse> {
+  return request<EbpfHooksResponse>("/api/ebpf/hooks");
+}
+
+export type { DashboardMetrics, RuntimeWorker, TelemetryEvent, TelemetryResponse, LogsResponse, NetworkEventsResponse, TopologySnapshot, TopologyNode, TopologyConnection, HealthResponse, EbpfStatusResponse, EbpfHook, EbpfHooksResponse, EbpfEvent, EbpfEventsResponse } from './types';

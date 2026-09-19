@@ -1,36 +1,15 @@
-import DataTable from "./DataTable";
-import StatusBadge from "./StatusBadge";
+﻿import DataTable from "./DataTable";
 
-type WorkflowStatus =
-  | "running"
-  | "waiting"
-  | "recovering"
-  | "failed"
-  | "completed";
-
-interface Workflow {
+type Workflow = {
   name: string;
   worker: string;
-  status: WorkflowStatus;
+  status: string;
   duration: string;
-}
-
-const workflows: Workflow[] = [
-  {
-    name: "Chat Agent",
-    worker: "worker-01",
-    status: "running",
-    duration: "18m",
-  },
-  {
-    name: "RAG Index",
-    worker: "worker-02",
-    status: "waiting",
-    duration: "3m",
-  },
-];
+};
 
 export default function WorkflowTable() {
+  const workflows: Workflow[] = [];
+
   return (
     <DataTable
       title="Workflows"
@@ -40,17 +19,14 @@ export default function WorkflowTable() {
           header: "Workflow",
           render: (workflow) => workflow.name,
         },
-
         {
           header: "Worker",
           render: (workflow) => workflow.worker,
         },
-
         {
           header: "State",
-          render: (workflow) => <StatusBadge status={workflow.status} />,
+          render: (workflow) => workflow.status,
         },
-
         {
           header: "Duration",
           render: (workflow) => workflow.duration,

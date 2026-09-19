@@ -1,3 +1,12 @@
+export type VariableDiffType = "modified" | "added" | "removed" | "unchanged";
+
+export interface VariableDiffData {
+  key: string;
+  before: string;
+  after: string;
+  type: VariableDiffType;
+}
+
 export interface DashboardMetrics {
   requests: number;
   workers: number;
@@ -9,106 +18,82 @@ export interface DashboardMetrics {
   updatedAt: string;
 }
 
-export interface Metric {
-  name: string;
-  value: number;
-  unit?: string;
-  timestamp?: string;
-}
-
-export type WorkerStatus =
-  | "ACTIVE"
-  | "FAILED"
-  | "RECOVERING"
-  | "STOPPED";
-
-export type WorkerRole =
-  | "PRIMARY"
-  | "STANDBY";
-
-export interface Worker {
+export interface RuntimeWorker {
   id: string;
-  status: WorkerStatus;
-  role: WorkerRole;
-  cpuUsage: number;
-  memoryUsage: string;
+  status: string;
+  cpu: number;
+  memory: number;
+  role?: string;
   checkpointId?: string;
   lastHeartbeat?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
-export type WorkflowStatus =
-  | "RUNNING"
-  | "FAILED"
-  | "COMPLETED"
-  | "PAUSED";
-
-export interface Workflow {
-  id: string;
-  name: string;
-  status: WorkflowStatus;
-  createdAt?: string;
-  updatedAt?: string;
-  workerIds?: string[];
-}
-
-export interface Checkpoint {
-  id: string;
-  createdAt: string;
-  size: string;
-  storagePath?: string;
-  checksum?: string;
-  version?: number;
-}
-
-export type TelemetryLevel =
-  | "INFO"
-  | "WARN"
-  | "ERROR"
-  | "SUCCESS";
-
 export interface TelemetryEvent {
-  level: TelemetryLevel;
-  message: string;
+  type: string;
   timestamp: string;
-  workerId?: string;
-  workflowId?: string;
-  metadata?: Record<string, unknown>;
+  value?: number;
+  metadata?: Record<string, string>;
 }
 
-export type VariableDiffType =
-  | "modified"
-  | "added"
-  | "removed"
-  | "unchanged";
-
-export interface VariableDiffData {
-  key: string;
-  before?: string;
-  after?: string;
-  type: VariableDiffType;
+export interface TelemetryResponse {
+  events: TelemetryEvent[];
 }
 
-export type VariableDiff = VariableDiffData;
-
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  timestamp: string;
+export interface LogsResponse {
+  logs: TelemetryEvent[];
 }
 
-export interface Pagination {
-  page: number;
-  limit: number;
-  total: number;
+export interface NetworkEventsResponse {
+  events: TelemetryEvent[];
 }
 
-export interface HealthStatus {
-  status:
-    | "HEALTHY"
-    | "DEGRADED"
-    | "UNHEALTHY";
-  uptime: number;
-  version: string;
+export interface TopologyNode {
+  id: string;
+  type: string;
+  name: string;
+  status: string;
+}
+
+export interface TopologyConnection {
+  id: string;
+  source: string;
+  target: string;
+  type: string;
+  status: string;
+}
+
+export interface TopologySnapshot {
+  nodes: TopologyNode[];
+  connections: TopologyConnection[];
+  updated_at: string;
+}
+
+export interface HealthResponse {
+  status: string;
+  service: string;
+  timestamp?: string;
+}
+
+export interface EbpfStatusResponse {
+  status: string;
+}
+
+export interface EbpfHook {
+  name: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
+export interface EbpfHooksResponse {
+  hooks: EbpfHook[];
+}
+
+export interface EbpfEvent {
+  [key: string]: unknown;
+}
+
+export interface EbpfEventsResponse {
+  events: EbpfEvent[];
 }

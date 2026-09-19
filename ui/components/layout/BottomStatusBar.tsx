@@ -12,7 +12,7 @@ export default function BottomStatusBar() {
         text-zinc-500
       "
     >
-      System Ready
+      Runtime status unavailable
     </div>
   );
 }
