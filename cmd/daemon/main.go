@@ -12,6 +12,7 @@ import (
 	"github.com/devloperdevesh/FaultPlane/internal/gateway"
 	"github.com/devloperdevesh/FaultPlane/internal/logging"
 	"github.com/devloperdevesh/FaultPlane/internal/runtime"
+	"github.com/devloperdevesh/FaultPlane/internal/smart"
 	"github.com/devloperdevesh/FaultPlane/internal/storage"
 	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
@@ -37,6 +38,12 @@ func main() {
 
 	collector := telemetry.NewCollector(registry)
 
+	smartRuntime := smart.NewRuntime(
+		registry,
+		smart.NewDetector(30),
+		time.Second,
+	)
+
 	store := storage.NewMemoryStore()
 
 	// Runtime is attached after the daemon creates its platform-specific
@@ -53,6 +60,7 @@ func main() {
 		registry,
 		collector,
 		controlManager.Controller(),
+		smartRuntime,
 	)
 
 	daemon := runtime.New(
@@ -65,6 +73,8 @@ func main() {
 
 	go func() {
 		defer close(daemonDone)
+
+		go smartRuntime.Start(ctx)
 
 		if err := daemon.Start(ctx); err != nil {
 			logger.Error(

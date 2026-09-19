@@ -34,6 +34,8 @@ func TelemetryMiddleware(
 
 		next.ServeHTTP(w, r)
 
+		collector.RecordRequestLatency(time.Since(start))
+
 		if store != nil {
 			store.Add(api.TelemetryEvent{
 				Type:      "request_complete",

@@ -1,56 +1,10 @@
-"use client";
-
-import { motion } from "framer-motion";
+﻿"use client";
 
 export default function RadiusCircle() {
   return (
-    <div
-      className="
-relative
-h-72
-w-72
-flex
-items-center
-justify-center
-"
-    >
-      {[1, 2, 3].map((i) => (
-        <motion.div
-          key={i}
-          animate={{
-            scale: [1, 1.2, 1],
-
-            opacity: [0.4, 0.1, 0.4],
-          }}
-          transition={{
-            repeat: Infinity,
-
-            duration: 2 + i,
-          }}
-          className="
-absolute
-rounded-full
-border
-border-red-500/40
-"
-          style={{
-            height: `${i * 90}px`,
-            width: `${i * 90}px`,
-          }}
-        />
-      ))}
-
-      <div
-        className="
-z-10
-rounded-full
-bg-red-500/20
-border
-border-red-500
-p-10
-"
-      >
-        Worker Failure
+    <div className="relative flex h-72 w-72 items-center justify-center">
+      <div className="rounded-full border border-white/10 bg-zinc-900/60 px-8 py-6 text-center text-sm text-zinc-500">
+        No active impact data
       </div>
     </div>
   );

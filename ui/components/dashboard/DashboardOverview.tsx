@@ -73,7 +73,6 @@ export default function DashboardOverview() {
           value={metrics.requests.toLocaleString()}
           description="Runtime requests recorded"
           icon={Activity}
-          status="healthy"
         />
 
         <MetricCard
@@ -81,7 +80,6 @@ export default function DashboardOverview() {
           value={`${metrics.latency.toFixed(2)} ms`}
           description="Runtime average latency"
           icon={Activity}
-          status="healthy"
         />
 
         <MetricCard
@@ -101,7 +99,6 @@ export default function DashboardOverview() {
           value={`${metrics.memory.toFixed(2)} MB`}
           description="Runtime memory usage"
           icon={Database}
-          status="healthy"
         />
       </div>
 
@@ -119,7 +116,6 @@ export default function DashboardOverview() {
           value={metrics.recoveries.toLocaleString()}
           description="Recorded runtime recovery events"
           icon={Activity}
-          status="healthy"
         />
       </div>
 

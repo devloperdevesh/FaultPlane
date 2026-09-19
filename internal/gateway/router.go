@@ -7,6 +7,7 @@ import (
 	"github.com/devloperdevesh/FaultPlane/internal/api"
 	"github.com/devloperdevesh/FaultPlane/internal/control"
 	"github.com/devloperdevesh/FaultPlane/internal/kernel"
+	"github.com/devloperdevesh/FaultPlane/internal/smart"
 	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
@@ -22,6 +23,7 @@ func NewRouter(
 	kernelMonitor *kernel.Monitor,
 	topologyController *control.TopologyController,
 	controller *control.Controller,
+	smartRuntime *smart.Runtime,
 ) http.Handler {
 	r := &Router{
 		mux: http.NewServeMux(),
@@ -34,6 +36,7 @@ func NewRouter(
 		kernelMonitor,
 		topologyController,
 		controller,
+		smartRuntime,
 	)
 
 	return TelemetryMiddleware(
@@ -50,6 +53,7 @@ func (r *Router) registerRoutes(
 	kernelMonitor *kernel.Monitor,
 	topologyController *control.TopologyController,
 	controller *control.Controller,
+	smartRuntime *smart.Runtime,
 ) {
 	r.mux.HandleFunc(
 		"/health",
@@ -59,6 +63,11 @@ func (r *Router) registerRoutes(
 	r.mux.Handle(
 		"/api/metrics",
 		api.MetricsHandler(registry),
+	)
+
+	r.mux.Handle(
+		"/api/smart/anomaly",
+		api.NewSmartAnomalyHandler(smartRuntime),
 	)
 
 	r.mux.Handle(

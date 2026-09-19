@@ -17,7 +17,7 @@ export default function MetricCard({
   value,
   description,
   icon: Icon,
-  status = "healthy",
+  status,
   trend,
 }: Props) {
   const statusStyles = {
@@ -40,10 +40,10 @@ export default function MetricCard({
     >
       <div className="flex items-center justify-between">
         <div className="rounded-xl bg-white/5 p-3">
-          <Icon className={statusStyles[status]} size={22} />
+          <Icon className={status ? statusStyles[status] : "text-zinc-400"} size={22} />
         </div>
 
-        <div className={`h-2 w-2 rounded-full ${dotStyles[status]}`} />
+        {status && <div className={`h-2 w-2 rounded-full ${dotStyles[status]}`} />}
       </div>
 
       <p className="mt-5 text-xs uppercase tracking-widest text-zinc-500">

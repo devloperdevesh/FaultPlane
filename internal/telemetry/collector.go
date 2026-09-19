@@ -25,6 +25,16 @@ func (c *Collector) RecordRequest() {
 }
 
 // RecordCheckpoint records checkpoint event.
+
+// RecordRequestLatency records completed HTTP request latency.
+func (c *Collector) RecordRequestLatency(duration time.Duration) {
+	if duration < 0 {
+		duration = 0
+	}
+
+	c.registry.RecordLatency(uint64(duration.Microseconds()) / 1000)
+}
+
 func (c *Collector) RecordCheckpoint() {
 
 	c.registry.RecordCheckpoint()

@@ -10,6 +10,7 @@ import (
 	"github.com/devloperdevesh/FaultPlane/internal/config"
 	"github.com/devloperdevesh/FaultPlane/internal/control"
 	"github.com/devloperdevesh/FaultPlane/internal/kernel"
+	"github.com/devloperdevesh/FaultPlane/internal/smart"
 	"github.com/devloperdevesh/FaultPlane/internal/telemetry"
 )
 
@@ -21,6 +22,7 @@ type Manager struct {
 	telemetryStore *api.TelemetryStore
 	topology       *control.TopologyController
 	controller     *control.Controller
+	smartRuntime   *smart.Runtime
 	config         config.Config
 }
 
@@ -29,6 +31,7 @@ func New(
 	registry *telemetry.Registry,
 	collector *telemetry.Collector,
 	controller *control.Controller,
+	smartRuntime *smart.Runtime,
 ) *Manager {
 	return &Manager{
 		logger:         logger,
@@ -38,6 +41,7 @@ func New(
 		telemetryStore: api.NewTelemetryStore(),
 		topology:       control.NewTopologyController(),
 		controller:     controller,
+		smartRuntime:   smartRuntime,
 		config:         config.Load(),
 	}
 }
@@ -87,6 +91,7 @@ func (m *Manager) start(
 		monitor,
 		m.topology,
 		m.controller,
+		m.smartRuntime,
 	)
 
 	server := NewServer(handler, m.config)

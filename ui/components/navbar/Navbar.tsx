@@ -77,8 +77,6 @@ export default function Navbar() {
 
           <div>
             <p className="text-xs text-zinc-500">Region</p>
-
-            <p className="text-sm">us-east-1</p>
           </div>
         </div>
 
