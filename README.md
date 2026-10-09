@@ -3,6 +3,7 @@
 </p>
 
 > Zero-code-intrusion transport data-plane proxy providing state resilience and microsecond kernel failover for long-running AI agent workloads.
+[![Visit Website](https://img.shields.io/badge/Visit-Website-0A7BFF?style=for-the-badge&logo=vercel&logoColor=white)](https://faultplane-website.vercel.app)
 
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://go.dev)
 [![Go Report Card](https://goreportcard.com/badge/github.com/devloperdevesh/FaultPlane)](https://goreportcard.com/report/github.com/devloperdevesh/FaultPlane)
