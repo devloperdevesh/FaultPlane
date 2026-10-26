@@ -1,12 +1,12 @@
 <h1 align="center">
   <img
-    src="https://raw.githubusercontent.com/devloperdevesh/FaultPlane/main/docs/icon.png"
-    width="62"
-    height="62"
+    src="docs/icon.png"
     alt=""
+    width="56"
+    height="56"
     align="center"
   />
-  FaultPlane
+  <span>FaultPlane</span>
 </h1>
 
 <p align="center">
