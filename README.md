@@ -1,7 +1,14 @@
 <h1 align="center">
-  <img src="https://raw.githubusercontent.com/devloperdevesh/FaultPlane/main/docs/icon.png" width="48" alt="FaultPlane">
-  <span>FaultPlane</span>
+  <img
+    src="https://raw.githubusercontent.com/devloperdevesh/FaultPlane/main/docs/icon.png"
+    alt=""
+    width="36"
+    height="36"
+    style="vertical-align: -5px;"
+  />
+  FaultPlane
 </h1>
+
 <p align="center">
   <strong>Infrastructure resilience for long-running AI workloads.</strong>
 </p>
@@ -13,9 +20,9 @@
 [![CI](https://github.com/devloperdevesh/FaultPlane/actions/workflows/ci.yml/badge.svg)](https://github.com/devloperdevesh/FaultPlane/actions)
 [![GitHub Issues](https://img.shields.io/github/issues/devloperdevesh/FaultPlane)](https://github.com/devloperdevesh/FaultPlane/issues)
 
-FaultPlane is an open-source, bare-metal Go systems runtime designed to handle execution state checkpoints and non-invasive network routing for distributed multi-tenant workflows directly at the Linux Layer 4 transport socket boundary. 
+FaultPlane is an open-source infrastructure resilience project for long-running AI workloads. It explores how runtime systems can detect infrastructure failures, track runtime state, and apply configurable recovery policies to help workloads recover more reliably.
 
-By separating execution compute from execution state, the runtime proxy captures stateless snapshot bit arrays seamlessly without requiring application-level orchestration adjustments or heavy SDK-injected micro-middlewares.
+Built around Go and Linux infrastructure signals, FaultPlane aims to connect failure detection, recovery decisions, and runtime observability in one system. The project is under active development, with implementation and recovery behavior being validated.
 
 ---
 ## Dashboard Preview
