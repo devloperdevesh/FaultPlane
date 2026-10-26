@@ -1,9 +1,7 @@
-<p align="center">
-  <img src="docs/icon.png" width="100" height="100" alt="FaultPlane">
-</p>
-
-<h1 align="center">FaultPlane</h1>
-
+<h1 align="center">
+  <img src="docs/icon.png" width="100" alt="FaultPlane"><br>
+  FaultPlane
+</h1>
 <p align="center">
   <strong>Infrastructure resilience for long-running AI workloads.</strong>
 </p>
