@@ -2,11 +2,13 @@
   <img
     src="docs/icon.png"
     alt=""
-    width="56"
-    height="56"
-    align="center"
+    width="64"
+    height="64"
+    style="vertical-align: middle; object-fit: contain;"
   />
-  <span>FaultPlane</span>
+  <span style="font-size: 48px; font-weight: 700; vertical-align: middle;">
+    FaultPlane
+  </span>
 </h1>
 
 <p align="center">
