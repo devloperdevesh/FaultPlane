@@ -1,8 +1,7 @@
 <h1 align="center">
-  <img src="docs/icon.png" alt="FaultPlane icon" width="48" align="center">
-  FaultPlane
+  <img src="https://raw.githubusercontent.com/devloperdevesh/FaultPlane/main/docs/icon.png" width="48" alt="FaultPlane">
+  <span>FaultPlane</span>
 </h1>
-
 <p align="center">
   <strong>Infrastructure resilience for long-running AI workloads.</strong>
 </p>
