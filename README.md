@@ -1,28 +1,23 @@
-<h1 align="center">
-  <img src="docs/icon.png" alt="" width="64" height="64" align="center">
-  <span>FaultPlane</span>
-</h1>
+<table align="center" border="0">
+  <tr>
+    <td align="center" valign="middle" style="border: none;">
+      <img src="docs/icon.png" width="64" height="64" alt="FaultPlane">
+    </td>
+    <td align="left" valign="middle" style="border: none;">
+      <h1>FaultPlane</h1>
+    </td>
+  </tr>
+</table>
 
 <p align="center">
   <strong>Infrastructure resilience for long-running AI workloads.</strong>
 </p>
 
 <p align="center">
-  <a href="https://faultplane-website.vercel.app/">
-    <img src="https://img.shields.io/badge/Website-Visit-2563EB?style=for-the-badge" alt="Website">
-  </a>
-  <a href="https://github.com/devloperdevesh/FaultPlane/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/devloperdevesh/FaultPlane/ci.yml?label=CI" alt="CI">
-  </a>
-  <a href="https://github.com/devloperdevesh/FaultPlane/graphs/contributors">
-    <img src="https://img.shields.io/github/contributors/devloperdevesh/FaultPlane" alt="Contributors">
-  </a>
-  <a href="https://github.com/devloperdevesh/FaultPlane/issues">
-    <img src="https://img.shields.io/github/issues/devloperdevesh/FaultPlane" alt="Issues">
-  </a>
-  <a href="LICENSE">
-    <img src="https://img.shields.io/github/license/devloperdevesh/FaultPlane" alt="License">
-  </a>
+  <a href="https://faultplane-website.vercel.app/">Website</a> ·
+  <a href="https://github.com/devloperdevesh/FaultPlane">Source</a> ·
+  <a href="https://github.com/devloperdevesh/FaultPlane/graphs/contributors">Contributors</a> ·
+  <a href="https://github.com/devloperdevesh/FaultPlane/issues">Issues</a>
 </p>
 
 FaultPlane is an open-source infrastructure resilience project for long-running AI workloads. It explores how runtime systems can detect infrastructure failures, track runtime state, and apply configurable recovery policies to help workloads recover more reliably.
