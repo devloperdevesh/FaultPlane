@@ -1,8 +1,12 @@
+<h1 align="center">FaultPlane</h1>
+
 <p align="center">
-  <img src="banner.png" alt="FaultPlane Autonomous Transport-Layer Data Proxy Banner Shield" width="100%">
+  <img src="docs/icon.png" alt="FaultPlane icon" width="72">
 </p>
 
-> Zero-code-intrusion transport data-plane proxy providing state resilience and microsecond kernel failover for long-running AI agent workloads.
+<p align="center">
+  <strong>Infrastructure resilience for long-running AI workloads.</strong>
+</p>
 
 [![Visit Website](https://img.shields.io/badge/Visit-Website-0A7BFF?style=for-the-badge&logo=vercel&logoColor=white)](https://faultplane-website.vercel.app)
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://go.dev)
@@ -14,6 +18,17 @@
 FaultPlane is an open-source, bare-metal Go systems runtime designed to handle execution state checkpoints and non-invasive network routing for distributed multi-tenant workflows directly at the Linux Layer 4 transport socket boundary. 
 
 By separating execution compute from execution state, the runtime proxy captures stateless snapshot bit arrays seamlessly without requiring application-level orchestration adjustments or heavy SDK-injected micro-middlewares.
+
+---
+## Dashboard Preview
+
+<p align="center">
+  <img src="docs/faultplane-dashboard.png" alt="FaultPlane dashboard preview" width="100%">
+</p>
+
+<p align="center">
+  <sub>Conceptual dashboard preview. Displayed metrics and runtime states are illustrative, not live production data.</sub>
+</p>
 
 ---
 ## Enterprise Technical Specifications & Moat Architecture Matrix
