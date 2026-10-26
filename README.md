@@ -1,14 +1,6 @@
 <h1 align="center">
-  <img
-    src="docs/icon.png"
-    alt=""
-    width="64"
-    height="64"
-    style="vertical-align: middle; object-fit: contain;"
-  />
-  <span style="font-size: 48px; font-weight: 700; vertical-align: middle;">
-    FaultPlane
-  </span>
+  <img src="docs/icon.png" alt="" width="64" height="64" align="center">
+  <span>FaultPlane</span>
 </h1>
 
 <p align="center">
@@ -20,16 +12,16 @@
     <img src="https://img.shields.io/badge/Website-Visit-2563EB?style=for-the-badge" alt="Website">
   </a>
   <a href="https://github.com/devloperdevesh/FaultPlane/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/devloperdevesh/FaultPlane/ci.yml?label=CI" alt="CI status">
+    <img src="https://img.shields.io/github/actions/workflow/status/devloperdevesh/FaultPlane/ci.yml?label=CI" alt="CI">
   </a>
   <a href="https://github.com/devloperdevesh/FaultPlane/graphs/contributors">
     <img src="https://img.shields.io/github/contributors/devloperdevesh/FaultPlane" alt="Contributors">
   </a>
   <a href="https://github.com/devloperdevesh/FaultPlane/issues">
-    <img src="https://img.shields.io/github/issues/devloperdevesh/FaultPlane" alt="Open issues">
+    <img src="https://img.shields.io/github/issues/devloperdevesh/FaultPlane" alt="Issues">
   </a>
   <a href="LICENSE">
-    <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="License">
+    <img src="https://img.shields.io/github/license/devloperdevesh/FaultPlane" alt="License">
   </a>
 </p>
 
