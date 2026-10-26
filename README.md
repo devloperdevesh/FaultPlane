@@ -1,18 +1,12 @@
-<table align="center" border="0">
-  <tr>
-    <td align="center" valign="middle" style="border: none;">
-      <img src="docs/icon.png" width="64" height="64" alt="FaultPlane">
-    </td>
-    <td align="left" valign="middle" style="border: none;">
-      <h1>FaultPlane</h1>
-    </td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/icon.png" width="100" height="100" alt="FaultPlane">
+</p>
+
+<h1 align="center">FaultPlane</h1>
 
 <p align="center">
   <strong>Infrastructure resilience for long-running AI workloads.</strong>
 </p>
-
 <p align="center">
   <a href="https://faultplane-website.vercel.app/">Website</a> ·
   <a href="https://github.com/devloperdevesh/FaultPlane">Source</a> ·
