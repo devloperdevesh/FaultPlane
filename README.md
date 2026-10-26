@@ -1,28 +1,30 @@
-<h1 align="center">
-  <img
-    src="https://raw.githubusercontent.com/devloperdevesh/FaultPlane/main/docs/icon.png"
-    alt=""
-    width="36"
-    height="36"
-    style="vertical-align: -5px;"
-  />
-  FaultPlane
-</h1>
+# <p align="center"><img src="https://raw.githubusercontent.com/devloperdevesh/FaultPlane/main/docs/icon.png" width="48" height="48" alt="FaultPlane"> FaultPlane</p>
 
 <p align="center">
   <strong>Infrastructure resilience for long-running AI workloads.</strong>
 </p>
 
-[![Visit Website](https://img.shields.io/badge/Visit-Website-0A7BFF?style=for-the-badge&logo=vercel&logoColor=white)](https://faultplane-website.vercel.app)
-[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://go.dev)
-[![Go Report Card](https://goreportcard.com/badge/github.com/devloperdevesh/FaultPlane)](https://goreportcard.com/report/github.com/devloperdevesh/FaultPlane)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![CI](https://github.com/devloperdevesh/FaultPlane/actions/workflows/ci.yml/badge.svg)](https://github.com/devloperdevesh/FaultPlane/actions)
-[![GitHub Issues](https://img.shields.io/github/issues/devloperdevesh/FaultPlane)](https://github.com/devloperdevesh/FaultPlane/issues)
+<p align="center">
+  <a href="https://faultplane-website.vercel.app/">
+    <img src="https://img.shields.io/badge/Website-Visit-2563EB?style=for-the-badge" alt="Website">
+  </a>
+  <a href="https://github.com/devloperdevesh/FaultPlane/actions">
+    <img src="https://img.shields.io/github/actions/workflow/status/devloperdevesh/FaultPlane/ci.yml?label=CI" alt="CI status">
+  </a>
+  <a href="https://github.com/devloperdevesh/FaultPlane/graphs/contributors">
+    <img src="https://img.shields.io/github/contributors/devloperdevesh/FaultPlane" alt="Contributors">
+  </a>
+  <a href="https://github.com/devloperdevesh/FaultPlane/issues">
+    <img src="https://img.shields.io/github/issues/devloperdevesh/FaultPlane" alt="Open issues">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-Apache--2.0-blue" alt="License">
+  </a>
+</p>
 
 FaultPlane is an open-source infrastructure resilience project for long-running AI workloads. It explores how runtime systems can detect infrastructure failures, track runtime state, and apply configurable recovery policies to help workloads recover more reliably.
 
-Built around Go and Linux infrastructure signals, FaultPlane aims to connect failure detection, recovery decisions, and runtime observability in one system. The project is under active development, with implementation and recovery behavior being validated.
+Built around Go and Linux infrastructure signals, FaultPlane aims to connect failure detection, recovery decisions, and runtime observability in one system. The project is under active development, and its implementation and recovery behavior are being validated.
 
 ---
 ## Dashboard Preview
