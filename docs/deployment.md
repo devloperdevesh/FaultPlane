@@ -164,6 +164,8 @@ Suitable for:
 
 Future Kubernetes deployments will separate FaultPlane components into independent workloads.
 
+A preview manifest generator for a Kubernetes sidecar or standalone Deployment is available in the UI at `/installer`. See [kubernetes-installer.md](kubernetes-installer.md). It only generates files and does not deploy anything.
+
 Example:
 
 ```text

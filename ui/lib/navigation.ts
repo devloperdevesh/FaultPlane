@@ -14,6 +14,7 @@ import {
   Shield,
   Sparkles,
   DollarSign,
+  Rocket,
 } from "lucide-react";
 
 
@@ -111,6 +112,13 @@ export const navigation: NavigationItem[] = [
       },
 
     ],
+  },
+
+
+  {
+    title: "Installer",
+    href: "/installer",
+    icon: Rocket,
   },
 
 
