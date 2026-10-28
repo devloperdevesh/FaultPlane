@@ -12,6 +12,7 @@ type TopologyNode struct {
 	Type   string `json:"type"`
 	Name   string `json:"name"`
 	Status string `json:"status"`
+	Region string `json:"region,omitempty"`
 }
 
 type TopologyConnection struct {
@@ -105,6 +106,7 @@ func (c *TopologyController) RefreshFromWorkers(
 				Type:   "worker",
 				Name:   worker.ID,
 				Status: worker.Status,
+				Region: worker.Region,
 			},
 		)
 

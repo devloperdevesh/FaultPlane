@@ -33,12 +33,13 @@ func New(
 	controller *control.Controller,
 	smartRuntime *smart.Runtime,
 ) *Manager {
+	events := api.NewTelemetryStore()
 	return &Manager{
 		logger:         logger,
 		registry:       registry,
 		collector:      collector,
-		workerStore:    api.NewWorkerStore(),
-		telemetryStore: api.NewTelemetryStore(),
+		workerStore:    api.NewWorkerStoreWithTelemetry(events),
+		telemetryStore: events,
 		topology:       control.NewTopologyController(),
 		controller:     controller,
 		smartRuntime:   smartRuntime,

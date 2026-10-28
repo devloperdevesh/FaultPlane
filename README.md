@@ -80,6 +80,9 @@ FaultPlane isolates failure blast radius by intercepting packet byte streams nat
 
 ## Operational Control Plane Topology
 
+The [regional topology HUD guide](docs/topology-hud.md) explains live data,
+observed failures, dependency exposure, and the isolated failure/recovery demo.
+
 ```text
 FaultPlane Control Mesh Console (Master Side-Bar Tree)
 │

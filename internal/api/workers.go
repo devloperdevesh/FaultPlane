@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/devloperdevesh/FaultPlane/internal/models"
 )
@@ -12,19 +13,48 @@ import (
 type WorkerStore struct {
 	mu      sync.RWMutex
 	workers map[string]models.Worker
+	events  *TelemetryStore
 }
 
 func NewWorkerStore() *WorkerStore {
-	return &WorkerStore{
-		workers: make(map[string]models.Worker),
-	}
+	return NewWorkerStoreWithTelemetry(nil)
+}
+
+// NewWorkerStoreWithTelemetry records observed worker health transitions.
+// It does not infer kernel failures or claim that a recovery was executed.
+func NewWorkerStoreWithTelemetry(events *TelemetryStore) *WorkerStore {
+	return &WorkerStore{workers: make(map[string]models.Worker), events: events}
 }
 
 func (s *WorkerStore) Set(worker models.Worker) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	previous, exists := s.workers[worker.ID]
 	s.workers[worker.ID] = worker
+	if s.events == nil || worker.ID == "" {
+		return
+	}
+	status := workerHealth(worker.Status)
+	previousStatus := workerHealth(previous.Status)
+	eventType := ""
+	if status == "failed" && (!exists || previousStatus != "failed") {
+		eventType = "worker_failed"
+	} else if exists && previousStatus == "failed" && status == "healthy" {
+		eventType = "worker_recovered"
+	}
+	if eventType != "" {
+		s.events.Add(TelemetryEvent{
+			Type:      eventType,
+			Timestamp: time.Now().UTC(),
+			Metadata: map[string]string{
+				"node_id": worker.ID,
+				"region":  worker.Region,
+				"status":  worker.Status,
+				"source":  "worker_registry",
+			},
+		})
+	}
 }
 
 func (s *WorkerStore) List() []models.Worker {
@@ -84,5 +114,16 @@ func writeJSON(w http.ResponseWriter, status int, value interface{}) {
 	w.WriteHeader(status)
 	if _, err := w.Write(payload); err != nil {
 		return
+	}
+}
+
+func workerHealth(status string) string {
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "failed", "unhealthy", "offline", "disconnected", "dead", "error":
+		return "failed"
+	case "active", "healthy", "running", "ready", "recovered":
+		return "healthy"
+	default:
+		return "unknown"
 	}
 }

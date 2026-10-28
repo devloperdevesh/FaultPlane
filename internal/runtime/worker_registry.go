@@ -3,7 +3,9 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/devloperdevesh/FaultPlane/internal/api"
@@ -57,6 +59,7 @@ func (r *WorkerRegistry) publish() {
 	r.store.Set(models.Worker{
 		ID:     fmt.Sprintf("faultplane-runtime-%d", runtime.GOMAXPROCS(0)),
 		Status: "ACTIVE",
+		Region: strings.TrimSpace(os.Getenv("FAULTPLANE_REGION")),
 		CPU:    cpu,
 		Memory: int64(mem.Alloc),
 	})

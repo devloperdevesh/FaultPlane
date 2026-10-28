@@ -1,0 +1,19 @@
+.cascade {
+    stroke-dasharray: 8 5;
+    animation: trace 1s linear 3;
+}
+
+@keyframes trace {
+    from {
+        stroke-dashoffset: 26;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cascade {
+        animation: none;
+    }
+}

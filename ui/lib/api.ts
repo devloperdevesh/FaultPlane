@@ -48,12 +48,12 @@ export async function getMetrics(): Promise<DashboardMetrics> {
   return request<DashboardMetrics>("/api/metrics");
 }
 
-export async function getWorkers(): Promise<RuntimeWorker[]> {
-  return request<RuntimeWorker[]>("/api/workers");
+export async function getWorkers(signal?: AbortSignal): Promise<RuntimeWorker[]> {
+  return request<RuntimeWorker[]>("/api/workers", { signal });
 }
 
-export async function getTelemetry(): Promise<TelemetryResponse> {
-  return request<TelemetryResponse>("/api/telemetry");
+export async function getTelemetry(signal?: AbortSignal): Promise<TelemetryResponse> {
+  return request<TelemetryResponse>("/api/telemetry", { signal });
 }
 
 export async function getLogs(): Promise<LogsResponse> {
@@ -64,8 +64,8 @@ export async function getNetworkEvents(): Promise<NetworkEventsResponse> {
   return request<NetworkEventsResponse>("/api/network/events");
 }
 
-export async function getTopology(): Promise<TopologySnapshot> {
-  return request<TopologySnapshot>("/api/topology");
+export async function getTopology(signal?: AbortSignal): Promise<TopologySnapshot> {
+  return request<TopologySnapshot>("/api/topology", { signal });
 }
 
 export async function getEbpfStatus(): Promise<EbpfStatusResponse> {

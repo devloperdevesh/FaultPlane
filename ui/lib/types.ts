@@ -20,6 +20,7 @@ export interface DashboardMetrics {
 
 export interface RuntimeWorker {
   id: string;
+  region?: string;
   status: string;
   cpu: number;
   memory: number;
@@ -51,6 +52,7 @@ export interface NetworkEventsResponse {
 
 export interface TopologyNode {
   id: string;
+  region?: string;
   type: string;
   name: string;
   status: string;

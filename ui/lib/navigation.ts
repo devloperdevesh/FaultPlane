@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 
 import {
   Activity,
+  Network,
   BarChart3,
   Database,
   LayoutDashboard,
@@ -28,6 +29,12 @@ export interface NavigationItem {
 
 
 export const navigation: NavigationItem[] = [
+
+  {
+    title: "Topology",
+    href: "/dashboard/topology",
+    icon: Network,
+  },
 
   {
     title: "Dashboard",
