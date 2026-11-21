@@ -23,6 +23,7 @@ type Manager struct {
 	topology       *control.TopologyController
 	controller     *control.Controller
 	smartRuntime   *smart.Runtime
+	routingEngine  *RoutingEngine
 	config         config.Config
 }
 
@@ -34,6 +35,7 @@ func New(
 	smartRuntime *smart.Runtime,
 ) *Manager {
 	events := api.NewTelemetryStore()
+	engine := NewRoutingEngine()
 	return &Manager{
 		logger:         logger,
 		registry:       registry,
@@ -43,8 +45,13 @@ func New(
 		topology:       control.NewTopologyController(),
 		controller:     controller,
 		smartRuntime:   smartRuntime,
+		routingEngine:  engine,
 		config:         config.Load(),
 	}
+}
+
+func (m *Manager) RoutingEngine() *RoutingEngine {
+	return m.routingEngine
 }
 
 func (m *Manager) Registry() *telemetry.Registry {
@@ -84,7 +91,15 @@ func (m *Manager) start(
 		"port", m.config.Port,
 	)
 
-	handler := NewRouter(
+	m.logger.Info(
+		"hardware vector registry initialized",
+		"track", m.routingEngine.ActiveTrack(),
+		"has_avx512", m.routingEngine.Profile().HasAVX512F,
+		"vector_bits", m.routingEngine.Profile().VectorBits,
+		"parallel_lanes", m.routingEngine.Profile().ParallelLanes,
+	)
+
+	handler := NewRouterWithEngine(
 		m.registry,
 		m.collector,
 		m.workerStore,
@@ -93,6 +108,7 @@ func (m *Manager) start(
 		m.topology,
 		m.controller,
 		m.smartRuntime,
+		m.routingEngine,
 	)
 
 	server := NewServer(handler, m.config)

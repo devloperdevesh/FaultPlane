@@ -99,3 +99,15 @@ export interface EbpfEvent {
 export interface EbpfEventsResponse {
   events: EbpfEvent[];
 }
+
+export interface HardwareProfileResponse {
+  has_avx512f: boolean;
+  has_avx512bw: boolean;
+  has_avx512cd: boolean;
+  has_avx512dq: boolean;
+  has_avx512vl: boolean;
+  cgo_available: boolean;
+  active_track: string;
+  vector_bits: number;
+  parallel_lanes: number;
+}
