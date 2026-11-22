@@ -9,6 +9,7 @@ import type {
   EbpfStatusResponse,
   EbpfHooksResponse,
   EbpfEventsResponse,
+  HardwareProfileResponse,
 } from "./types";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/+$/, "");
@@ -80,4 +81,8 @@ export async function getEbpfHooks(): Promise<EbpfHooksResponse> {
   return request<EbpfHooksResponse>("/api/ebpf/hooks");
 }
 
-export type { DashboardMetrics, RuntimeWorker, TelemetryEvent, TelemetryResponse, LogsResponse, NetworkEventsResponse, TopologySnapshot, TopologyNode, TopologyConnection, HealthResponse, EbpfStatusResponse, EbpfHook, EbpfHooksResponse, EbpfEvent, EbpfEventsResponse } from './types';
+export async function getHardwareStatus(): Promise<HardwareProfileResponse> {
+  return request<HardwareProfileResponse>("/api/hardware/status");
+}
+
+export type { DashboardMetrics, RuntimeWorker, TelemetryEvent, TelemetryResponse, LogsResponse, NetworkEventsResponse, TopologySnapshot, TopologyNode, TopologyConnection, HealthResponse, EbpfStatusResponse, EbpfHook, EbpfHooksResponse, EbpfEvent, EbpfEventsResponse, HardwareProfileResponse } from './types';

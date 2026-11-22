@@ -24,6 +24,16 @@ func main() {
 
 	logger.Info("starting FaultPlane daemon")
 
+	// Dynamic CPU Feature Detection Registry bootstrap cycle
+	hwProfile := gateway.DetectHardwareCapabilities()
+	logger.Info(
+		"hardware feature detection registry initialized",
+		"track", hwProfile.ActiveTrack,
+		"has_avx512", hwProfile.HasAVX512F,
+		"vector_bits", hwProfile.VectorBits,
+		"parallel_lanes", hwProfile.ParallelLanes,
+	)
+
 	ctx, cancel := signal.NotifyContext(
 		context.Background(),
 		os.Interrupt,

@@ -25,8 +25,36 @@ func NewRouter(
 	controller *control.Controller,
 	smartRuntime *smart.Runtime,
 ) http.Handler {
+	return NewRouterWithEngine(
+		registry,
+		collector,
+		workerStore,
+		telemetryStore,
+		kernelMonitor,
+		topologyController,
+		controller,
+		smartRuntime,
+		NewRoutingEngine(),
+	)
+}
+
+func NewRouterWithEngine(
+	registry *telemetry.Registry,
+	collector *telemetry.Collector,
+	workerStore *api.WorkerStore,
+	telemetryStore *api.TelemetryStore,
+	kernelMonitor *kernel.Monitor,
+	topologyController *control.TopologyController,
+	controller *control.Controller,
+	smartRuntime *smart.Runtime,
+	engine *RoutingEngine,
+) http.Handler {
 	r := &Router{
 		mux: http.NewServeMux(),
+	}
+
+	if engine == nil {
+		engine = NewRoutingEngine()
 	}
 
 	r.registerRoutes(
@@ -37,6 +65,7 @@ func NewRouter(
 		topologyController,
 		controller,
 		smartRuntime,
+		engine,
 	)
 
 	return TelemetryMiddleware(
@@ -54,10 +83,18 @@ func (r *Router) registerRoutes(
 	topologyController *control.TopologyController,
 	controller *control.Controller,
 	smartRuntime *smart.Runtime,
+	engine *RoutingEngine,
 ) {
 	r.mux.HandleFunc(
 		"/health",
 		healthHandler,
+	)
+
+	r.mux.HandleFunc(
+		"/api/hardware/status",
+		func(w http.ResponseWriter, req *http.Request) {
+			writeJSON(w, http.StatusOK, engine.Profile())
+		},
 	)
 
 	r.mux.Handle(
