@@ -24,7 +24,7 @@ func TestVectorBridgeStubs(t *testing.T) {
 		if idx != 4 {
 			t.Fatalf("expected matched index 4, got %d", idx)
 		}
-	} else {
+	} else if !CgoEnabled {
 		// In pure Go / non-Cgo fallback mode, ensure stubs are non-blocking and safe
 		mask := NativeMatch16IPs(ips, target)
 		if mask != 0 {
@@ -34,6 +34,19 @@ func TestVectorBridgeStubs(t *testing.T) {
 		idx := NativeEvaluateIPs(ips, target)
 		if idx != -1 {
 			t.Fatalf("expected -1 from non-cgo stub, got %d", idx)
+		}
+	} else {
+		// Cgo is available but the runner CPU lacks AVX-512: native functions
+		// must use a scalar fallback instead of executing AVX-512 instructions.
+		mask := NativeMatch16IPs(ips, target)
+		expectedBit := uint16(1 << 4)
+		if mask&expectedBit == 0 {
+			t.Fatalf("expected scalar mask bit %x set, got %x", expectedBit, mask)
+		}
+
+		idx := NativeEvaluateIPs(ips, target)
+		if idx != 4 {
+			t.Fatalf("expected scalar matched index 4, got %d", idx)
 		}
 	}
 }

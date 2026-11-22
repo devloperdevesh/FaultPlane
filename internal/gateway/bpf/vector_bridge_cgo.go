@@ -21,6 +21,15 @@ func NativeMatch16IPs(ips []uint32, targetIP uint32) uint16 {
 	if len(ips) < 16 {
 		return 0
 	}
+	if C.is_avx512_runtime_supported() != 1 {
+		var mask uint16
+		for i := 0; i < 16; i++ {
+			if ips[i] == targetIP {
+				mask |= 1 << i
+			}
+		}
+		return mask
+	}
 	ptr := (*C.uint32_t)(unsafe.Pointer(&ips[0]))
 	return uint16(C.match_16_ips_avx512(ptr, C.uint32_t(targetIP)))
 }
@@ -28,6 +37,14 @@ func NativeMatch16IPs(ips []uint32, targetIP uint32) uint16 {
 // NativeEvaluateIPs scans routing allocation IPs using 512-bit vector registers.
 func NativeEvaluateIPs(ips []uint32, targetIP uint32) int {
 	if len(ips) == 0 {
+		return -1
+	}
+	if C.is_avx512_runtime_supported() != 1 {
+		for i, ip := range ips {
+			if ip == targetIP {
+				return i
+			}
+		}
 		return -1
 	}
 	ptr := (*C.uint32_t)(unsafe.Pointer(&ips[0]))
