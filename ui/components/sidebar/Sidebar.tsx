@@ -1,124 +1,14 @@
 "use client";
-
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import type { ReactNode } from "react";
-
-import SidebarItem from "./SidebarItem";
-import SidebarLogo from "./SidebarLogo";
-import SidebarSection from "./SidebarSection";
-import SidebarCollapse from "./SidebarCollapse";
-
-import { navigation, type NavigationItem } from "@/lib/navigation";
-
-function isLeafItem(
-  item: NavigationItem,
-): item is NavigationItem & { href: string } {
-  return Boolean(item.href);
-}
-
-function renderNavigation(
-  items: NavigationItem[],
-  pathname: string,
-  collapsed: boolean,
-): ReactNode[] {
-  return items.flatMap((item): ReactNode[] => {
-    if (item.children?.length) {
-      const hasActiveChild = item.children.some(
-        (child) => child.href === pathname,
-      );
-
-      if (collapsed) {
-        return renderNavigation(
-          item.children,
-          pathname,
-          true,
-        );
-      }
-
-      return [
-        <SidebarSection
-          key={item.title}
-          title={item.title}
-          icon={item.icon}
-          active={hasActiveChild}
-        >
-          {renderNavigation(
-            item.children,
-            pathname,
-            false,
-          )}
-        </SidebarSection>,
-      ];
-    }
-
-    if (isLeafItem(item)) {
-      return [
-        <SidebarItem
-          key={item.href}
-          title={item.title}
-          href={item.href}
-          icon={item.icon}
-          active={pathname === item.href}
-          collapsed={collapsed}
-        />,
-      ];
-    }
-
-    return [];
-  });
-}
-
-export default function Sidebar() {
-  const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-
-  return (
-    <aside
-      className={`relative flex h-screen shrink-0 flex-col border-r border-zinc-800 bg-zinc-950 transition-[width] duration-200 ${
-        collapsed ? "w-20" : "w-72"
-      }`}
-    >
-      <SidebarLogo collapsed={collapsed} />
-
-      <SidebarCollapse
-        collapsed={collapsed}
-        onToggle={() => setCollapsed((value) => !value)}
-      />
-
-      <nav
-        className={`flex-1 overflow-y-auto py-6 ${
-          collapsed ? "px-2" : "px-4"
-        }`}
-      >
-        <div className="space-y-1">
-          {renderNavigation(
-            navigation,
-            pathname,
-            collapsed,
-          )}
-        </div>
-      </nav>
-
-      {!collapsed && (
-        <footer className="border-t border-zinc-800 p-5">
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-white">
-                Enterprise
-              </span>
-
-              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-400">
-                Stable
-              </span>
-            </div>
-
-            <p className="mt-2 text-xs text-zinc-500">
-              FaultPlane v0.1.0
-            </p>
-          </div>
-        </footer>
-      )}
-    </aside>
-  );
-}
+import { Activity, Bell, Blocks, BookOpen, Boxes, ChevronDown, ChevronLeft, CircleDollarSign, Clock3, Command, Database, FlaskConical, GitBranch, Gauge, KeyRound, LayoutDashboard, Network, Radio, ScrollText, Server, Settings, ShieldCheck, Sparkles, Users, Workflow, Wrench } from "lucide-react";
+import Link from "next/link";
+const groups = [
+ {title:"WORKSPACE",items:[["Dashboard","/dashboard",LayoutDashboard],["Clusters","/clusters",Boxes],["Workers","/workers",Server],["Workloads","/workflows",Workflow],["Infrastructure topology","/dashboard/topology",Network]]},
+ {title:"RESILIENCE",items:[["Recovery","/recovery",ShieldCheck],["Recovery rules","/recovery-rules",GitBranch],["Checkpoints","/checkpoints",Database],["Incidents","/incidents",Bell]]},
+ {title:"OBSERVABILITY",items:[["Telemetry","/telemetry",Radio],["Metrics","/metrics",Gauge],["Audit log","/audit",ScrollText]]},
+ {title:"ADVANCED · PRO",items:[["FaultPlane Pro","/pro",Sparkles],["Failure Lab","/failure-lab",FlaskConical],["Time Travel","/experimental/time-travel",Clock3],["WASM Sandbox","/experimental/wasm",Blocks],["Speculative Paths","/experimental/speculative",Sparkles],["FinOps","/experimental/finops",CircleDollarSign]]},
+ {title:"ADMINISTRATION",items:[["Team & members","/team",Users],["API keys","/api-keys",KeyRound],["Integrations","/integrations",Wrench],["Billing & plan","/billing",CircleDollarSign],["Settings","/settings",Settings],["Installer","/installer",BookOpen]]}
+] as const;
+export default function Sidebar(){const path=usePathname();const [collapsed,setCollapsed]=useState(false);const [open,setOpen]=useState(true);return <aside className={`fp-sidebar ${collapsed?"is-collapsed":""}`}><div className="fp-brand"><img className="fp-brand-image" src="https://faultplane-website.vercel.app/_next/image?url=%2Flogo%2Flogo.png&w=96&q=75" alt="FaultPlane logo" width="34" height="34"/>{!collapsed&&<div><strong>FaultPlane</strong><small>AI Runtime Control Plane</small></div>}<button className="fp-collapse" onClick={()=>setCollapsed(v=>!v)} aria-label="Collapse sidebar"><ChevronLeft size={16}/></button></div><div className="fp-workspace-switch"><div className="fp-workspace-logo">F</div>{!collapsed&&<><div><strong>FaultPlane workspace</strong><small>Free · Core</small></div><ChevronDown size={14}/></>}</div><nav className="fp-side-nav">{groups.map(group=><div className="fp-nav-group" key={group.title}>{!collapsed&&<div className="fp-nav-label">{group.title}</div>}{group.items.map(([label,href,Icon])=><Link key={href} href={href} title={collapsed?label:undefined} className={`fp-nav-item ${path===href?"active":""}`}><Icon size={17}/>{!collapsed&&<><span>{label}</span>{group.title.includes("PRO")&&<em>PRO</em>}</>}</Link>)}</div>)}</nav>{!collapsed&&<div className="fp-pro-card"><div className="fp-pro-top"><Sparkles size={16}/><strong>Unlock FaultPlane Pro</strong></div><p>Advanced recovery intelligence, replay and enterprise controls.</p><Link href="/pro">Explore Pro <span>↗</span></Link></div>}<div className="fp-sidebar-bottom"><div className="fp-user-avatar">D</div>{!collapsed&&<div className="fp-user-info"><strong>Devesh Chauhan</strong><small>Workspace owner</small></div>}{!collapsed&&<button onClick={()=>setOpen(v=>!v)} aria-label="Toggle account info"><ChevronDown size={15}/></button>}</div></aside>}
