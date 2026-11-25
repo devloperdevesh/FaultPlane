@@ -9,6 +9,7 @@ import type {
   EbpfStatusResponse,
   EbpfHooksResponse,
   EbpfEventsResponse,
+  ComplianceLedgerResponse,
 } from "./types";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/+$/, "");
@@ -80,4 +81,27 @@ export async function getEbpfHooks(): Promise<EbpfHooksResponse> {
   return request<EbpfHooksResponse>("/api/ebpf/hooks");
 }
 
-export type { DashboardMetrics, RuntimeWorker, TelemetryEvent, TelemetryResponse, LogsResponse, NetworkEventsResponse, TopologySnapshot, TopologyNode, TopologyConnection, HealthResponse, EbpfStatusResponse, EbpfHook, EbpfHooksResponse, EbpfEvent, EbpfEventsResponse } from './types';
+export async function getComplianceLedger(signal?: AbortSignal): Promise<ComplianceLedgerResponse> {
+  return request<ComplianceLedgerResponse>("/api/compliance/ledger", { signal });
+}
+
+export type {
+  DashboardMetrics,
+  RuntimeWorker,
+  TelemetryEvent,
+  TelemetryResponse,
+  LogsResponse,
+  NetworkEventsResponse,
+  TopologySnapshot,
+  TopologyNode,
+  TopologyConnection,
+  HealthResponse,
+  EbpfStatusResponse,
+  EbpfHook,
+  EbpfHooksResponse,
+  EbpfEvent,
+  EbpfEventsResponse,
+  ComplianceMetricSummary,
+  ComplianceAuditLog,
+  ComplianceLedgerResponse,
+} from './types';
