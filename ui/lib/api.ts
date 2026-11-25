@@ -9,6 +9,7 @@ import type {
   EbpfStatusResponse,
   EbpfHooksResponse,
   EbpfEventsResponse,
+  BufferPoolSnapshot,
 } from "./types";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/+$/, "");
@@ -80,4 +81,26 @@ export async function getEbpfHooks(): Promise<EbpfHooksResponse> {
   return request<EbpfHooksResponse>("/api/ebpf/hooks");
 }
 
-export type { DashboardMetrics, RuntimeWorker, TelemetryEvent, TelemetryResponse, LogsResponse, NetworkEventsResponse, TopologySnapshot, TopologyNode, TopologyConnection, HealthResponse, EbpfStatusResponse, EbpfHook, EbpfHooksResponse, EbpfEvent, EbpfEventsResponse } from './types';
+export async function getMemoryMatrix(signal?: AbortSignal): Promise<BufferPoolSnapshot> {
+  return request<BufferPoolSnapshot>("/api/memory/matrix", { signal });
+}
+
+export type {
+  DashboardMetrics,
+  RuntimeWorker,
+  TelemetryEvent,
+  TelemetryResponse,
+  LogsResponse,
+  NetworkEventsResponse,
+  TopologySnapshot,
+  TopologyNode,
+  TopologyConnection,
+  HealthResponse,
+  EbpfStatusResponse,
+  EbpfHook,
+  EbpfHooksResponse,
+  EbpfEvent,
+  EbpfEventsResponse,
+  BufferPoolSnapshot,
+  SlotSnapshot,
+} from './types';

@@ -99,3 +99,28 @@ export interface EbpfEvent {
 export interface EbpfEventsResponse {
   events: EbpfEvent[];
 }
+
+export interface SlotSnapshot {
+  index: number;
+  slot_id: number;
+  tenant_id: string;
+  domain_key: number;
+  status: "ACTIVE" | "FENCED" | "FREE" | string;
+  active_tokens: number;
+  access_count: number;
+  memory_offset_hex: string;
+  cache_line_aligned: boolean;
+  color_channel: string;
+}
+
+export interface BufferPoolSnapshot {
+  total_slots: number;
+  active_slots: number;
+  fenced_slots: number;
+  cache_line_size: number;
+  cache_alignment_congruent: boolean;
+  l1_l2_thrashing_rate: number;
+  gc_pauses_ms: number;
+  active_tenants_count: number;
+  slots: SlotSnapshot[];
+}

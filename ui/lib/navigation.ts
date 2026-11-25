@@ -16,6 +16,7 @@ import {
   Sparkles,
   DollarSign,
   Rocket,
+  Cpu,
 } from "lucide-react";
 
 
@@ -63,6 +64,11 @@ export const navigation: NavigationItem[] = [
     icon: Database,
   },
 
+  {
+    title: "Memory Matrix",
+    href: "/dashboard/memory",
+    icon: Cpu,
+  },
 
   {
     title: "Recovery",

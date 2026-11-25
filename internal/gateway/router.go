@@ -66,6 +66,16 @@ func (r *Router) registerRoutes(
 	)
 
 	r.mux.Handle(
+		"/api/memory/matrix",
+		api.MemoryMatrixHandler(nil),
+	)
+
+	r.mux.Handle(
+		"/api/memory/matrix/stream",
+		api.MemoryMatrixStreamHandler(nil),
+	)
+
+	r.mux.Handle(
 		"/api/smart/anomaly",
 		api.NewSmartAnomalyHandler(smartRuntime),
 	)

@@ -37,3 +37,5 @@ go.work.sum
 # eBPF build artifacts
 *.bpf.o
 *.o
+.gocache/
+.gopath/
