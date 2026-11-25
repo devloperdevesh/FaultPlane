@@ -1,152 +1,34 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import { Activity, Cpu, Database, Server } from "lucide-react";
-import MetricCard from "../cards/MetricCard";
-import { getMetrics } from "../../lib/api";
-import type { DashboardMetrics } from "../../lib/types";
+import { Activity, AlertTriangle, ArrowDownRight, ArrowUpRight, CheckCircle2, ChevronRight, Clock3, Cpu, Database, GitBranch, HeartPulse, Layers3, Network, Pause, Play, RefreshCw, Server, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { getMetrics } from "@/lib/api";
+import type { DashboardMetrics } from "@/lib/types";
 
-export default function DashboardOverview() {
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const loadMetrics = async () => {
-      try {
-        const next = await getMetrics();
-
-        if (mounted) {
-          setMetrics(next);
-          setError(null);
-        }
-      } catch (err) {
-        if (mounted) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : "Unable to load FaultPlane runtime metrics",
-          );
-        }
-      }
-    };
-
-    void loadMetrics();
-
-    const interval = window.setInterval(() => {
-      void loadMetrics();
-    }, 2000);
-
-    return () => {
-      mounted = false;
-      window.clearInterval(interval);
-    };
-  }, []);
-
-  if (error) {
-    return (
-      <section className="rounded-xl border border-red-500/20 bg-zinc-950 p-6">
-        <p className="text-sm font-medium text-red-400">
-          Runtime metrics unavailable
-        </p>
-        <p className="mt-2 text-xs text-zinc-500">{error}</p>
-      </section>
-    );
-  }
-
-  if (!metrics) {
-    return (
-      <section className="rounded-xl border border-white/10 bg-zinc-950 p-6">
-        <p className="text-sm text-zinc-400">
-          Loading live FaultPlane runtime metrics...
-        </p>
-      </section>
-    );
-  }
-
-  return (
-    <section className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          title="Requests"
-          value={metrics.requests.toLocaleString()}
-          description="Runtime requests recorded"
-          icon={Activity}
-        />
-
-        <MetricCard
-          title="Average Latency"
-          value={`${metrics.latency.toFixed(2)} ms`}
-          description="Runtime average latency"
-          icon={Activity}
-        />
-
-        <MetricCard
-          title="CPU"
-          value={
-            metrics.cpu > 0
-              ? `${metrics.cpu.toFixed(2)}%`
-              : "Unavailable"
-          }
-          description="Runtime CPU metric"
-          icon={Cpu}
-          status={metrics.cpu > 0 ? "healthy" : "warning"}
-        />
-
-        <MetricCard
-          title="Memory"
-          value={`${metrics.memory.toFixed(2)} MB`}
-          description="Runtime memory usage"
-          icon={Database}
-        />
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <MetricCard
-          title="Workers"
-          value={metrics.workers.toLocaleString()}
-          description="Workers reported by runtime telemetry"
-          icon={Server}
-          status={metrics.workers > 0 ? "healthy" : "warning"}
-        />
-
-        <MetricCard
-          title="Recoveries"
-          value={metrics.recoveries.toLocaleString()}
-          description="Recorded runtime recovery events"
-          icon={Activity}
-        />
-      </div>
-
-      <div className="rounded-xl border border-white/10 bg-zinc-950 p-5">
-        <p className="text-xs uppercase tracking-widest text-zinc-500">
-          Runtime snapshot
-        </p>
-
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <div>
-            <p className="text-xs text-zinc-500">Checkpoints</p>
-            <p className="mt-1 text-xl font-semibold text-white">
-              {metrics.checkpoints.toLocaleString()}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-zinc-500">Updated</p>
-            <p className="mt-1 text-sm text-zinc-300">
-              {new Date(metrics.updatedAt).toLocaleString()}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-zinc-500">Source</p>
-            <p className="mt-1 text-sm text-emerald-400">
-              FaultPlane runtime API
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+type Mode = "demo" | "runtime";
+const sparkA="0,27 12,24 22,26 34,15 45,19 57,9 69,12 82,3 94,8 108,0";
+const workloads=[["chat-agent-01","Running","12h","0","32%","1.2 GB"],["research-agent","Running","8h","1","24%","980 MB"],["data-processor","Running","6h","0","45%","2.1 GB"],["content-agent","Running","4h","2","28%","1.4 GB"],["analysis-agent","Running","2h","0","18%","760 MB"]];
+const events=[["14:28","Worker node recovered","Info"],["14:27","API connection failed","Error"],["14:26","Pod restarted automatically","Info"],["14:24","Database timeout detected","Warning"],["14:21","Network latency spike","Warning"]];
+function Sparkline({color="var(--fp-blue)"}:{color?:string}){return <svg viewBox="0 0 108 30" className="fp-spark" aria-hidden="true"><polyline points={sparkA} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+function Metric({label,value,delta,icon:Icon,color="blue",trend="up"}:{label:string;value:string;delta:string;icon:typeof Activity;color?:string;trend?:string}){return <article className="fp-metric"><div className={`fp-metric-icon ${color}`}><Icon size={19}/></div><div className="fp-metric-copy"><span>{label}</span><strong>{value}</strong><small className={trend==="down"?"good":"good"}>{trend==="down"?<ArrowDownRight size={12}/>:<ArrowUpRight size={12}/>} {delta}</small></div><Sparkline color={color==="green"?"#10b981":color==="purple"?"#8b5cf6":"#1769ff"}/></article>}
+function Panel({title,action,children}:{title:string;action?:string;children:React.ReactNode}){return <section className="fp-dash-panel"><header><strong>{title}</strong>{action&&<a href="#" onClick={e=>e.preventDefault()}>{action} <ChevronRight size={13}/></a>}</header>{children}</section>}
+export default function DashboardOverview(){
+ const [mode,setMode]=useState<Mode>("demo");const [metrics,setMetrics]=useState<DashboardMetrics|null>(null);const [apiError,setApiError]=useState("");const [paused,setPaused]=useState(false);
+ useEffect(()=>{if(mode!=="runtime")return;let alive=true;const load=async()=>{try{const result=await getMetrics();if(alive){setMetrics(result);setApiError("")}}catch(e){if(alive)setApiError(e instanceof Error?e.message:"Runtime API unavailable")}};void load();const timer=window.setInterval(()=>{if(!paused)void load()},5000);return()=>{alive=false;window.clearInterval(timer)}},[mode,paused]);
+ const active=mode==="runtime"&&metrics;
+ return <section className="fp-dashboard"><div className="fp-dashboard-heading"><div><div className="fp-eyebrow">OVERVIEW</div><h1>Dashboard</h1><p>Real-time overview of your AI workloads, infrastructure health and recovery activity.</p></div><div className="fp-dashboard-actions"><span className={`fp-data-mode ${mode}`}>{mode==="demo"?"DEMO DATA":"LIVE RUNTIME"}</span><div className="fp-mode-toggle"><button className={mode==="demo"?"selected":""} onClick={()=>setMode("demo")}>Demo</button><button className={mode==="runtime"?"selected":""} onClick={()=>setMode("runtime")}>Runtime</button></div><button className="fp-primary-button" onClick={()=>setMode("runtime")}><Zap size={14}/> Connect runtime</button></div></div>
+ {mode==="runtime"&&apiError&&<div className="fp-runtime-error"><AlertTriangle size={15}/><span>Runtime API unavailable: {apiError}. Showing no live measurements until connectivity is restored.</span><button onClick={()=>setMode("demo")}>Switch to demo</button></div>}
+ <div className="fp-metrics-grid"><Metric label="Active Workloads" value={active?String(metrics!.workers):"5"} delta="2 from last 24h" icon={Layers3}/><Metric label="Recovery Events" value={active?String(metrics!.recoveries):"3"} delta="50% from last 24h" icon={RefreshCw} color="purple"/><Metric label="Infrastructure Health" value={mode==="demo"?"99.7%":"—"} delta={mode==="demo"?"0.2% from last 24h":"Awaiting health API"} icon={HeartPulse} color="green"/><Metric label="Avg. Recovery Time" value="12.4s" delta="40% from last 24h" icon={Clock3} trend="down"/></div>
+ <div className="fp-dashboard-grid top"><Panel title="Cluster status"><div className="fp-cluster-head"><div className="fp-cluster-icon"><Network size={20}/></div><div><strong>faultplane-oke-cluster</strong><small>ap-mumbai-1 · OCI Kubernetes (OKE)</small></div><span className="fp-health-pill"><CheckCircle2 size={11}/> Healthy</span></div><div className="fp-cluster-facts"><div><span>Version</span><b>1.27.3</b></div><div><span>Nodes</span><b>3 (2 ready, 1 spot)</b></div><div><span>CPU</span><b>42% (1.8 / 4.0 cores)</b></div><div className="fp-progress"><i style={{width:"42%"}}/></div><div><span>Memory</span><b>56% (7.2 / 12.8 GB)</b></div><div className="fp-progress purple"><i style={{width:"56%"}}/></div><div><span>Pods</span><b>18 / 40</b></div><div className="fp-progress green"><i style={{width:"45%"}}/></div></div></Panel>
+ <Panel title="Active workloads" action="View all"><div className="fp-table-scroll"><table className="fp-dash-table"><thead><tr>{["Name","Status","Uptime","Restarts","CPU","Memory"].map(x=><th key={x}>{x}</th>)}</tr></thead><tbody>{workloads.map(w=><tr key={w[0]}><td>{w[0]}</td><td><span className="fp-running"><i/>Running</span></td>{w.slice(2).map((v,i)=><td key={i}>{v}</td>)}</tr>)}</tbody></table></div></Panel>
+ <Panel title="Recent events" action="View all"><div className="fp-events">{events.map((e,i)=><div className="fp-event" key={e[0]}><time>{e[0]}</time><span className={`fp-event-dot ${e[2].toLowerCase()}`}/><span>{e[1]}</span><em className={e[2].toLowerCase()}>{e[2]}</em></div>)}</div></Panel></div>
+ <div className="fp-dashboard-grid charts"><Panel title="CPU & memory usage"><div className="fp-legend"><span><i className="blue"/>CPU usage (avg)</span><span><i className="purple"/>Memory usage (avg)</span></div><div className="fp-chart"><div className="fp-y-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><svg viewBox="0 0 600 130" preserveAspectRatio="none"><path d="M0 88 C30 77 48 94 75 75 S125 82 150 66 S200 82 230 56 S275 76 310 52 S360 63 390 36 S430 67 460 48 S510 65 540 43 S575 60 600 38" fill="none" stroke="#1769ff" strokeWidth="2.5"/><path d="M0 52 C30 42 50 55 80 35 S130 51 160 32 S200 44 235 28 S280 43 315 19 S365 42 400 12 S450 37 480 22 S530 40 560 24 S585 33 600 17" fill="none" stroke="#8b5cf6" strokeWidth="2.5"/></svg></div><div className="fp-chart-times"><span>00:00</span><span>04:00</span><span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span></div></Panel>
+ <Panel title="Network traffic"><div className="fp-legend"><span><i className="blue"/>Incoming</span><span><i className="green"/>Outgoing</span></div><div className="fp-chart"><div className="fp-y-labels"><span>1.0K</span><span>750</span><span>500</span><span>250</span><span>0</span></div><svg viewBox="0 0 600 130" preserveAspectRatio="none"><polyline points="0,95 15,75 28,100 43,55 57,86 70,42 85,82 98,65 112,91 126,50 140,80 154,35 168,89 182,56 196,76 210,28 224,84 238,60 252,92 266,45 280,76 294,24 308,86 322,57 336,92 350,42 364,80 378,17 392,78 406,50 420,88 434,36 448,76 462,46 476,91 490,28 504,80 518,52 532,91 546,42 560,77 574,35 588,82 600,30" fill="none" stroke="#1769ff" strokeWidth="2.5"/><polyline points="0,112 25,105 50,110 75,100 100,108 125,97 150,111 175,103 200,108 225,98 250,110 275,101 300,107 325,97 350,110 375,100 400,108 425,98 450,110 475,101 500,108 525,97 550,110 575,102 600,107" fill="none" stroke="#10b981" strokeWidth="2.5"/></svg></div><div className="fp-chart-times"><span>00:00</span><span>04:00</span><span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span></div></Panel>
+ <Panel title="Error rate & latency"><div className="fp-legend"><span><i className="red"/>Error rate</span><span><i className="orange"/>Latency (p95)</span></div><div className="fp-chart"><div className="fp-y-labels"><span>10%</span><span>7.5%</span><span>5%</span><span>2.5%</span><span>0%</span></div><svg viewBox="0 0 600 130" preserveAspectRatio="none"><polyline points="0,105 25,103 50,107 75,101 100,105 125,102 150,106 175,102 200,106 225,101 250,105 275,102 300,106 325,101 350,105 375,102 400,106 425,101 450,104 475,102 500,105 525,101 550,105 575,102 600,106" fill="none" stroke="#ef4444" strokeWidth="2.5"/><polyline points="0,12 25,52 50,40 75,59 100,47 125,61 150,54 175,69 200,53 225,65 250,48 275,60 300,52 325,68 350,49 375,61 400,51 425,63 450,42 475,69 500,20 525,74 550,60 575,81 600,75" fill="none" stroke="#f59e0b" strokeWidth="2.5"/></svg></div><div className="fp-chart-times"><span>00:00</span><span>04:00</span><span>08:00</span><span>12:00</span><span>16:00</span><span>20:00</span></div></Panel></div>
+ <div className="fp-dashboard-grid lower"><Panel title="Infrastructure topology" action="View details"><div className="fp-topology-mini"><div><CloudIcon/><b>External APIs</b><small>● Healthy</small></div><div><BotIcon/><b>AI Agents</b><small>5 running</small></div><div><Network size={22}/><b>Queue / Workers</b><small>● Healthy</small></div><div className="fp-topology-core"><Sparkles size={22}/><b>FaultPlane</b><small>Control Plane</small></div><div><Database size={22}/><b>Databases</b><small>● Healthy</small></div><div><Activity size={22}/><b>Network</b><small>● Healthy</small></div><div><Database size={22}/><b>Storage</b><small>● Healthy</small></div></div></Panel>
+ <Panel title="Pod status" action="View all"><div className="fp-table-scroll"><table className="fp-dash-table"><thead><tr><th>Name</th><th>Namespace</th><th>Status</th><th>Restarts</th><th>Age</th></tr></thead><tbody>{["sample-app-6d8f7c4b5-1","sample-app-6d8f7c4b5-2","nginx-7c9d6f8b7c-2","redis-0","postgres-0"].map((n,i)=><tr key={n}><td>{n}</td><td>{i>2?"infra":"default"}</td><td><span className="fp-running"><i/>Running</span></td><td>{i===2?1:0}</td><td>{i>2?"3h":"2m"}</td></tr>)}</tbody></table></div></Panel>
+ <Panel title="Live logs"><div className="fp-log-head"><span>All components</span><button onClick={()=>setPaused(v=>!v)}>{paused?<Play size={13}/>:<Pause size={13}/>} {paused?"Resume":"Pause"}</button></div><div className="fp-live-logs">{[["14:28:11","INFO","Worker node recovered: node-2"],["14:27:34","WARN","API connection failed, retrying..."],["14:27:36","INFO","Reconnected to external API"],["14:26:12","INFO","Pod restarted automatically"],["14:24:09","ERROR","Database timeout detected"],["14:24:15","INFO","Recovery rule applied: restart-pod"],["14:21:08","WARN","Network latency spike detected"],["14:20:11","INFO","Checkpoint created: agent-state-001"]].map((l,i)=><div key={i}><time>{l[0]}</time><b className={l[1].toLowerCase()}>{l[1]}</b><span>{l[2]}</span></div>)}</div></Panel></div>
+ <div className="fp-dashboard-grid bottom"><Panel title="Recovery rules" action="View all"><div className="fp-rule-list">{[["api-connection-failure","API unreachable","Restart pod"],["high-memory-usage","Memory > 80%","Scale up"],["node-unreachable","Node not ready","Evict & reschedule"],["database-timeout","DB timeout","Failover"]].map(r=><div key={r[0]}><b>{r[0]}</b><span>{r[1]}</span><span>{r[2]}</span><i/></div>)}</div></Panel><Panel title="Checkpoints" action="View all"><div className="fp-simple-list">{["agent-state-001","db-snapshot","model-cache","workflow-state"].map(x=><div key={x}><Database size={13}/><span>{x}</span><em>Completed</em></div>)}</div></Panel><Panel title="Alerts"><div className="fp-simple-list">{[["14:27","API connection failures","Critical"],["14:21","High network latency","Warning"],["13:10","Memory usage > 80%","Warning"],["09:35","Node not ready","Resolved"]].map(a=><div key={a[0]}><time>{a[0]}</time><span>{a[1]}</span><em className={a[2].toLowerCase()}>{a[2]}</em></div>)}</div></Panel></div>
+ <div className="fp-demo-disclaimer">{mode==="demo"?"Demo preview · Sample values are illustrative and are not connected to a live cluster.":"Live runtime mode · Metrics are fetched from the configured FaultPlane API. Missing metrics are not substituted with sample values."}</div>
+ </section>;
 }
+function CloudIcon(){return <Network size={22}/>};function BotIcon(){return <Cpu size={22}/>}
