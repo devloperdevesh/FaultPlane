@@ -103,6 +103,11 @@ func (r *Router) registerRoutes(
 	)
 
 	r.mux.Handle(
+		"/api/compliance/ledger",
+		api.ComplianceLedgerHandler(registry),
+	)
+
+	r.mux.Handle(
 		"/api/smart/anomaly",
 		api.NewSmartAnomalyHandler(smartRuntime),
 	)
