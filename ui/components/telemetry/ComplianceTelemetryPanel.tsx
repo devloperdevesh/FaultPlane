@@ -175,7 +175,10 @@ export default function ComplianceTelemetryPanel() {
   };
 
   useEffect(() => {
-    void fetchLedger();
+    const initialFetch = window.setTimeout(() => {
+      void fetchLedger();
+    }, 0);
+    return () => window.clearTimeout(initialFetch);
   }, []);
 
   // Filtered Logs

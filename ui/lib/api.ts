@@ -1,4 +1,6 @@
 import type {
+  HardwareProfileResponse,
+  ComplianceLedgerResponse,
   DashboardMetrics,
   RuntimeWorker,
   TelemetryResponse,
@@ -9,7 +11,7 @@ import type {
   EbpfStatusResponse,
   EbpfHooksResponse,
   EbpfEventsResponse,
-  ComplianceLedgerResponse,
+  BufferPoolSnapshot,
 } from "./types";
 
 const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/+$/, "");
@@ -81,8 +83,16 @@ export async function getEbpfHooks(): Promise<EbpfHooksResponse> {
   return request<EbpfHooksResponse>("/api/ebpf/hooks");
 }
 
+
 export async function getComplianceLedger(signal?: AbortSignal): Promise<ComplianceLedgerResponse> {
   return request<ComplianceLedgerResponse>("/api/compliance/ledger", { signal });
+}
+
+export async function getHardwareStatus(): Promise<HardwareProfileResponse> {
+  return request<HardwareProfileResponse>("/api/hardware/status");
+}
+export async function getMemoryMatrix(signal?: AbortSignal): Promise<BufferPoolSnapshot> {
+  return request<BufferPoolSnapshot>("/api/memory/matrix", { signal });
 }
 
 export type {
@@ -101,7 +111,6 @@ export type {
   EbpfHooksResponse,
   EbpfEvent,
   EbpfEventsResponse,
-  ComplianceMetricSummary,
-  ComplianceAuditLog,
-  ComplianceLedgerResponse,
+  BufferPoolSnapshot,
+  SlotSnapshot,
 } from './types';
