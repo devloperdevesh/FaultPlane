@@ -39,7 +39,7 @@ export default function MemoryMatrix3D({
   const lastMousePosRef = useRef({ x: 0, y: 0 });
   const animFrameIdRef = useRef<number | null>(null);
   const frameCountRef = useRef(0);
-  const lastFpsUpdateRef = useRef(performance.now());
+  const lastFpsUpdateRef = useRef(0);
 
   // Handle Drag / Orbit
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -79,7 +79,9 @@ export default function MemoryMatrix3D({
     const render = (time: number) => {
       // FPS measurement
       frameCountRef.current++;
-      if (time - lastFpsUpdateRef.current >= 500) {
+      if (lastFpsUpdateRef.current === 0) {
+        lastFpsUpdateRef.current = time;
+      } else if (time - lastFpsUpdateRef.current >= 500) {
         setFps(Math.round((frameCountRef.current * 1000) / (time - lastFpsUpdateRef.current)));
         frameCountRef.current = 0;
         lastFpsUpdateRef.current = time;

@@ -94,9 +94,16 @@ export default function MemoryCockpitOverview() {
   };
 
   useEffect(() => {
-    void fetchMatrix();
-    const interval = window.setInterval(fetchMatrix, 2000);
-    return () => window.clearInterval(interval);
+    const initialFetch = window.setTimeout(() => {
+      void fetchMatrix();
+    }, 0);
+    const interval = window.setInterval(() => {
+      void fetchMatrix();
+    }, 2000);
+    return () => {
+      window.clearTimeout(initialFetch);
+      window.clearInterval(interval);
+    };
   }, []);
 
   return (

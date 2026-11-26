@@ -1,4 +1,6 @@
 import type {
+  HardwareProfileResponse,
+  ComplianceLedgerResponse,
   DashboardMetrics,
   RuntimeWorker,
   TelemetryResponse,
@@ -81,6 +83,14 @@ export async function getEbpfHooks(): Promise<EbpfHooksResponse> {
   return request<EbpfHooksResponse>("/api/ebpf/hooks");
 }
 
+
+export async function getComplianceLedger(signal?: AbortSignal): Promise<ComplianceLedgerResponse> {
+  return request<ComplianceLedgerResponse>("/api/compliance/ledger", { signal });
+}
+
+export async function getHardwareStatus(): Promise<HardwareProfileResponse> {
+  return request<HardwareProfileResponse>("/api/hardware/status");
+}
 export async function getMemoryMatrix(signal?: AbortSignal): Promise<BufferPoolSnapshot> {
   return request<BufferPoolSnapshot>("/api/memory/matrix", { signal });
 }

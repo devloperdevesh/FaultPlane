@@ -27,14 +27,14 @@ export default function Topbar() {
   useEffect(() => {
     const saved = localStorage.getItem("fp-theme");
     const isDark = saved === "dark";
-    setDark(isDark);
+    const themeTimer = window.setTimeout(() => setDark(isDark), 0);
     document.documentElement.dataset.theme = isDark ? "dark" : "light";
     const onKey = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); setSearchOpen(true); }
       if (event.key === "Escape") { setSearchOpen(false); setProfileOpen(false); setNoticeOpen(false); }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => { window.clearTimeout(themeTimer); window.removeEventListener("keydown", onKey); };
   }, []);
 
   const toggleTheme = () => {
