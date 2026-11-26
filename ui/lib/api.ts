@@ -9,6 +9,7 @@ import type {
   EbpfStatusResponse,
   EbpfHooksResponse,
   EbpfEventsResponse,
+  ComplianceLedgerResponse,
   BufferPoolSnapshot,
 } from "./types";
 
@@ -81,6 +82,10 @@ export async function getEbpfHooks(): Promise<EbpfHooksResponse> {
   return request<EbpfHooksResponse>("/api/ebpf/hooks");
 }
 
+export async function getComplianceLedger(signal?: AbortSignal): Promise<ComplianceLedgerResponse> {
+  return request<ComplianceLedgerResponse>("/api/compliance/ledger", { signal });
+}
+
 export async function getMemoryMatrix(signal?: AbortSignal): Promise<BufferPoolSnapshot> {
   return request<BufferPoolSnapshot>("/api/memory/matrix", { signal });
 }
@@ -101,6 +106,9 @@ export type {
   EbpfHooksResponse,
   EbpfEvent,
   EbpfEventsResponse,
+  ComplianceMetricSummary,
+  ComplianceAuditLog,
+  ComplianceLedgerResponse,
   BufferPoolSnapshot,
   SlotSnapshot,
 } from './types';

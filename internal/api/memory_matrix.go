@@ -60,7 +60,7 @@ func MemoryMatrixHandler(pool *storage.BufferPool) http.Handler {
 	})
 }
 
-// MemoryMatrixStreamHandler streams real-time 3D structural matrix telemetry via SSE.
+// MemoryMatrixStreamHandler streams real-time memory matrix telemetry via SSE.
 func MemoryMatrixStreamHandler(pool *storage.BufferPool) http.Handler {
 	if pool == nil {
 		pool = globalBufferPool

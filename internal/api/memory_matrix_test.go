@@ -23,6 +23,14 @@ func TestMemoryMatrixHandler(t *testing.T) {
 		t.Fatalf("expected status 200, got %d", rec.Code)
 	}
 
+	var raw map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &raw); err != nil {
+		t.Fatalf("failed to decode JSON map: %v", err)
+	}
+	if val, ok := raw["l1_l2_thrashing_rate"]; !ok || val != nil {
+		t.Errorf("expected l1_l2_thrashing_rate to be JSON null when unavailable, got %v (present=%v)", val, ok)
+	}
+
 	var snap storage.BufferPoolSnapshot
 	if err := json.NewDecoder(rec.Body).Decode(&snap); err != nil {
 		t.Fatalf("failed to decode JSON response: %v", err)
@@ -38,5 +46,17 @@ func TestMemoryMatrixHandler(t *testing.T) {
 
 	if !snap.CacheAlignmentCongruent {
 		t.Errorf("expected cache alignment to be congruent")
+	}
+
+	if snap.L1L2ThrashingAvailable || snap.L1L2ThrashingRate != nil {
+		t.Errorf("expected L1/L2 thrashing telemetry to report unavailable")
+	}
+
+	if !snap.GCPausesAvailable {
+		t.Errorf("expected GC pause telemetry to report available")
+	}
+
+	if snap.HardwareMPKEnforced || snap.IsolationMode != storage.IsolationModeLogicalTag {
+		t.Errorf("expected logical software isolation status, got enforced=%v mode=%q", snap.HardwareMPKEnforced, snap.IsolationMode)
 	}
 }

@@ -6,9 +6,9 @@ import MemoryCockpitOverview from "@/components/memory/MemoryCockpitOverview";
 export default function MemoryCockpitPage() {
   return (
     <RoutePage
-      eyebrow="Silicon Architecture & Memory Protection"
-      title="Sub-Kernel Memory Matrix"
-      description="Hardware-isolated multi-tenant buffer pools, 64-byte structural cache-line alignment guard, and real-time 3D WebGL silicon fencing cockpit."
+      eyebrow="Buffer Architecture & Isolation Telemetry"
+      title="Cache-Line Memory Matrix"
+      description="64-byte aligned multi-tenant buffer pool with CAS slot synchronization, runtime GC pause telemetry, and logical domain fencing (software isolation mode)."
     >
       <MemoryCockpitOverview />
     </RoutePage>
