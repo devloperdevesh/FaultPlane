@@ -11,6 +11,7 @@ import type {
   EbpfStatusResponse,
   EbpfHooksResponse,
   EbpfEventsResponse,
+  ComplianceLedgerResponse,
   BufferPoolSnapshot,
 } from "./types";
 
@@ -88,9 +89,6 @@ export async function getComplianceLedger(signal?: AbortSignal): Promise<Complia
   return request<ComplianceLedgerResponse>("/api/compliance/ledger", { signal });
 }
 
-export async function getHardwareStatus(): Promise<HardwareProfileResponse> {
-  return request<HardwareProfileResponse>("/api/hardware/status");
-}
 export async function getMemoryMatrix(signal?: AbortSignal): Promise<BufferPoolSnapshot> {
   return request<BufferPoolSnapshot>("/api/memory/matrix", { signal });
 }
@@ -111,6 +109,9 @@ export type {
   EbpfHooksResponse,
   EbpfEvent,
   EbpfEventsResponse,
+  ComplianceMetricSummary,
+  ComplianceAuditLog,
+  ComplianceLedgerResponse,
   BufferPoolSnapshot,
   SlotSnapshot,
 } from './types';

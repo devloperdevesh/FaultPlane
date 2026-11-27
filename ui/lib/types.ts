@@ -162,14 +162,34 @@ export interface ComplianceLedgerResponse {
   summary: ComplianceMetricSummary;
   logs: ComplianceAuditLog[];
 }
-export interface HardwareProfileResponse {
-  has_avx512f: boolean;
-  has_avx512bw: boolean;
-  has_avx512cd: boolean;
-  has_avx512dq: boolean;
-  has_avx512vl: boolean;
-  cgo_available: boolean;
-  active_track: string;
-  vector_bits: number;
-  parallel_lanes: number;
+
+export interface SlotSnapshot {
+  index: number;
+  slot_id: number;
+  tenant_id: string;
+  domain_key: number;
+  status: "ACTIVE" | "FENCED" | "FREE" | string;
+  active_tokens: number;
+  access_count: number;
+  memory_offset_hex: string;
+  cache_line_aligned: boolean;
+  color_channel: string;
+}
+
+export interface BufferPoolSnapshot {
+  total_slots: number;
+  active_slots: number;
+  fenced_slots: number;
+  cache_line_size: number;
+  cache_alignment_congruent: boolean;
+  l1_l2_thrashing_rate: number | null;
+  l1_l2_thrashing_available: boolean;
+  l1_l2_thrashing_note?: string;
+  gc_pauses_ms: number;
+  gc_pause_count: number;
+  gc_pauses_available: boolean;
+  isolation_mode: string;
+  hardware_mpk_enforced: boolean;
+  active_tenants_count: number;
+  slots: SlotSnapshot[];
 }

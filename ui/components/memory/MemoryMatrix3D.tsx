@@ -1,17 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import {
-  RotateCcw,
-  Maximize2,
-  Lock,
-  Cpu,
-  Layers,
-  Activity,
-  ShieldCheck,
-  Eye,
-  Info,
-} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { RotateCcw, Cpu } from "lucide-react";
 import type { BufferPoolSnapshot, SlotSnapshot } from "@/lib/types";
 
 interface MemoryMatrix3DProps {
@@ -22,18 +12,16 @@ interface MemoryMatrix3DProps {
 
 export default function MemoryMatrix3D({
   snapshot,
-  onSelectSlot,
   selectedSlot,
 }: MemoryMatrix3DProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // 3D Orbit State
+  // Isometric Orbit State
   const [rotationX, setRotationX] = useState(55); // Isometric pitch (degrees)
   const [rotationZ, setRotationZ] = useState(45); // Isometric yaw (degrees)
   const [zoom, setZoom] = useState(1.0);
   const [autoRotate, setAutoRotate] = useState(true);
   const [fps, setFps] = useState(60);
-  const [hoveredSlot, setHoveredSlot] = useState<SlotSnapshot | null>(null);
 
   const isDraggingRef = useRef(false);
   const lastMousePosRef = useRef({ x: 0, y: 0 });
@@ -78,10 +66,11 @@ export default function MemoryMatrix3D({
 
     const render = (time: number) => {
       // FPS measurement
-      frameCountRef.current++;
       if (lastFpsUpdateRef.current === 0) {
         lastFpsUpdateRef.current = time;
-      } else if (time - lastFpsUpdateRef.current >= 500) {
+      }
+      frameCountRef.current++;
+      if (time - lastFpsUpdateRef.current >= 500) {
         setFps(Math.round((frameCountRef.current * 1000) / (time - lastFpsUpdateRef.current)));
         frameCountRef.current = 0;
         lastFpsUpdateRef.current = time;
@@ -163,7 +152,7 @@ export default function MemoryMatrix3D({
         };
       };
 
-      // Draw Silicon Substrate Base Wafer (NUMA node)
+      // Draw Base Matrix Substrate Grid
       const waferSize = 240;
       const w0 = project(-waferSize, -waferSize, -8);
       const w1 = project(waferSize, -waferSize, -8);
@@ -218,7 +207,7 @@ export default function MemoryMatrix3D({
             access_count: 0,
             memory_offset_hex: `0x${(idx * 64).toString(16).toUpperCase().padStart(4, "0")}`,
             cache_line_aligned: true,
-            colorChannel: "#1E293B",
+            color_channel: "#1E293B",
           };
 
           // 3D coordinates relative to center
@@ -235,16 +224,14 @@ export default function MemoryMatrix3D({
           }
 
           const isSelected = selectedSlot?.slot_id === slot.slot_id;
-          const isHovered = hoveredSlot?.slot_id === slot.slot_id;
-          if (isSelected || isHovered) {
+          if (isSelected) {
             h += 6;
           }
 
           const hw = slotWidth / 2;
 
-          // Compute 8 corner vertices of the 3D pillar
+          // Compute corner vertices of the extruded slot column
           // Base corners (z = 0)
-          const b0 = project(posX - hw, posY - hw, 0);
           const b1 = project(posX + hw, posY - hw, 0);
           const b2 = project(posX + hw, posY + hw, 0);
           const b3 = project(posX - hw, posY + hw, 0);
@@ -268,7 +255,7 @@ export default function MemoryMatrix3D({
             },
             height: h,
             color: slot.color_channel || "#1E293B",
-            isHovered,
+            isHovered: false,
             isSelected,
           });
         }
@@ -342,7 +329,7 @@ export default function MemoryMatrix3D({
           ctx.stroke();
         }
 
-        // Draw 64B Structural Silicon Fence on Fenced Slots
+        // Draw Logical Fence Indicator on Fenced Slots
         if (slot.status === "FENCED") {
           ctx.strokeStyle = "#FF0055";
           ctx.lineWidth = 2;
@@ -365,11 +352,11 @@ export default function MemoryMatrix3D({
         cancelAnimationFrame(animFrameIdRef.current);
       }
     };
-  }, [rotationX, rotationZ, zoom, autoRotate, snapshot, selectedSlot, hoveredSlot]);
+  }, [rotationX, rotationZ, zoom, autoRotate, snapshot, selectedSlot]);
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl">
-      {/* 3D WebGL Canvas */}
+      {/* Isometric Matrix Canvas */}
       <canvas
         ref={canvasRef}
         onMouseDown={handleMouseDown}
@@ -385,7 +372,7 @@ export default function MemoryMatrix3D({
         <div className="pointer-events-auto flex items-center gap-2 rounded-lg border border-white/10 bg-black/60 px-3 py-1.5 backdrop-blur-md">
           <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-xs font-semibold uppercase tracking-wider text-white">
-            64B Sub-Kernel Matrix HUD
+            64B Memory Matrix HUD
           </span>
           <span className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-[11px] text-emerald-400">
             {fps} FPS
@@ -437,7 +424,7 @@ export default function MemoryMatrix3D({
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm bg-[#FF0055] shadow-[0_0_8px_#FF0055]" />
-            <span className="text-rose-400 font-medium">MPK Silicon Fence</span>
+            <span className="text-rose-400 font-medium">Logical Slot Fence</span>
           </div>
         </div>
       </div>
@@ -464,15 +451,21 @@ export default function MemoryMatrix3D({
 
           <div className="mt-3 space-y-1.5 font-mono text-[11px]">
             <div className="flex justify-between">
-              <span className="text-zinc-400">Physical Offset:</span>
+              <span className="text-zinc-400">Relative Offset:</span>
               <span className="text-cyan-400 font-bold">{selectedSlot.memory_offset_hex}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-zinc-400">Cache Alignment:</span>
-              <span className="text-emerald-400 font-bold">64-Byte Congruent</span>
+              <span
+                className={`font-bold ${
+                  selectedSlot.cache_line_aligned ? "text-emerald-400" : "text-rose-400"
+                }`}
+              >
+                {selectedSlot.cache_line_aligned ? "64-Byte Congruent" : "Unaligned"}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-zinc-400">Intel MPK Domain:</span>
+              <span className="text-zinc-400">Logical Domain:</span>
               <span className="text-white">Domain Key 0x0{selectedSlot.domain_key}</span>
             </div>
             <div className="flex justify-between">
