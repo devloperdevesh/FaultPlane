@@ -5,7 +5,7 @@ import { ArrowLeft, CheckCircle2, CreditCard, LockKeyhole, ShieldCheck, Sparkles
 
 export default function CheckoutPage() {
   const [plan, setPlan] = useState<"monthly"|"annual">("monthly");
-  useEffect(() => { setPlan(new URLSearchParams(window.location.search).get("plan") === "annual" ? "annual" : "monthly"); }, []);
+  useEffect(() => { const timer = window.setTimeout(() => setPlan(new URLSearchParams(window.location.search).get("plan") === "annual" ? "annual" : "monthly"), 0); return () => window.clearTimeout(timer); }, []);
   const [method, setMethod] = useState<"stripe"|"razorpay">("stripe");
   const [complete, setComplete] = useState(false);
   const [busy, setBusy] = useState(false);
