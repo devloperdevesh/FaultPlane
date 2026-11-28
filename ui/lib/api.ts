@@ -91,8 +91,21 @@ export async function getComplianceLedger(signal?: AbortSignal): Promise<Complia
 export async function getHardwareStatus(): Promise<HardwareProfileResponse> {
   return request<HardwareProfileResponse>("/api/hardware/status");
 }
+
 export async function getMemoryMatrix(signal?: AbortSignal): Promise<BufferPoolSnapshot> {
   return request<BufferPoolSnapshot>("/api/memory/matrix", { signal });
+}
+
+export async function triggerDMATransfer(
+  slotId: number,
+  expertId: number,
+  tensorBytes: number = 4194304
+): Promise<unknown> {
+  return request("/api/memory/dma/stream", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ slot_id: slotId, expert_id: expertId, tensor_bytes: tensorBytes }),
+  });
 }
 
 export type {
@@ -113,4 +126,6 @@ export type {
   EbpfEventsResponse,
   BufferPoolSnapshot,
   SlotSnapshot,
+  DMAChannelSnapshot,
+  DPDKPortSnapshot,
 } from './types';
