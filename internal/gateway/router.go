@@ -113,6 +113,16 @@ func (r *Router) registerRoutes(
 	)
 
 	r.mux.Handle(
+		"/api/memory/dma",
+		api.MemoryDMAHandler(nil),
+	)
+
+	r.mux.Handle(
+		"/api/memory/dma/stream",
+		api.MemoryDMAStreamTriggerHandler(nil),
+	)
+
+	r.mux.Handle(
 		"/api/smart/anomaly",
 		api.NewSmartAnomalyHandler(smartRuntime),
 	)

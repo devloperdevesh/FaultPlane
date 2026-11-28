@@ -111,6 +111,31 @@ export interface SlotSnapshot {
   memory_offset_hex: string;
   cache_line_aligned: boolean;
   color_channel: string;
+  dma_bound?: boolean;
+  expert_id?: number;
+  dma_latency_ms?: number;
+}
+
+export interface DMAChannelSnapshot {
+  channel_id: number;
+  gpu_bus_id: string;
+  bandwidth_gbs: number;
+  active_streams: number;
+  total_transfers: number;
+  average_latency_ms: number;
+  sub_two_ms_bound_met: boolean;
+  active_expert_id: number;
+}
+
+export interface DPDKPortSnapshot {
+  port_id: number;
+  device_pci_addr: string;
+  link_speed_mbps: number;
+  poll_mode_driver: string;
+  kernel_bypass_rate: number;
+  zero_copy_hot_swaps: number;
+  context_cache_bits_routed: number;
+  hardware_ring_active: boolean;
 }
 
 export interface BufferPoolSnapshot {
@@ -122,6 +147,15 @@ export interface BufferPoolSnapshot {
   l1_l2_thrashing_rate: number;
   gc_pauses_ms: number;
   active_tenants_count: number;
+  pcie_dma_bound?: boolean;
+  dpdk_bypass_active?: boolean;
+  dma_throughput_gbs?: number;
+  average_dma_latency_ms?: number;
+  sub_two_ms_congruent?: boolean;
+  moe_experts_offloaded?: number;
+  os_kernel_bypass_percent?: number;
+  dma_channels?: DMAChannelSnapshot[];
+  dpdk_port?: DPDKPortSnapshot;
   slots: SlotSnapshot[];
 }
 

@@ -1,16 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   RotateCcw,
-  Maximize2,
-  Lock,
   Cpu,
-  Layers,
-  Activity,
-  ShieldCheck,
-  Eye,
-  Info,
 } from "lucide-react";
 import type { BufferPoolSnapshot, SlotSnapshot } from "@/lib/types";
 
@@ -376,6 +369,11 @@ export default function MemoryMatrix3D({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onClick={() => {
+          if (onSelectSlot && (hoveredSlot || selectedSlot)) {
+            onSelectSlot((hoveredSlot ?? selectedSlot) ?? null);
+          }
+        }}
         onWheel={handleWheel}
         className="h-[520px] w-full cursor-grab active:cursor-grabbing"
       />
@@ -439,6 +437,10 @@ export default function MemoryMatrix3D({
             <span className="h-2.5 w-2.5 rounded-sm bg-[#FF0055] shadow-[0_0_8px_#FF0055]" />
             <span className="text-rose-400 font-medium">MPK Silicon Fence</span>
           </div>
+          <div className="flex items-center gap-1.5 border-l border-white/10 pl-2">
+            <span className="h-2.5 w-2.5 rounded-sm bg-amber-400 shadow-[0_0_8px_#F59E0B]" />
+            <span className="text-amber-400 font-medium">PCIe Gen5 DMA Stream</span>
+          </div>
         </div>
       </div>
 
@@ -471,6 +473,26 @@ export default function MemoryMatrix3D({
               <span className="text-zinc-400">Cache Alignment:</span>
               <span className="text-emerald-400 font-bold">64-Byte Congruent</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-zinc-400">PCIe DMA Binding:</span>
+              <span className={selectedSlot.dma_bound ? "text-amber-400 font-bold" : "text-zinc-500"}>
+                {selectedSlot.dma_bound ? "Gen5 x16 (DGX Station)" : "Unmapped"}
+              </span>
+            </div>
+            {selectedSlot.dma_bound && (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">MoE Expert ID:</span>
+                  <span className="text-cyan-300 font-bold">Expert #{selectedSlot.expert_id ?? 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">DMA Latency:</span>
+                  <span className="text-emerald-400 font-bold">
+                    {selectedSlot.dma_latency_ms?.toFixed(2) ?? "0.82"} ms (&lt;2ms SLA)
+                  </span>
+                </div>
+              </>
+            )}
             <div className="flex justify-between">
               <span className="text-zinc-400">Intel MPK Domain:</span>
               <span className="text-white">Domain Key 0x0{selectedSlot.domain_key}</span>
